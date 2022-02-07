@@ -1,11 +1,12 @@
 import {useCallback, useContext, useEffect, useMemo, useRef} from "react";
 import {useCallbackRef} from "use-callback-ref";
-import {NodeGroupInfo, Graph, GraphContext} from "../Graph.js";
+import {Graph, GraphContext} from "../Graph.js";
 import {Vector2, VRect} from "js-vextensions";
+import {NodeGroup} from "../Graph/NodeGroup.js";
 
 export function useNodeGroup(treePath: string) {
 	const graph = useContext(GraphContext);
-	let groupInfo = useRef<NodeGroupInfo | null>(null);
+	let groupInfo = useRef<NodeGroup | null>(null);
 
 	const store = useMemo(()=>({
 		renderCount: 0,
@@ -21,6 +22,7 @@ export function useNodeGroup(treePath: string) {
 
 		if (el) {
 			groupInfo.current = graph.NotifyGroupUIMount(el as any as HTMLElement, treePath);
+			groupInfo.current.RecalculateShift(); // call once, for first render
 		} else {
 			graph.NotifyGroupUIUnmount(groupInfo.current!);
 			groupInfo.current = null;
@@ -55,18 +57,8 @@ export function useNodeGroup(treePath: string) {
 		const resizeObserver = new ResizeObserver(entries=>onResize(entries[0]));
 		resizeObserver.observe(ref.current!);
 		function onResize(entry: ResizeObserverEntry) {
-			if (ref.current == null) return;
-
-			const newRect = VRect.FromLTWH(ref.current!.getBoundingClientRect());
-			const rectChanged = !newRect.Equals(groupInfo.current?.rect);
-			//Object.assign(store, {width: newWidth, height: newHeight});
-			//graph.uiDebugKit?.FlashComp(ref.current, {text: `Rendering... @rc:${store.renderCount} @rect:${newRect}`});
-
-			// if this is the first render, still call this (it's considered "moving/resizing" from rect-empty to the current rect)
-			if (rectChanged) {
-				graph.uiDebugKit?.FlashComp(ref.current, {text: `Rect changed. @rc:${store.renderCount} @rect:${newRect}`});
-				graph.NotifyGroupUIMoveOrResize(groupInfo.current!, newRect);
-			}
+			if (ref.current == null || groupInfo.current == null) return;
+			groupInfo.current.CheckForMoveOrResize();
 		}
 		return ()=>resizeObserver.disconnect();
 	}, []);

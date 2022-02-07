@@ -1,9 +1,10 @@
-import { CE, VRect } from "js-vextensions";
+import { VRect } from "js-vextensions";
 import { configure, observable } from "mobx";
 import { createContext } from "react";
 import { TreeColumn } from "./Graph/TreeColumn.js";
 import { GetPageRect } from "./Utils/General/General.js";
 import { makeObservable_safe } from "./Utils/General/MobX.js";
+import { NodeGroup } from "./Graph/NodeGroup.js";
 // maybe temp
 configure({ enforceActions: "never" });
 //const defaultGraph = new Graph({columnWidth: 100});
@@ -17,6 +18,10 @@ export class Graph {
             columns: observable.shallow,
         });
         Object.assign(this, data);
+    }
+    FindChildGroups(parentGroup) {
+        const prefix = parentGroup.parentPath + "/";
+        return [...this.groupsByPath.values()].filter(a => a.parentPath.startsWith(prefix));
     }
     GetColumnsForGroup(group) {
         let firstIndex = Math.floor(group.rect.x / this.columnWidth);
@@ -45,7 +50,7 @@ export class Graph {
     NotifyGroupUIMount(element, treePath) {
         if (!this.groupsByPath.has(treePath)) {
             const rect = GetPageRect(element);
-            const group = new NodeGroupInfo({
+            const group = new NodeGroup({
                 graph: this,
                 parentPath: treePath,
                 element,
@@ -66,12 +71,6 @@ export class Graph {
         }
         return group;
     }
-    NotifyGroupUIMoveOrResize(group, rect) {
-        group.rect = rect;
-        for (const nextGroup of this.GetNextGroupsWithinColumnsFor(group)) {
-            nextGroup.RecalculateShift();
-        }
-    }
     NotifyGroupUIUnmount(group) {
         this.groupsByPath.delete(group.parentPath);
         const columns = this.GetColumnsForGroup(group);
@@ -82,24 +81,6 @@ export class Graph {
             nextGroup.RecalculateShift();
         }
         return group;
-    }
-}
-/** Converts, eg. "0.0.10.0" into "00.00.10.00", such that comparisons like XXX("0.0.10.0") > XXX("0.0.9.0") succeed. */
-export function TreePathAsSortableStr(treePath) {
-    const parts = treePath.split("/");
-    const maxPartLength = CE(parts.map(a => a.length)).Max();
-    return parts.map(part => part.padStart(maxPartLength, "0")).join("/");
-}
-export class NodeGroupInfo {
-    constructor(data) {
-        Object.assign(this, data);
-    }
-    get ParentPath_Sortable() { return TreePathAsSortableStr(this.parentPath); }
-    RecalculateShift() {
-        var _a;
-        (_a = this.graph.uiDebugKit) === null || _a === void 0 ? void 0 : _a.FlashComp(this.element, { text: `Recalculating shift. @rect:${this.rect}` });
-        for (const column of this.graph.GetColumnsForGroup(this)) {
-        }
     }
 }
 /*export class GraphPassInfo {

@@ -1,6 +1,6 @@
 import {CE, VRect} from "js-vextensions";
-import {NodeGroupInfo} from "../Graph.js";
 import {n} from "../Utils/@Internal/Types.js";
+import {NodeGroup} from "./NodeGroup.js";
 
 export class TreeColumn {
 	constructor(data?: Partial<TreeColumn>) {
@@ -9,8 +9,8 @@ export class TreeColumn {
 	rect: VRect;
 
 	/** Sorted by tree-path, at insert time. */
-	groups_ordered: NodeGroupInfo[] = [];
-	AddGroup(group: NodeGroupInfo) {
+	groups_ordered: NodeGroup[] = [];
+	AddGroup(group: NodeGroup) {
 		let i = 0;
 		// keep increasing i, while we keep seeing elements that we should be inserted after
 		while (this.groups_ordered[i] != null && this.groups_ordered[i].ParentPath_Sortable < group.ParentPath_Sortable) {
@@ -19,7 +19,7 @@ export class TreeColumn {
 		CE(this.groups_ordered).Insert(i, group);
 		//this.groups_ordered[i + 1]?.RecalculateShift();
 	}
-	RemoveGroup(group: NodeGroupInfo) {
+	RemoveGroup(group: NodeGroup) {
 		const index = this.groups_ordered.indexOf(group);
 		CE(this.groups_ordered).RemoveAt(index);
 		//this.groups_ordered[index]?.RecalculateShift();
@@ -59,7 +59,17 @@ export class TreeColumn {
 			shiftNeeded,
 		};
 	}*/
-	FindNextGroup(group: NodeGroupInfo): NodeGroupInfo|n {
+	FindPreviousGroup(group: NodeGroup): NodeGroup|n {
+		const ownIndex = this.groups_ordered.indexOf(group);
+		for (let i = ownIndex - 1; i >= 0; i--) {
+			const group2 = this.groups_ordered[i];
+			const group2IsAncestor = group.parentPath.startsWith(`${group2.parentPath}/`);
+			if (group2IsAncestor) continue;
+			return group2;
+		}
+		return null;
+	}
+	FindNextGroup(group: NodeGroup): NodeGroup|n {
 		const ownIndex = this.groups_ordered.indexOf(group);
 		for (let i = ownIndex + 1; i < this.groups_ordered.length; i++) {
 			const group2 = this.groups_ordered[i];

@@ -1,13 +1,14 @@
 import { VRect } from "js-vextensions";
-import { NodeGroupInfo } from "../Graph.js";
 import { n } from "../Utils/@Internal/Types.js";
+import { NodeGroup } from "./NodeGroup.js";
 export declare class TreeColumn {
     constructor(data?: Partial<TreeColumn>);
     rect: VRect;
     /** Sorted by tree-path, at insert time. */
-    groups_ordered: NodeGroupInfo[];
-    AddGroup(group: NodeGroupInfo): void;
-    RemoveGroup(group: NodeGroupInfo): void;
-    GetNodeGroupInfo(groupElement: HTMLElement): NodeGroupInfo | undefined;
-    FindNextGroup(group: NodeGroupInfo): NodeGroupInfo | n;
+    groups_ordered: NodeGroup[];
+    AddGroup(group: NodeGroup): void;
+    RemoveGroup(group: NodeGroup): void;
+    GetNodeGroupInfo(groupElement: HTMLElement): NodeGroup | undefined;
+    FindPreviousGroup(group: NodeGroup): NodeGroup | n;
+    FindNextGroup(group: NodeGroup): NodeGroup | n;
 }

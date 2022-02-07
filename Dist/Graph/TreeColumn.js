@@ -52,6 +52,17 @@ export class TreeColumn {
             shiftNeeded,
         };
     }*/
+    FindPreviousGroup(group) {
+        const ownIndex = this.groups_ordered.indexOf(group);
+        for (let i = ownIndex - 1; i >= 0; i--) {
+            const group2 = this.groups_ordered[i];
+            const group2IsAncestor = group.parentPath.startsWith(`${group2.parentPath}/`);
+            if (group2IsAncestor)
+                continue;
+            return group2;
+        }
+        return null;
+    }
     FindNextGroup(group) {
         const ownIndex = this.groups_ordered.indexOf(group);
         for (let i = ownIndex + 1; i < this.groups_ordered.length; i++) {
