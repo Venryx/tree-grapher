@@ -28,7 +28,7 @@ export function useNodeGroup(treePath: string) {
 	});
 	//}, []);
 
-	useEffect(()=>{
+	/*useEffect(()=>{
 		store.renderCount++;
 		const newRect = VRect.FromLTWH(ref.current!.getBoundingClientRect());
 		const rectChanged = !newRect.Equals(groupInfo.current?.rect);
@@ -48,8 +48,28 @@ export function useNodeGroup(treePath: string) {
 		}
 		/*return ()=>{
 			console.log("Test2");
-		};*/
-	})
+		};*#/
+	});*/
+
+	useEffect(()=>{
+		const resizeObserver = new ResizeObserver(entries=>onResize(entries[0]));
+		resizeObserver.observe(ref.current!);
+		function onResize(entry: ResizeObserverEntry) {
+			if (ref.current == null) return;
+
+			const newRect = VRect.FromLTWH(ref.current!.getBoundingClientRect());
+			const rectChanged = !newRect.Equals(groupInfo.current?.rect);
+			//Object.assign(store, {width: newWidth, height: newHeight});
+			//graph.uiDebugKit?.FlashComp(ref.current, {text: `Rendering... @rc:${store.renderCount} @rect:${newRect}`});
+
+			// if this is the first render, still call this (it's considered "moving/resizing" from rect-empty to the current rect)
+			if (rectChanged) {
+				graph.uiDebugKit?.FlashComp(ref.current, {text: `Rect changed. @rc:${store.renderCount} @rect:${newRect}`});
+				graph.NotifyGroupUIMoveOrResize(groupInfo.current!, newRect);
+			}
+		}
+		return ()=>resizeObserver.disconnect();
+	}, []);
 
 	return {ref};
 }
