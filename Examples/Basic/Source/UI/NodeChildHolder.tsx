@@ -11,11 +11,11 @@ import {WaitXThenRun} from "js-vextensions";
 export function NodeChildHolder(props: {children: MapNode[], path: string}) {
 	let {children, path} = props;
 	const forceUpdate = useForceUpdate();
-	let {ref} = useNodeGroup(path);
+	let {ref} = useNodeGroup(path, {FlashComp});
 
-	WaitXThenRun(0, ()=>{
-		if (ref.current) FlashComp(ref.current, {text: "TODO"});
-	});
+	/*WaitXThenRun(0, ()=>{
+		if (ref.current) FlashComp(ref.current, {text: "Rendering"});
+	});*/
 
 	const {css} = cssHelper({constructor: NodeChildHolder} as any);
 	return (

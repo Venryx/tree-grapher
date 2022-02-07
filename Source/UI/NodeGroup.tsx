@@ -1,15 +1,21 @@
-import {useCallback, useContext, useEffect, useRef} from "react";
+import {useCallback, useContext, useEffect, useMemo, useRef} from "react";
 import {useCallbackRef} from "use-callback-ref";
 import useResizeObserver from "use-resize-observer";
 import {NodeGroupInfo, Graph, GraphContext} from "../Graph.js";
+import type {FlashComp} from "ui-debug-kit";
 
-export function useNodeGroup(treePath: string) {
+export function useNodeGroup(treePath: string, uiDebugKit?: {FlashComp: typeof FlashComp}) {
 	const graph = useContext(GraphContext);
 	let groupInfo = useRef<NodeGroupInfo | null>(null);
 
 	//const {ref: ref2, width = -1, height = -1} = useResizeObserver();
+	const store = useMemo(()=>({
+		renderCount: 0,
+		width: -1,
+		height: -1,
+	}), []);
 
-	let ref = useCallbackRef(null, el=>{
+	let ref = useCallbackRef<HTMLElement>(null, el=>{
 	//let ref = useCallback(el=>{
 		//ref2(el);
 		//console.log(`${el ? "Mount" : "Unmount"} @wh:`, width, height);
@@ -25,7 +31,16 @@ export function useNodeGroup(treePath: string) {
 	//}, []);
 
 	useEffect(()=>{
-		console.log("Test1");
+		store.renderCount++;
+		store.width = ref.current!.getBoundingClientRect().width!;
+		store.height = ref.current!.getBoundingClientRect().height!;
+		uiDebugKit?.FlashComp(ref.current, {text: `@c:${store.renderCount} @w:${store.width} @h:${store.height}`});
+		
+		if (store.renderCount > 0) {
+			console.log(`Rerendering @count:${store.renderCount} @width:${store.width} @height:${store.height}`);
+		} else {
+			console.log("First render");
+		}
 		return ()=>{
 			console.log("Test2");
 		};
