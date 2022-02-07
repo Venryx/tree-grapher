@@ -7,10 +7,15 @@
 			"script": "dev",
 			"problemMatcher": "$tsc-watch",
 			"isBackground": true,
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
+			"group": "build",
+		},
+		{
+			"label": "npm run examples-dev",
+			"type": "npm",
+			"script": "examples-dev",
+			"problemMatcher": [],
+			"isBackground": true,
+			"group": "build",
 		},
 	]
 }
