@@ -7,5 +7,6 @@ export class MapNode {
 	}
 	id: string;
 	text: string;
+	width = 300;
 	children: MapNode[] = [];
 }

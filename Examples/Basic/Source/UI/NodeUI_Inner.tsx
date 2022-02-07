@@ -12,7 +12,7 @@ export class NodeUI_Inner extends BaseComponent<{node: MapNode}, {}> {
 				background: "rgba(0,0,0,.3)",
 				border: "1px solid black",
 				borderRadius: 10,
-				width: 300,
+				width: node.width,
 				padding: 5,
 			}}>
 				{node.text}

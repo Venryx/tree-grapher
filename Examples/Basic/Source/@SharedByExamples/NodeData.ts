@@ -9,13 +9,11 @@ export const nodeTree_main = new MapNode({
 				new MapNode({
 					id: "1.1.1",
 					children: [
-		
 					],
 				}),
 				new MapNode({
 					id: "1.1.2",
 					children: [
-		
 					],
 				}),
 			],
@@ -26,13 +24,11 @@ export const nodeTree_main = new MapNode({
 				new MapNode({
 					id: "1.2.1",
 					children: [
-		
 					],
 				}),
 				new MapNode({
 					id: "1.2.2",
 					children: [
-		
 					],
 				}),
 			],
