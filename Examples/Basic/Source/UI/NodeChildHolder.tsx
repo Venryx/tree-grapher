@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useCallback} from "react";
 import {Button, Column, Row} from "react-vcomponents";
 import {BaseComponent, cssHelper, GetDOM, UseCallback} from "react-vextensions";
 import {MapNode} from "../@SharedByExamples/MapNode";
@@ -6,17 +6,18 @@ import {NodeUI} from "./NodeUI";
 import {useNodeGroup} from "tree-grapher";
 import {StripesCSS, useForceUpdate} from "../@SharedByExamples/Utils/General";
 
-export function NodeChildHolder(props: {children: MapNode[], treePath: string}) {
-	let {children, treePath} = props;
+export function NodeChildHolder(props: {children: MapNode[], path: string}) {
+	let {children, path} = props;
 	const forceUpdate = useForceUpdate();
-	let {ref} = useNodeGroup(treePath);
+	let {ref} = useNodeGroup(path);
 
 	const {css} = cssHelper({constructor: NodeChildHolder} as any);
 	return (
 		<Column
-			ref={c=>{
+			ref={useCallback(c=>{
 				ref.current = GetDOM(c) as any;
-			}}
+				//ref(c ? GetDOM(c) as any : null), [ref]);
+			}, [])}
 			className="NodeChildHolder clickThrough"
 			style={css(
 				{
@@ -30,7 +31,7 @@ export function NodeChildHolder(props: {children: MapNode[], treePath: string}) 
 				style={{position: "absolute", left: -30, top: `calc(50% - 15px)`, width: 30, height: 30}}
 				onClick={()=>forceUpdate()}/>
 			{children.map((child, index)=>{
-				return <NodeUI key={index} node={child} {...{treePath: `${treePath}/${index}`}}/>;
+				return <NodeUI key={index} node={child} {...{path: `${path}/${index}`}}/>;
 			})}
 		</Column>
 	);

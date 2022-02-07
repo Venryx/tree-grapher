@@ -9,6 +9,11 @@
 			box-sizing: border-box;
 		}
 		.Button { color: black !important; }
+
+		.clickThrough > * { pointer-events: auto; }
+		.clickThrough { pointer-events: none; }
+		.clickThroughChain { pointer-events: none; }
+		.clickThroughChain-break { pointer-events: auto; }
 		</style>
 	</head>
 	<body style="height: 100%; margin: 0;">

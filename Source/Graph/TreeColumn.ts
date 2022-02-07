@@ -16,9 +16,12 @@ export class TreeColumn {
 			i++;
 		}
 		CE(this.groups_ordered).Insert(i, group);
+		this.groups_ordered[i + 1]?.RecalculateShift();
 	}
 	RemoveGroup(group: NodeGroupInfo) {
-		CE(this.groups_ordered).Remove(group);
+		const index = this.groups_ordered.indexOf(group);
+		CE(this.groups_ordered).RemoveAt(index);
+		this.groups_ordered[index]?.RecalculateShift();
 	}
 
 	GetNodeGroupInfo(groupElement: HTMLElement) {

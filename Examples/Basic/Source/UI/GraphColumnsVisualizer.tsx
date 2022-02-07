@@ -13,12 +13,13 @@ export const GraphColumnsVisualizer = observer(()=>{
 		}}>
 			{graph.columns.map((column, index)=>{
 				return (
-					<Column style={{display: "inline-flex", width: 100, height: "100%", border: "1px solid orange"}}>
-						<Row>
-							<Button text="Info" onClick={()=>{
+					<Column key={index} style={{display: "inline-flex", width: 100, height: "100%", border: "1px solid orange"}}>
+						<Row>#{index} C:{column.groups_ordered.length}</Row>
+						{/*<Row>
+							<Button text="More" onClick={()=>{
 								alert("TODO");
 							}}/>
-						</Row>
+						</Row>*/}
 					</Column>
 				);
 			})}

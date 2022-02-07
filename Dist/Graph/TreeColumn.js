@@ -6,15 +6,20 @@ export class TreeColumn {
         Object.assign(this, data);
     }
     AddGroup(group) {
+        var _a;
         let i = 0;
         // keep increasing i, while we keep seeing elements that we should be inserted after
         while (this.groups_ordered[i] != null && this.groups_ordered[i].ParentPath_Sortable < group.ParentPath_Sortable) {
             i++;
         }
         CE(this.groups_ordered).Insert(i, group);
+        (_a = this.groups_ordered[i + 1]) === null || _a === void 0 ? void 0 : _a.RecalculateShift();
     }
     RemoveGroup(group) {
-        CE(this.groups_ordered).Remove(group);
+        var _a;
+        const index = this.groups_ordered.indexOf(group);
+        CE(this.groups_ordered).RemoveAt(index);
+        (_a = this.groups_ordered[index]) === null || _a === void 0 ? void 0 : _a.RecalculateShift();
     }
     GetNodeGroupInfo(groupElement) {
         return this.groups_ordered.find(a => a.element == groupElement);
