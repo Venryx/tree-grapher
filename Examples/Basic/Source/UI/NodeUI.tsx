@@ -4,35 +4,27 @@ import {BaseComponent, cssHelper, UseCallback} from "react-vextensions";
 import {MapNode} from "../@SharedByExamples/MapNode";
 import {NodeChildHolder} from "./NodeChildHolder";
 import {NodeUI_Inner} from "./NodeUI_Inner";
+import {NodeUI_LeftColumn, NodeUI_RightColumn} from "tree-grapher";
 
-export class NodeUI extends BaseComponent<{node: MapNode}, {boxExpanded: boolean}> {
+export class NodeUI extends BaseComponent<{node: MapNode, treePath: string}, {boxExpanded: boolean}> {
 	static initialState = {boxExpanded: true};
 	render() {
-		let {node} = this.props;
+		let {node, treePath} = this.props;
 		let {boxExpanded} = this.state;
-
-		let gapBeforeInnerUI = 0;
-		let gapAfterInnerUI = 0;
-		let rightColumnOffset = 0;
 		
 		const {css} = cssHelper(this);
 		return (
-			<Row className="NodeUI" style={{position: "relative"}}>
-				<Column className="innerBoxColumn clickThrough" style={css(
-					{
-						position: "relative",
-						paddingTop: gapBeforeInnerUI,
-						paddingBottom: gapAfterInnerUI,
-					},
-				)}>
+			<Row className="NodeUI" style={{
+				position: "relative",
+				//background: StripesCSS({angle: 0, stripeColor: "rgba(255,0,0,.2)"}),
+			}}>
+				<NodeUI_LeftColumn {...{treePath}}>
 					<NodeUI_Inner node={node}/>
-				</Column>
+				</NodeUI_LeftColumn>
 				{boxExpanded &&
-				<Column /*ref={UseCallback(c=>this.rightColumn = c, [])}*/ className="rightColumn clickThrough" style={{
-					position: "absolute", left: "100%", top: rightColumnOffset,
-				}}>
-					<NodeChildHolder children={node.children}/>
-				</Column>}
+				<NodeUI_RightColumn {...{treePath}}>
+					<NodeChildHolder children={node.children} {...{treePath}}/>
+				</NodeUI_RightColumn>}
 			</Row>
 		);
 	}

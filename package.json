@@ -30,8 +30,6 @@
   "devDependencies": {
     "@types/react": "^17.0.9",
     "concurrently": "^6.1.0",
-    "react": "17.0.2",
-    "react-dom": "17.0.2",
     "react-vcomponents": "1.0.39",
     "react-vextensions": "1.0.15",
     "webpack": "5.68.0",
@@ -40,5 +38,10 @@
     "ts-loader": "9.2.6",
     "tree-grapher": "file:."
   },
-  "dependencies": {}
+  "dependencies": {
+    "js-vextensions": "^1.0.69",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "use-callback-ref": "^1.2.5"
+  }
 }

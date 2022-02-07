@@ -7,10 +7,10 @@ export class Graph {
     GetNodeGroupInfo(groupElement) {
         return this.nodeGroupInfos.find(a => a.element == groupElement);
     }
-    NotifyNodeGroupRendered(element, graphInfo) {
+    NotifyNodeGroupRendered(element, treePath) {
         const rect = GetPageRect(element);
         const entry = new NodeGroupInfo({
-            treePath: graphInfo.treePath,
+            parentPath: treePath,
             element,
             rect,
         });
@@ -27,5 +27,6 @@ export class NodeGroupInfo {
         Object.assign(this, data);
     }
 }
-export class GraphPassInfo {
-}
+/*export class GraphPassInfo {
+    treePath: string;
+}*/ 

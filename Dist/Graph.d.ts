@@ -4,15 +4,12 @@ export declare class Graph {
     static main: Graph;
     nodeGroupInfos: NodeGroupInfo[];
     GetNodeGroupInfo(groupElement: HTMLElement): NodeGroupInfo | undefined;
-    NotifyNodeGroupRendered(element: HTMLElement, graphInfo: GraphPassInfo): NodeGroupInfo;
+    NotifyNodeGroupRendered(element: HTMLElement, treePath: string): NodeGroupInfo;
     NotifyNodeGroupUnrendered(group: NodeGroupInfo): void;
 }
 export declare class NodeGroupInfo {
-    constructor(data?: RequiredBy<Partial<NodeGroupInfo>, "treePath" | "element" | "rect">);
-    treePath: number[];
+    constructor(data?: RequiredBy<Partial<NodeGroupInfo>, "parentPath" | "element" | "rect">);
+    parentPath: string;
     element: HTMLElement;
     rect: VRect;
-}
-export declare class GraphPassInfo {
-    treePath: number[];
 }

@@ -3,6 +3,12 @@ import {BaseComponent} from "react-vextensions";
 import {Column, Row} from "react-vcomponents";
 import {NodeUI} from "./UI/NodeUI";
 import {nodeTree_main} from "./@SharedByExamples/NodeData";
+import {Graph} from "tree-grapher";
+
+// make some stuff global, for easy debugging
+Object.assign(globalThis, {
+	Graph,
+});
 
 export class RootUI extends BaseComponent<{}, {}> {
 	render() {
@@ -17,7 +23,7 @@ export class RootUI extends BaseComponent<{}, {}> {
 					Toolbar
 				</Row>
 				<Row style={{height: "calc(100% - 30px)", padding: 5}}>
-					<NodeUI node={nodeTree_main}/>
+					<NodeUI node={nodeTree_main} treePath="0"/>
 				</Row>
 			</Column>
 		);

@@ -1,25 +1,37 @@
 import React from "react";
-import {Column, Row} from "react-vcomponents";
-import {BaseComponent, cssHelper, UseCallback} from "react-vextensions";
+import {Button, Column, Row} from "react-vcomponents";
+import {BaseComponent, cssHelper, GetDOM, UseCallback} from "react-vextensions";
 import {MapNode} from "../@SharedByExamples/MapNode";
 import {NodeUI} from "./NodeUI";
+import {useNodeGroup} from "tree-grapher";
+import {StripesCSS, useForceUpdate} from "../@SharedByExamples/Utils/General";
 
-export class NodeChildHolder extends BaseComponent<{children: MapNode[]}, {}> {
-	render() {
-		let {children} = this.props;
+export function NodeChildHolder(props: {children: MapNode[], treePath: string}) {
+	let {children, treePath} = props;
+	const forceUpdate = useForceUpdate();
+	let {ref} = useNodeGroup(treePath);
 
-		const {css} = cssHelper(this);
-		return (
-			<Column className="NodeChildHolder clickThrough" style={css(
+	const {css} = cssHelper({constructor: NodeChildHolder} as any);
+	return (
+		<Column
+			ref={c=>{
+				ref.current = GetDOM(c) as any;
+			}}
+			className="NodeChildHolder clickThrough"
+			style={css(
 				{
 					position: "relative",
 					marginLeft: 30,
+					background: StripesCSS({angle: 10, stripeColor: "rgba(255,150,0,.2)"}),
 				},
-			)}>
-				{children.map((child, index)=>{
-					return <NodeUI key={index} node={child}/>;
-				})}
-			</Column>
-		);
-	}
+			)}
+		>
+			<Button text="U" title="Update NodeChildHolder"
+				style={{position: "absolute", left: -30, top: `calc(50% - 15px)`, width: 30, height: 30}}
+				onClick={()=>forceUpdate()}/>
+			{children.map((child, index)=>{
+				return <NodeUI key={index} node={child} {...{treePath: `${treePath}/${index}`}}/>;
+			})}
+		</Column>
+	);
 }
