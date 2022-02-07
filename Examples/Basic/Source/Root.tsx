@@ -6,6 +6,7 @@ import {GetAllNodesInTree_ByPath, nodeTree_main} from "./@SharedByExamples/NodeD
 import {Graph, GraphContext, makeObservable_safe} from "tree-grapher";
 import {GraphColumnsVisualizer} from "./UI/GraphColumnsVisualizer";
 import {makeObservable, observable} from "mobx";
+import {FlashComp} from "ui-debug-kit";
 
 // make some stuff global, for easy debugging
 Object.assign(globalThis, {
@@ -48,7 +49,10 @@ export function RootUI() {
 		return result;
 	}, []);
 	const context = useMemo(()=>{
-		let graph = new Graph({columnWidth: 100});
+		let graph = new Graph({
+			columnWidth: 100,
+			uiDebugKit: {FlashComp},
+		});
 		globalThis.graph = graph;
 		return graph;
 	}, []);

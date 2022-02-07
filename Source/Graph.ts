@@ -1,4 +1,4 @@
-import {CE, VRect} from "js-vextensions";
+import {CE, Vector2, VRect} from "js-vextensions";
 import {configure, observable} from "mobx";
 import {createContext} from "react";
 import {TreeColumn} from "./Graph/TreeColumn.js";
@@ -6,6 +6,7 @@ import {Column} from "./UI/@Shared/Basics.js";
 import {n, RequiredBy} from "./Utils/@Internal/Types.js";
 import {GetPageRect} from "./Utils/General/General.js";
 import {makeObservable_safe} from "./Utils/General/MobX.js";
+import type {FlashComp} from "ui-debug-kit";
 
 // maybe temp
 configure({enforceActions: "never"});
@@ -22,6 +23,7 @@ export class Graph {
 		Object.assign(this, data);
 	}
 	columnWidth: number;
+	uiDebugKit?: {FlashComp: typeof FlashComp};
 
 	columns: TreeColumn[] = []; // @O
 	groupsByPath = new Map<string, NodeGroupInfo>();
@@ -40,6 +42,15 @@ export class Graph {
 			}
 		}
 		return this.columns.slice(firstIndex, lastIndex + 1);
+	}
+	GetNextGroupsWithinColumnsFor(group: NodeGroupInfo) {
+		let result = new Set<NodeGroupInfo>();
+		const columns = this.GetColumnsForGroup(group);
+		for (const column of columns) {
+			const nextGroup = column.FindNextGroup(group);
+			if (nextGroup) result.add(nextGroup);
+		}
+		return result;
 	}
 
 	NotifyGroupUIMount(element: HTMLElement, treePath: string) {
@@ -61,13 +72,25 @@ export class Graph {
 		for (const column of columns) {
 			column.AddGroup(group);
 		}
+		for (const nextGroup of this.GetNextGroupsWithinColumnsFor(group)) {
+			nextGroup.RecalculateShift();
+		}
 		return group;
+	}
+	NotifyGroupUIMoveOrResize(group: NodeGroupInfo, rect: VRect) {
+		group.rect = rect;
+		for (const nextGroup of this.GetNextGroupsWithinColumnsFor(group)) {
+			nextGroup.RecalculateShift();
+		}
 	}
 	NotifyGroupUIUnmount(group: NodeGroupInfo) {
 		this.groupsByPath.delete(group.parentPath);
 		const columns = this.GetColumnsForGroup(group);
 		for (const column of columns) {
 			column.RemoveGroup(group);
+		}
+		for (const nextGroup of this.GetNextGroupsWithinColumnsFor(group)) {
+			nextGroup.RecalculateShift();
 		}
 		return group;
 	}
@@ -91,6 +114,7 @@ export class NodeGroupInfo {
 	rect: VRect;
 
 	RecalculateShift() {
+		this.graph.uiDebugKit?.FlashComp(this.element, {text: `Recalculating shift. @rect:${this.rect}`});
 		for (const column of this.graph.GetColumnsForGroup(this)) {
 		}
 	}

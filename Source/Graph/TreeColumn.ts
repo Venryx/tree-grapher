@@ -1,5 +1,6 @@
 import {CE, VRect} from "js-vextensions";
 import {NodeGroupInfo} from "../Graph.js";
+import {n} from "../Utils/@Internal/Types.js";
 
 export class TreeColumn {
 	constructor(data?: Partial<TreeColumn>) {
@@ -16,12 +17,12 @@ export class TreeColumn {
 			i++;
 		}
 		CE(this.groups_ordered).Insert(i, group);
-		this.groups_ordered[i + 1]?.RecalculateShift();
+		//this.groups_ordered[i + 1]?.RecalculateShift();
 	}
 	RemoveGroup(group: NodeGroupInfo) {
 		const index = this.groups_ordered.indexOf(group);
 		CE(this.groups_ordered).RemoveAt(index);
-		this.groups_ordered[index]?.RecalculateShift();
+		//this.groups_ordered[index]?.RecalculateShift();
 	}
 
 	GetNodeGroupInfo(groupElement: HTMLElement) {
@@ -44,7 +45,7 @@ export class TreeColumn {
 		};
 	}*/
 	// we only need to find the next group (ie. the group just below), because we already take care of positioning outself below our earlier-groups
-	FindNextGroupInVSpace(group: NodeGroupInfo) {
+	/*FindNextGroupInVSpace(group: NodeGroupInfo) {
 		const rect_fullVertical = group.rect.NewTop(0).NewBottom(Number.MAX_SAFE_INTEGER);
 		let groupsInVertSpace = this.groups_ordered.filter(a=>a.rect.Intersects(rect_fullVertical));
 		const groupsInVertSpace_earlier = groupsInVertSpace.filter(a=>a.ParentPath_Sortable < group.ParentPath_Sortable);
@@ -57,5 +58,15 @@ export class TreeColumn {
 			groupsInVertSpace_earlier_lowest,
 			shiftNeeded,
 		};
+	}*/
+	FindNextGroup(group: NodeGroupInfo): NodeGroupInfo|n {
+		const ownIndex = this.groups_ordered.indexOf(group);
+		for (let i = ownIndex + 1; i < this.groups_ordered.length; i++) {
+			const group2 = this.groups_ordered[i];
+			const group2IsAncestor = group.parentPath.startsWith(`${group2.parentPath}/`);
+			if (group2IsAncestor) continue;
+			return group2;
+		}
+		return null;
 	}
 }

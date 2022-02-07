@@ -11,7 +11,7 @@ import {WaitXThenRun} from "js-vextensions";
 export function NodeChildHolder(props: {children: MapNode[], path: string}) {
 	let {children, path} = props;
 	const forceUpdate = useForceUpdate();
-	let {ref} = useNodeGroup(path, {FlashComp});
+	let {ref} = useNodeGroup(path);
 
 	/*WaitXThenRun(0, ()=>{
 		if (ref.current) FlashComp(ref.current, {text: "Rendering"});

@@ -7,21 +7,21 @@ function NewNode(data: RequiredBy<Partial<MapNodeWithExpandState>, "id">) {
 }
 
 export const nodeTree_main = NewNode({
-	id: "1",
+	id: "0",
 	expanded: true,
 	children: [
 		NewNode({
-			id: "1.1",
+			id: "0.0",
 			expanded: true,
 			children: [
 				NewNode({
-					id: "1.1.1",
+					id: "0.0.0",
 					expanded: true,
 					children: [
 					],
 				}),
 				NewNode({
-					id: "1.1.2",
+					id: "0.0.1",
 					expanded: true,
 					children: [
 					],
@@ -29,17 +29,17 @@ export const nodeTree_main = NewNode({
 			],
 		}),
 		NewNode({
-			id: "1.2",
+			id: "0.1",
 			expanded: true,
 			children: [
 				NewNode({
-					id: "1.2.1",
+					id: "0.1.0",
 					expanded: true,
 					children: [
 					],
 				}),
 				NewNode({
-					id: "1.2.2",
+					id: "0.1.1",
 					expanded: true,
 					children: [
 					],

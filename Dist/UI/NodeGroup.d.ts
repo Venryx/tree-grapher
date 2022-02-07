@@ -1,7 +1,4 @@
 /// <reference types="react" />
-import type { FlashComp } from "ui-debug-kit";
-export declare function useNodeGroup(treePath: string, uiDebugKit?: {
-    FlashComp: typeof FlashComp;
-}): {
+export declare function useNodeGroup(treePath: string): {
     ref: import("react").MutableRefObject<HTMLElement | null>;
 };

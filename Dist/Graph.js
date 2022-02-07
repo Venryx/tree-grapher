@@ -32,6 +32,16 @@ export class Graph {
         }
         return this.columns.slice(firstIndex, lastIndex + 1);
     }
+    GetNextGroupsWithinColumnsFor(group) {
+        let result = new Set();
+        const columns = this.GetColumnsForGroup(group);
+        for (const column of columns) {
+            const nextGroup = column.FindNextGroup(group);
+            if (nextGroup)
+                result.add(nextGroup);
+        }
+        return result;
+    }
     NotifyGroupUIMount(element, treePath) {
         if (!this.groupsByPath.has(treePath)) {
             const rect = GetPageRect(element);
@@ -51,13 +61,25 @@ export class Graph {
         for (const column of columns) {
             column.AddGroup(group);
         }
+        for (const nextGroup of this.GetNextGroupsWithinColumnsFor(group)) {
+            nextGroup.RecalculateShift();
+        }
         return group;
+    }
+    NotifyGroupUIMoveOrResize(group, rect) {
+        group.rect = rect;
+        for (const nextGroup of this.GetNextGroupsWithinColumnsFor(group)) {
+            nextGroup.RecalculateShift();
+        }
     }
     NotifyGroupUIUnmount(group) {
         this.groupsByPath.delete(group.parentPath);
         const columns = this.GetColumnsForGroup(group);
         for (const column of columns) {
             column.RemoveGroup(group);
+        }
+        for (const nextGroup of this.GetNextGroupsWithinColumnsFor(group)) {
+            nextGroup.RecalculateShift();
         }
         return group;
     }
@@ -74,6 +96,8 @@ export class NodeGroupInfo {
     }
     get ParentPath_Sortable() { return TreePathAsSortableStr(this.parentPath); }
     RecalculateShift() {
+        var _a;
+        (_a = this.graph.uiDebugKit) === null || _a === void 0 ? void 0 : _a.FlashComp(this.element, { text: `Recalculating shift. @rect:${this.rect}` });
         for (const column of this.graph.GetColumnsForGroup(this)) {
         }
     }

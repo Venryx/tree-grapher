@@ -1,5 +1,6 @@
 import { VRect } from "js-vextensions";
 import { NodeGroupInfo } from "../Graph.js";
+import { n } from "../Utils/@Internal/Types.js";
 export declare class TreeColumn {
     constructor(data?: Partial<TreeColumn>);
     rect: VRect;
@@ -8,8 +9,5 @@ export declare class TreeColumn {
     AddGroup(group: NodeGroupInfo): void;
     RemoveGroup(group: NodeGroupInfo): void;
     GetNodeGroupInfo(groupElement: HTMLElement): NodeGroupInfo | undefined;
-    FindNextGroupInVSpace(group: NodeGroupInfo): number | {
-        groupsInVertSpace_earlier_lowest: NodeGroupInfo;
-        shiftNeeded: number;
-    };
+    FindNextGroup(group: NodeGroupInfo): NodeGroupInfo | n;
 }

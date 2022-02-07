@@ -1,14 +1,14 @@
 import { useContext, useEffect, useMemo, useRef } from "react";
 import { useCallbackRef } from "use-callback-ref";
 import { GraphContext } from "../Graph.js";
-export function useNodeGroup(treePath, uiDebugKit) {
+import { VRect } from "js-vextensions";
+export function useNodeGroup(treePath) {
     const graph = useContext(GraphContext);
     let groupInfo = useRef(null);
-    //const {ref: ref2, width = -1, height = -1} = useResizeObserver();
     const store = useMemo(() => ({
         renderCount: 0,
-        width: -1,
-        height: -1,
+        /*width: -1,
+        height: -1,*/
     }), []);
     let ref = useCallbackRef(null, el => {
         //let ref = useCallback(el=>{
@@ -25,19 +25,26 @@ export function useNodeGroup(treePath, uiDebugKit) {
     });
     //}, []);
     useEffect(() => {
+        var _a, _b, _c, _d, _e;
         store.renderCount++;
-        store.width = ref.current.getBoundingClientRect().width;
-        store.height = ref.current.getBoundingClientRect().height;
-        uiDebugKit === null || uiDebugKit === void 0 ? void 0 : uiDebugKit.FlashComp(ref.current, { text: `@c:${store.renderCount} @w:${store.width} @h:${store.height}` });
+        const newRect = VRect.FromLTWH(ref.current.getBoundingClientRect());
+        const rectChanged = !newRect.Equals((_a = groupInfo.current) === null || _a === void 0 ? void 0 : _a.rect);
+        //Object.assign(store, {width: newWidth, height: newHeight});
+        (_b = graph.uiDebugKit) === null || _b === void 0 ? void 0 : _b.FlashComp(ref.current, { text: `Rendering... @rc:${store.renderCount} @rect:${newRect}` });
+        // if this is the first render, still call this (it's considered "moving/resizing" from rect-empty to the current rect)
+        if (rectChanged) {
+            (_c = graph.uiDebugKit) === null || _c === void 0 ? void 0 : _c.FlashComp(ref.current, { text: `Rect changed. @rc:${store.renderCount} @rect:${newRect}` });
+            graph.NotifyGroupUIMoveOrResize(groupInfo.current, newRect);
+        }
         if (store.renderCount > 0) {
-            console.log(`Rerendering @count:${store.renderCount} @width:${store.width} @height:${store.height}`);
+            console.log(`Rerendering @count:${store.renderCount} @width:${(_d = groupInfo.current) === null || _d === void 0 ? void 0 : _d.rect.width} @height:${(_e = groupInfo.current) === null || _e === void 0 ? void 0 : _e.rect.height}`);
         }
         else {
             console.log("First render");
         }
-        return () => {
+        /*return ()=>{
             console.log("Test2");
-        };
+        };*/
     });
     return { ref };
 }
