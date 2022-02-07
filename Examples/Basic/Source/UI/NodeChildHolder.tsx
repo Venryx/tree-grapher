@@ -22,7 +22,7 @@ export function NodeChildHolder(props: {children: MapNode[], treePath: string}) 
 				{
 					position: "relative",
 					marginLeft: 30,
-					background: StripesCSS({angle: 10, stripeColor: "rgba(255,150,0,.2)"}),
+					background: StripesCSS({angle: 10, stripeColor: "rgba(255,150,0,.5)"}),
 				},
 			)}
 		>

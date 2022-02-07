@@ -9,7 +9,7 @@ export class NodeUI_Inner extends BaseComponent<{node: MapNode}, {}> {
 		let {node} = this.props;
 		return (
 			<Row style={{
-				background: "rgba(0,0,0,.3)",
+				background: "rgba(100,100,100,.7)",
 				border: "1px solid black",
 				borderRadius: 10,
 				width: node.width,

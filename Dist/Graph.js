@@ -1,57 +1,54 @@
-import { CE } from "js-vextensions";
+import { CE, VRect } from "js-vextensions";
+import { observable } from "mobx";
+import { createContext } from "react";
+import { TreeColumn } from "./Graph/TreeColumn.js";
 import { GetPageRect } from "./Utils/General/General.js";
+import { makeObservable_safe } from "./Utils/General/MobX.js";
+//const defaultGraph = new Graph({columnWidth: 100});
+const defaultGraph = undefined; // we want an error if someone forgets to add the GraphContext.Provider wrapper
+export const GraphContext = createContext(defaultGraph);
 export class Graph {
-    constructor() {
-        this.nodeGroupInfos = [];
+    constructor(data) {
+        this.columns = []; // @O
+        makeObservable_safe(this, {
+            columns: observable.shallow,
+        });
+        Object.assign(this, data);
     }
-    GetNodeGroupInfo(groupElement) {
-        return this.nodeGroupInfos.find(a => a.element == groupElement);
+    GetColumnsForGroup(group) {
+        let firstIndex = Math.floor(group.rect.x / this.columnWidth);
+        let lastIndex = Math.floor(group.rect.Right / this.columnWidth);
+        // ensure all the necessary columns are created (start from 0, because we don't want gaps)
+        for (let i = 0; i <= lastIndex; i++) {
+            if (this.columns[i] == null) {
+                this.columns[i] = new TreeColumn({
+                    rect: new VRect(i * this.columnWidth, 0, this.columnWidth, Number.MAX_SAFE_INTEGER),
+                });
+            }
+        }
+        return this.columns.slice(firstIndex, lastIndex + 1);
     }
     NotifyNodeGroupRendered(element, treePath) {
         const rect = GetPageRect(element);
-        const entry = new NodeGroupInfo({
+        const group = new NodeGroupInfo({
             parentPath: treePath,
             element,
             rect,
         });
-        this.nodeGroupInfos.push(entry);
-        return entry;
+        const columns = this.GetColumnsForGroup(group);
+        for (const column of columns) {
+            column.AddGroup(group);
+        }
+        return group;
     }
     NotifyNodeGroupUnrendered(group) {
-        CE(this.nodeGroupInfos).Remove(group);
-    }
-    // we only need to find the lowest earlier-group, because it will take care of positioning below its own earlier-groups
-    /*GetInfoForAvoidingEarlierGroupsInVSpace(group: NodeGroupInfo) {
-        const rect_fullVertical = group.rect.NewTop(0).NewBottom(Number.MAX_SAFE_INTEGER);
-        let groupsInVertSpace = this.nodeGroupInfos.filter(a=>a.rect.Intersects(rect_fullVertical));
-        const groupsInVertSpace_earlier = groupsInVertSpace.filter(a=>a.ParentPath_Sortable < group.ParentPath_Sortable);
-        if (groupsInVertSpace_earlier.length == 0) return CE(0 - group.rect.Top).KeepAtLeast(0);
-
-        //const groupsInVertSpace_earlier_lowest = CE(groupsInVertSpace_earlier).Max(a=>a.rect.Bottom);
-        const groupsInVertSpace_earlier_lowest = CE(groupsInVertSpace_earlier).OrderBy(a=>a.ParentPath_Sortable).slice(-1)[0];
-        const shiftNeeded = CE(groupsInVertSpace_earlier_lowest.rect.Bottom - group.rect.Top).KeepAtLeast(0);
-        return {
-            groupsInVertSpace_earlier_lowest,
-            shiftNeeded,
-        };
-    }*/
-    // we only need to find the next group (ie. the group just below), because we already take care of positioning outself below our earlier-groups
-    FindNextGroupInVSpace(group) {
-        const rect_fullVertical = group.rect.NewTop(0).NewBottom(Number.MAX_SAFE_INTEGER);
-        let groupsInVertSpace = this.nodeGroupInfos.filter(a => a.rect.Intersects(rect_fullVertical));
-        const groupsInVertSpace_earlier = groupsInVertSpace.filter(a => a.ParentPath_Sortable < group.ParentPath_Sortable);
-        if (groupsInVertSpace_earlier.length == 0)
-            return CE(0 - group.rect.Top).KeepAtLeast(0);
-        //const groupsInVertSpace_earlier_lowest = CE(groupsInVertSpace_earlier).Max(a=>a.rect.Bottom);
-        const groupsInVertSpace_earlier_lowest = CE(groupsInVertSpace_earlier).OrderBy(a => a.ParentPath_Sortable).slice(-1)[0];
-        const shiftNeeded = CE(groupsInVertSpace_earlier_lowest.rect.Bottom - group.rect.Top).KeepAtLeast(0);
-        return {
-            groupsInVertSpace_earlier_lowest,
-            shiftNeeded,
-        };
+        const columns = this.GetColumnsForGroup(group);
+        for (const column of columns) {
+            column.RemoveGroup(group);
+        }
+        return group;
     }
 }
-Graph.main = new Graph();
 /** Converts, eg. "0.0.10.0" into "00.00.10.00", such that comparisons like XXX("0.0.10.0") > XXX("0.0.9.0") succeed. */
 export function TreePathAsSortableStr(treePath) {
     const parts = treePath.split("/");

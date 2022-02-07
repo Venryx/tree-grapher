@@ -40,6 +40,8 @@
   },
   "dependencies": {
     "js-vextensions": "^1.0.69",
+    "mobx": "^6.3.13",
+    "mobx-react": "^7.2.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "use-callback-ref": "^1.2.5"

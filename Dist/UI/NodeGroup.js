@@ -1,18 +1,15 @@
-import { useRef } from "react";
+import { useContext, useRef } from "react";
 import { useCallbackRef } from "use-callback-ref";
-import { Graph } from "../Graph.js";
+import { GraphContext } from "../Graph.js";
 export function useNodeGroup(treePath) {
-    /*useEffect(()=>{
-        return ()=>{
-        };
-    });*/
+    const graph = useContext(GraphContext);
     let groupInfo = useRef(null);
     let ref = useCallbackRef(null, el => {
         if (el) {
-            groupInfo.current = Graph.main.NotifyNodeGroupRendered(el, treePath);
+            groupInfo.current = graph.NotifyNodeGroupRendered(el, treePath);
         }
         else {
-            Graph.main.NotifyNodeGroupUnrendered(groupInfo.current);
+            graph.NotifyNodeGroupUnrendered(groupInfo.current);
             groupInfo.current = null;
         }
     });

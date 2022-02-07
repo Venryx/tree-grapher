@@ -1,15 +1,15 @@
+/// <reference types="react" />
 import { VRect } from "js-vextensions";
+import { TreeColumn } from "./Graph/TreeColumn.js";
 import { RequiredBy } from "./Utils/@Internal/Types.js";
+export declare const GraphContext: import("react").Context<Graph>;
 export declare class Graph {
-    static main: Graph;
-    nodeGroupInfos: NodeGroupInfo[];
-    GetNodeGroupInfo(groupElement: HTMLElement): NodeGroupInfo | undefined;
+    constructor(data: RequiredBy<Partial<Graph>, "columnWidth">);
+    columnWidth: number;
+    columns: TreeColumn[];
+    GetColumnsForGroup(group: NodeGroupInfo): TreeColumn[];
     NotifyNodeGroupRendered(element: HTMLElement, treePath: string): NodeGroupInfo;
-    NotifyNodeGroupUnrendered(group: NodeGroupInfo): void;
-    FindNextGroupInVSpace(group: NodeGroupInfo): number | {
-        groupsInVertSpace_earlier_lowest: NodeGroupInfo;
-        shiftNeeded: number;
-    };
+    NotifyNodeGroupUnrendered(group: NodeGroupInfo): NodeGroupInfo;
 }
 /** Converts, eg. "0.0.10.0" into "00.00.10.00", such that comparisons like XXX("0.0.10.0") > XXX("0.0.9.0") succeed. */
 export declare function TreePathAsSortableStr(treePath: string): string;
