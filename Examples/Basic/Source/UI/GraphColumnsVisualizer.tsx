@@ -1,11 +1,20 @@
+import {Timer} from "js-vextensions";
 import {observer} from "mobx-react";
-import React from "react";
+import React, {useEffect} from "react";
 import {useContext} from "react";
 import {Button, Column, Row} from "react-vcomponents";
-import {GraphContext} from "../../../../Dist/Graph.js";
+import {GraphContext} from "../../../../Dist/Graph";
+import {useForceUpdate} from "../@SharedByExamples/Utils/General";
 
 export const GraphColumnsVisualizer = observer(()=>{
 	const graph = useContext(GraphContext);
+	const forceUpdate = useForceUpdate();
+
+	useEffect(()=>{
+		let timer = new Timer(100, ()=>forceUpdate()).Start();
+		return ()=>timer.Stop();
+	})
+
 	return (
 		<Row style={{
 			position: "absolute", left: 0, right: 0, top: 0, bottom: 0,

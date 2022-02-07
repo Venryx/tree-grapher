@@ -32,11 +32,12 @@
     "concurrently": "^6.1.0",
     "react-vcomponents": "1.0.39",
     "react-vextensions": "1.0.15",
+    "tree-grapher": "file:.",
+    "ts-loader": "9.2.6",
+    "ui-debug-kit": "0.0.2",
     "webpack": "5.68.0",
     "webpack-cli": "^4.9.2",
-    "webpack-dev-server": "^4.7.4",
-    "ts-loader": "9.2.6",
-    "tree-grapher": "file:."
+    "webpack-dev-server": "^4.7.4"
   },
   "dependencies": {
     "js-vextensions": "^1.0.69",
