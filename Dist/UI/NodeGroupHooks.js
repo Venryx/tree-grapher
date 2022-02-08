@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useRef } from "react";
 import { useCallbackRef } from "use-callback-ref";
 import { GraphContext } from "../Graph.js";
-export function useNodeGroup(treePath) {
+export function useRef_nodeGroup(treePath) {
     const graph = useContext(GraphContext);
     let groupInfo = useRef(null);
     const store = useMemo(() => ({
@@ -13,13 +13,17 @@ export function useNodeGroup(treePath) {
         //let ref = useCallback(el=>{
         //ref2(el);
         //console.log(`${el ? "Mount" : "Unmount"} @wh:`, width, height);
-        console.log(`${el ? "Mount" : "Unmount"}`);
+        //console.log(`${el ? "Mount" : "Unmount"}`);
         if (el) {
-            groupInfo.current = graph.NotifyGroupUIMount(el, treePath);
-            groupInfo.current.RecalculateShift(); // call once, for first render
+            groupInfo.current = graph.NotifyGroupChildHolderMount(el, treePath);
+            groupInfo.current.RecalculateLeftColumnAlign(); // call once, for first render
+            groupInfo.current.RecalculateChildHolderShift(); // call once, for first render
         }
         else {
-            graph.NotifyGroupUIUnmount(groupInfo.current);
+            //graph.NotifyGroupUIUnmount(groupInfo.current!);
+            const group = groupInfo.current;
+            group.childHolderEl = null;
+            group.RecalculateLeftColumnAlign();
             groupInfo.current = null;
         }
     });

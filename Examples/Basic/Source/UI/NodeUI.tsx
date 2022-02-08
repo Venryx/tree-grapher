@@ -14,10 +14,13 @@ export const NodeUI = observer((props: {node: MapNode, path: string})=>{
 	const nodeState = mapInfo.GetNodeState(path);
 	
 	return (
-		<Row className="NodeUI" style={{
-			position: "relative",
-			//background: StripesCSS({angle: 0, stripeColor: "rgba(255,0,0,.2)"}),
-		}}>
+		<Row className="NodeUI" style={Object.assign(
+			{
+				position: "relative",
+				//background: StripesCSS({angle: 0, stripeColor: "rgba(255,0,0,.2)"}),
+			},
+			path == "0" && {alignSelf: "flex-start"}, // root node needs this, to not be stretched to fit container's height
+		)}>
 			<NodeUI_LeftColumn {...{treePath: path}}>
 				<NodeUI_Inner node={node} path={path}/>
 			</NodeUI_LeftColumn>

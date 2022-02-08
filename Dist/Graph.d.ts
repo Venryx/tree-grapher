@@ -6,6 +6,7 @@ import { NodeGroup } from "./Graph/NodeGroup.js";
 export declare const GraphContext: import("react").Context<Graph>;
 export declare class Graph {
     constructor(data: RequiredBy<Partial<Graph>, "columnWidth">);
+    containerEl: HTMLElement;
     columnWidth: number;
     uiDebugKit?: {
         FlashComp: typeof FlashComp;
@@ -13,8 +14,14 @@ export declare class Graph {
     columns: TreeColumn[];
     groupsByPath: Map<string, NodeGroup>;
     FindChildGroups(parentGroup: NodeGroup): NodeGroup[];
+    FindDescendantGroups(parentGroup: NodeGroup): NodeGroup[];
     GetColumnsForGroup(group: NodeGroup): TreeColumn[];
     GetNextGroupsWithinColumnsFor(group: NodeGroup): Set<NodeGroup>;
-    NotifyGroupUIMount(element: HTMLElement, treePath: string): NodeGroup;
+    GetOrCreateGroup(treePath: string): {
+        group: NodeGroup;
+        alreadyExisted: boolean;
+    };
+    NotifyGroupLeftColumnMountOrRender(leftColumnEl: HTMLElement, treePath: string): NodeGroup;
+    NotifyGroupChildHolderMount(childHolderEl: HTMLElement, treePath: string): NodeGroup;
     NotifyGroupUIUnmount(group: NodeGroup): NodeGroup;
 }

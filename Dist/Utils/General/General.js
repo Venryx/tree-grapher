@@ -8,3 +8,23 @@ export function GetPageRect(el) {
     box.top + (window.pageYOffset || document.documentElement.scrollTop) - (document.documentElement.clientTop  || 0),*/
     box.left + win.pageXOffset, box.top + win.pageYOffset, box.width, box.height);
 }
+/** Get bounding-rect of element-x relative to element-y. */
+export function GetRectRelative(x, y) {
+    var xRect = VRect.FromLTWH(x.getBoundingClientRect());
+    var yRect = VRect.FromLTWH(y.getBoundingClientRect());
+    return xRect.NewPosition(pos => pos.Minus(yRect.Position));
+}
+export function GetMarginTopFromStyle(style) {
+    if (style.marginTop == "")
+        return 0;
+    if (style.marginTop.includes("px"))
+        return parseFloat(style.marginTop);
+    return 0; // ignores %-margins and such (we don't use %-margins in tree-grapher)
+}
+export function GetPaddingTopFromStyle(style) {
+    if (style.paddingTop == "")
+        return 0;
+    if (style.paddingTop.includes("px"))
+        return parseFloat(style.paddingTop);
+    return 0; // ignores %-paddings and such (we don't use %-paddings in tree-grapher)
+}

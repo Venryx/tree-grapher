@@ -1,10 +1,10 @@
 import {useCallback, useContext, useEffect, useMemo, useRef} from "react";
 import {useCallbackRef} from "use-callback-ref";
 import {Graph, GraphContext} from "../Graph.js";
-import {Vector2, VRect} from "js-vextensions";
+import {Vector2, VRect, WaitXThenRun} from "js-vextensions";
 import {NodeGroup} from "../Graph/NodeGroup.js";
 
-export function useNodeGroup(treePath: string) {
+export function useRef_nodeGroup(treePath: string) {
 	const graph = useContext(GraphContext);
 	let groupInfo = useRef<NodeGroup | null>(null);
 
@@ -18,13 +18,17 @@ export function useNodeGroup(treePath: string) {
 	//let ref = useCallback(el=>{
 		//ref2(el);
 		//console.log(`${el ? "Mount" : "Unmount"} @wh:`, width, height);
-		console.log(`${el ? "Mount" : "Unmount"}`);
+		//console.log(`${el ? "Mount" : "Unmount"}`);
 
 		if (el) {
-			groupInfo.current = graph.NotifyGroupUIMount(el as any as HTMLElement, treePath);
-			groupInfo.current.RecalculateShift(); // call once, for first render
+			groupInfo.current = graph.NotifyGroupChildHolderMount(el as any as HTMLElement, treePath);
+			groupInfo.current.RecalculateLeftColumnAlign(); // call once, for first render
+			groupInfo.current.RecalculateChildHolderShift(); // call once, for first render
 		} else {
-			graph.NotifyGroupUIUnmount(groupInfo.current!);
+			//graph.NotifyGroupUIUnmount(groupInfo.current!);
+			const group = groupInfo.current!;
+			group.childHolderEl = null;
+			group.RecalculateLeftColumnAlign();
 			groupInfo.current = null;
 		}
 	});

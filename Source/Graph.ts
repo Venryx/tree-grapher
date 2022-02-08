@@ -1,4 +1,4 @@
-import {CE, Vector2, VRect} from "js-vextensions";
+import {CE, Vector2, VRect, WaitXThenRun} from "js-vextensions";
 import {configure, observable} from "mobx";
 import {createContext} from "react";
 import {TreeColumn} from "./Graph/TreeColumn.js";
@@ -23,17 +23,23 @@ export class Graph {
 		});
 		Object.assign(this, data);
 	}
+	containerEl = document.body; // start out the "container" as the body, just so there aren't null errors prior to container-ref resolving
 	columnWidth: number;
 	uiDebugKit?: {FlashComp: typeof FlashComp};
 
 	columns: TreeColumn[] = []; // @O
 	groupsByPath = new Map<string, NodeGroup>();
 	FindChildGroups(parentGroup: NodeGroup) {
-		const prefix = parentGroup.parentPath + "/";
-		return [...this.groupsByPath.values()].filter(a=>a.parentPath.startsWith(prefix));
+		const prefix = parentGroup.path + "/";
+		return [...this.groupsByPath.values()].filter(a=>a.path.startsWith(prefix) && a.path.split("/").length == parentGroup.path.split("/").length + 1);
+	}
+	FindDescendantGroups(parentGroup: NodeGroup) {
+		const prefix = parentGroup.path + "/";
+		return [...this.groupsByPath.values()].filter(a=>a.path.startsWith(prefix));
 	}
 
 	GetColumnsForGroup(group: NodeGroup) {
+		if (group.rect == null) return [];
 		let firstIndex = Math.floor(group.rect.x / this.columnWidth);
 		let lastIndex = Math.floor(group.rect.Right / this.columnWidth);
 
@@ -58,39 +64,55 @@ export class Graph {
 		return result;
 	}
 
-	NotifyGroupUIMount(element: HTMLElement, treePath: string) {
-		if (!this.groupsByPath.has(treePath)) {
-			const rect = GetPageRect(element);
+	GetOrCreateGroup(treePath: string) {
+		const alreadyExisted = this.groupsByPath.has(treePath);
+		if (!alreadyExisted) {
 			const group = new NodeGroup({
 				graph: this,
-				parentPath: treePath,
-				element,
-				rect,
+				path: treePath,
 			});
 			this.groupsByPath.set(treePath, group);
-		} else {
-			console.warn(`Found existing NodeGroupInfo attached for path!:${treePath}`);
 		}
+		return {
+			group: this.groupsByPath.get(treePath)!,
+			alreadyExisted,
+		};
+	}
+	NotifyGroupLeftColumnMountOrRender(leftColumnEl: HTMLElement, treePath: string) {
+		const {group} = this.GetOrCreateGroup(treePath);
+		group.leftColumnEl = leftColumnEl;
+		return group;
+	}
+	NotifyGroupChildHolderMount(childHolderEl: HTMLElement, treePath: string) {
+		const {group, alreadyExisted} = this.GetOrCreateGroup(treePath);
+		group.childHolderEl = childHolderEl;
+		group.rect = GetPageRect(childHolderEl);
 
-		const group = this.groupsByPath.get(treePath)!;
 		const columns = this.GetColumnsForGroup(group);
 		for (const column of columns) {
+			if (column.groups_ordered.includes(group)) continue;
 			column.AddGroup(group);
 		}
 		for (const nextGroup of this.GetNextGroupsWithinColumnsFor(group)) {
-			nextGroup.RecalculateShift();
+			nextGroup.RecalculateChildHolderShift();
 		}
 		return group;
 	}
 	NotifyGroupUIUnmount(group: NodeGroup) {
-		this.groupsByPath.delete(group.parentPath);
+		this.groupsByPath.delete(group.path);
 		const columns = this.GetColumnsForGroup(group);
 		for (const column of columns) {
 			column.RemoveGroup(group);
 		}
-		for (const nextGroup of this.GetNextGroupsWithinColumnsFor(group)) {
-			nextGroup.RecalculateShift();
-		}
+		
+		// wait a tick for UI to actually be destroyed, then recalc stuff
+		WaitXThenRun(0, ()=>{
+			group.RecalculateLeftColumnAlign(); // back to 0
+			for (const nextGroup of this.GetNextGroupsWithinColumnsFor(group)) {
+				nextGroup.RecalculateChildHolderShift();
+			}
+		});
+
 		return group;
 	}
 }

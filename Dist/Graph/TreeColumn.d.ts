@@ -8,7 +8,9 @@ export declare class TreeColumn {
     groups_ordered: NodeGroup[];
     AddGroup(group: NodeGroup): void;
     RemoveGroup(group: NodeGroup): void;
-    GetNodeGroupInfo(groupElement: HTMLElement): NodeGroup | undefined;
+    GetNodeGroupInfo(childHolderEl: HTMLElement): NodeGroup | undefined;
     FindPreviousGroup(group: NodeGroup): NodeGroup | n;
     FindNextGroup(group: NodeGroup): NodeGroup | n;
 }
+export declare function IsXAncestorOfY(xPath: string, yPath: string): boolean;
+export declare function IsXAncestor_OrSiblingOfAncestor_OfY(xPath: string, yPath: string): boolean;

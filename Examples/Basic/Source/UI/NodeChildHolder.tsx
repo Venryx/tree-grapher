@@ -3,7 +3,7 @@ import {Button, Column, Row} from "react-vcomponents";
 import {BaseComponent, cssHelper, GetDOM, UseCallback} from "react-vextensions";
 import {MapNode} from "../@SharedByExamples/MapNode";
 import {NodeUI} from "./NodeUI";
-import {useNodeGroup} from "tree-grapher";
+import {useRef_nodeGroup} from "tree-grapher";
 import {StripesCSS, useForceUpdate} from "../@SharedByExamples/Utils/General";
 import {FlashComp} from "ui-debug-kit";
 import {WaitXThenRun} from "js-vextensions";
@@ -11,7 +11,7 @@ import {WaitXThenRun} from "js-vextensions";
 export function NodeChildHolder(props: {children: MapNode[], path: string}) {
 	let {children, path} = props;
 	const forceUpdate = useForceUpdate();
-	let {ref} = useNodeGroup(path);
+	let {ref} = useRef_nodeGroup(path);
 
 	/*WaitXThenRun(0, ()=>{
 		if (ref.current) FlashComp(ref.current, {text: "Rendering"});

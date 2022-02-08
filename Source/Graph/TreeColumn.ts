@@ -1,4 +1,4 @@
-import {CE, VRect} from "js-vextensions";
+import {Assert, CE, VRect} from "js-vextensions";
 import {n} from "../Utils/@Internal/Types.js";
 import {NodeGroup} from "./NodeGroup.js";
 
@@ -13,7 +13,8 @@ export class TreeColumn {
 	AddGroup(group: NodeGroup) {
 		let i = 0;
 		// keep increasing i, while we keep seeing elements that we should be inserted after
-		while (this.groups_ordered[i] != null && this.groups_ordered[i].ParentPath_Sortable < group.ParentPath_Sortable) {
+		while (this.groups_ordered[i] != null && this.groups_ordered[i].ParentPath_Sortable <= group.ParentPath_Sortable) {
+			Assert(this.groups_ordered[i].path != group.path, `Tried to insert a group for a path that already exists! @path:${group.path}`);
 			i++;
 		}
 		CE(this.groups_ordered).Insert(i, group);
@@ -25,8 +26,8 @@ export class TreeColumn {
 		//this.groups_ordered[index]?.RecalculateShift();
 	}
 
-	GetNodeGroupInfo(groupElement: HTMLElement) {
-		return this.groups_ordered.find(a=>a.element == groupElement);
+	GetNodeGroupInfo(childHolderEl: HTMLElement) {
+		return this.groups_ordered.find(a=>a.childHolderEl == childHolderEl);
 	}
 
 	// we only need to find the lowest earlier-group, because it will take care of positioning below its own earlier-groups
@@ -63,8 +64,9 @@ export class TreeColumn {
 		const ownIndex = this.groups_ordered.indexOf(group);
 		for (let i = ownIndex - 1; i >= 0; i--) {
 			const group2 = this.groups_ordered[i];
-			const group2IsAncestor = group.parentPath.startsWith(`${group2.parentPath}/`);
-			if (group2IsAncestor) continue;
+			if (group2.childHolderEl == null) continue; // group is collapsed, so has no rect to care about
+			if (IsXAncestorOfY(group2.path, group.path)) continue;
+			//if (IsXAncestor_OrSiblingOfAncestor_OfY(group2.path, group.path)) continue;
 			return group2;
 		}
 		return null;
@@ -73,10 +75,26 @@ export class TreeColumn {
 		const ownIndex = this.groups_ordered.indexOf(group);
 		for (let i = ownIndex + 1; i < this.groups_ordered.length; i++) {
 			const group2 = this.groups_ordered[i];
-			const group2IsAncestor = group.parentPath.startsWith(`${group2.parentPath}/`);
-			if (group2IsAncestor) continue;
+			if (group2.childHolderEl == null) continue; // group is collapsed, so has no rect to care about
+			if (IsXAncestorOfY(group2.path, group.path)) continue;
+			//if (IsXAncestor_OrSiblingOfAncestor_OfY(group2.path, group.path)) continue;
 			return group2;
 		}
 		return null;
 	}
+}
+
+export function IsXAncestorOfY(xPath: string, yPath: string) {
+	return yPath.startsWith(`${xPath}/`);
+}
+export function IsXAncestor_OrSiblingOfAncestor_OfY(xPath: string, yPath: string) {
+	const xIsAncestor = IsXAncestorOfY(xPath, yPath);
+	const xParts = xPath.split("/");
+	const xParentPath = xParts.slice(0, -1).join("/");
+	//const yParts = yPath.split("/");
+	
+	const xParentIsAncestor = yPath.startsWith(`${xParentPath}/`);
+	const xIsSiblingOfAncestor = !xIsAncestor && xParentIsAncestor;
+	
+	return xIsAncestor || xIsSiblingOfAncestor;
 }

@@ -1,6 +1,7 @@
 import {CE, VRect} from "js-vextensions";
 import {Graph} from "../Graph.js";
-import {RequiredBy} from "../Utils/@Internal/Types.js";
+import {n, RequiredBy} from "../Utils/@Internal/Types.js";
+import {GetMarginTopFromStyle, GetPaddingTopFromStyle, GetRectRelative} from "../Utils/General/General.js";
 
 /** Converts, eg. "0.0.10.0" into "00.00.10.00", such that comparisons like XXX("0.0.10.0") > XXX("0.0.9.0") succeed. */
 export function TreePathAsSortableStr(treePath: string) {
@@ -9,30 +10,30 @@ export function TreePathAsSortableStr(treePath: string) {
 	return parts.map(part=>part.padStart(maxPartLength, "0")).join("/");
 }
 
-export function GetMarginTopFromStyle(style: CSSStyleDeclaration) {
-	if (style.marginTop == "") return 0;
-	if (style.marginTop.includes("px")) return parseFloat(style.marginTop);
-	return 0; // ignores %-margins and such (we don't use %-margins in tree-grapher)
-}
 export class NodeGroup {
-	constructor(data?: RequiredBy<Partial<NodeGroup>, "graph" | "parentPath" | "element" | "rect">) {
+	constructor(data?: RequiredBy<Partial<NodeGroup>, "graph" | "path">) {
 		Object.assign(this, data);
 	}
 	graph: Graph;
-	parentPath: string;
-	get ParentPath_Sortable() { return TreePathAsSortableStr(this.parentPath); }
-	element: HTMLElement;
+	path: string;
+	get ParentPath_Sortable() { return TreePathAsSortableStr(this.path); }
+	leftColumnEl: HTMLElement;
+	//rightColumnEl: HTMLElement;
+	childHolderEl: HTMLElement|n;
 
 	// inputs/observed
-	rect: VRect; // just storage for "actual rect" observed
+	rect: VRect|n; // just storage for "actual rect" observed
 	// what the rect would be if we removed the above-gap/top-margin (ie. if we didn't care about intersections)
-	get rect_base(): VRect {
-		return this.rect.NewY(y=>y - GetMarginTopFromStyle(this.element.style));
+	get rect_base(): VRect|n {
+		if (this.childHolderEl == null || this.rect == null) return null;
+		return this.rect.NewY(y=>y - GetMarginTopFromStyle(this.childHolderEl!.style));
 	}
 
 	UpdateRect() {
-		const oldRect = this.rect;
-		const newRect = VRect.FromLTWH(this.element.getBoundingClientRect());
+		if (this.childHolderEl == null) return null;
+		const oldRect = this.rect!;
+		//const newRect = VRect.FromLTWH(this.childHolderEl.getBoundingClientRect());
+		const newRect = GetRectRelative(this.childHolderEl, this.graph.containerEl);
 		const rectChanged = !newRect.Equals(this.rect);
 		//Object.assign(store, {width: newWidth, height: newHeight});
 		//graph.uiDebugKit?.FlashComp(ref.current, {text: `Rendering... @rc:${store.renderCount} @rect:${newRect}`});
@@ -45,13 +46,21 @@ export class NodeGroup {
 	}
 	/** Updates this.rect, then notifies next-groups of their potentially needing to update their shifts. */
 	CheckForMoveOrResize() {
-		const {newRect, oldRect, rectChanged} = this.UpdateRect();
+		const updateRectResult = this.UpdateRect();
+		if (updateRectResult == null) return;
+		const {newRect, oldRect, rectChanged} = updateRectResult;
+
 		if (rectChanged) {
-			this.graph.uiDebugKit?.FlashComp(this.element, {text: `Rect changed. @rect:${newRect}`});
-			const changeCanAffectOwnShift = !newRect.NewY(-1).Equals(oldRect.NewY(-1)); // a simple y-pos change isn't meaningful; we already track+react-to that part "in-system"
+			this.graph.uiDebugKit?.FlashComp(this.childHolderEl, {text: `Rect changed. @rect:${newRect}`});
+
+			this.RecalculateLeftColumnAlign(); // this is very cheap, so just always do it
+			
+			//const changeCanAffectOwnShift = !newRect.NewY(-1).Equals(oldRect.NewY(-1)); // a simple y-pos change isn't meaningful; we already track+react-to that part "in-system"
+			const changeCanAffectOwnShift = !newRect.Equals(oldRect);
 			if (changeCanAffectOwnShift) {
+				this.RecalculateChildHolderShift(false); // no need to update rect, we already did
 				for (const nextGroup of this.graph.GetNextGroupsWithinColumnsFor(this)) {
-					nextGroup.RecalculateShift();
+					nextGroup.RecalculateChildHolderShift();
 				}
 			}
 
@@ -66,36 +75,63 @@ export class NodeGroup {
 			} else if (changeCanAffectChildGroupShifts) {
 				const childGroups = this.graph.FindChildGroups(this);
 				for (const childGroup of childGroups) {
-					childGroup.RecalculateShift();
+					childGroup.RecalculateChildHolderShift();
 				}
 			}
 		}
 	}
 
-	/** Make sure this.rect is up-to-date before calling this. (can call this.UpdateRect() beforehand) */
-	RecalculateShift(updateRectFirst = true) {
+	RecalculateChildHolderShift(updateRectFirst = true) {
+		if (this.childHolderEl == null || this.rect == null) return;
 		if (updateRectFirst) this.UpdateRect();
 		//if (checkForRectChangeFirst) this.CheckForMoveOrResize();
+
+		const leftColumnHeight = this.leftColumnEl.getBoundingClientRect().height;
+		const leftColumnHeight_withoutPadding = leftColumnHeight - GetPaddingTopFromStyle(this.leftColumnEl.style);
+		const idealMarginTop = -(this.rect.height / 2) + (leftColumnHeight_withoutPadding / 2);
 		
-		let oldMarginTop = GetMarginTopFromStyle(this.element.style);
-		let maxMarginTop = 0;
+		let oldMarginTop = GetMarginTopFromStyle(this.childHolderEl.style);
+		let maxMarginTop = idealMarginTop;
+		let previousGroups = new Set<NodeGroup>();
 		for (const column of this.graph.GetColumnsForGroup(this)) {
 			const previousGroup = column.FindPreviousGroup(this);
-			const rectToStayBelow = previousGroup?.rect ?? column.rect.NewBottom(0);
+			if (previousGroup) previousGroups.add(previousGroup);
+			previousGroup?.UpdateRect(); // this is necessary in some cases; idk why, but I don't have time to investigate atm
+			const rectToStayBelow = previousGroup?.rect ?? column.rect.NewBottom(GetPaddingTopFromStyle(this.graph.containerEl.style));
 
-			const deltaToBeJustBelow = rectToStayBelow.Bottom - this.rect.Top;
-			maxMarginTop = Math.max(maxMarginTop, CE(oldMarginTop + deltaToBeJustBelow).KeepAtLeast(0));
+			const deltaToBeJustBelow = rectToStayBelow.Bottom - this.rect!.Top;
+			maxMarginTop = Math.max(maxMarginTop, CE(oldMarginTop + deltaToBeJustBelow).KeepAtLeast(idealMarginTop));
 			//if (isNaN(maxMarginTop)) debugger;
 
 			//const pathForAboveGap = ;
 		}
-		this.graph.uiDebugKit?.FlashComp(this.element, {text: `Recalculated shift. @newMarginTop:${maxMarginTop}`});
+		maxMarginTop = Math.floor(maxMarginTop);
+		this.graph.uiDebugKit?.FlashComp(this.childHolderEl, {text: `Recalced ch-shift. @newMT:${maxMarginTop} @prevGroups:[${[...previousGroups].map(a=>a.path).join(",")}]`});
 
 		if (maxMarginTop != oldMarginTop) {
-			this.element.style.marginTop = `${maxMarginTop}px`;
+			this.childHolderEl.style.marginTop = `${maxMarginTop}px`;
+			this.RecalculateLeftColumnAlign();
 			/*for (const nextGroup of this.graph.GetNextGroupsWithinColumnsFor(this)) {
 				nextGroup.CheckForMoveOrResize();
 			}*/
 		}
+	}
+
+	RecalculateLeftColumnAlign() {
+		// left-column must not be attached yet; ignore (this is fine, cause left-column will rerun this func on mount)
+		if (this.leftColumnEl == null) return console.log(`Couldn't find leftColumnEl, for:${this.path}`);
+
+		const leftColumnHeight = this.leftColumnEl.getBoundingClientRect().height;
+		const leftColumnHeight_withoutPadding = leftColumnHeight - GetPaddingTopFromStyle(this.leftColumnEl.style);
+		
+		let alignPoint = 0;
+		if (this.childHolderEl != null) {
+			alignPoint = GetMarginTopFromStyle(this.childHolderEl.style) + ((this.rect!.height ?? 0) / 2);
+		}
+		let gapBeforeInnerUI = CE(alignPoint - (leftColumnHeight_withoutPadding / 2)).KeepAtLeast(0); // can't have negative padding
+		gapBeforeInnerUI = Math.floor(gapBeforeInnerUI);
+		this.graph.uiDebugKit?.FlashComp(this.leftColumnEl, {text: `Recalced lc-align. @newPT:${gapBeforeInnerUI} @lcHeight_wp:${leftColumnHeight_withoutPadding}`});
+
+		this.leftColumnEl.style.paddingTop = `${gapBeforeInnerUI}px`;
 	}
 }

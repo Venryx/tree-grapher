@@ -1,12 +1,12 @@
-import React, {createContext, useMemo} from "react";
-import {BaseComponent} from "react-vextensions";
+import React, {createContext, useMemo, useRef} from "react";
+import {BaseComponent, GetDOM} from "react-vextensions";
 import {Column, Row} from "react-vcomponents";
 import {NodeUI} from "./UI/NodeUI";
 import {GetAllNodesInTree_ByPath, nodeTree_main} from "./@SharedByExamples/NodeData";
 import {Graph, GraphContext, makeObservable_safe} from "tree-grapher";
 import {GraphColumnsVisualizer} from "./UI/GraphColumnsVisualizer";
 import {makeObservable, observable} from "mobx";
-import {FlashComp} from "ui-debug-kit";
+import {FlashComp, FlashElementOptions} from "ui-debug-kit";
 
 // make some stuff global, for easy debugging
 Object.assign(globalThis, {
@@ -38,6 +38,9 @@ export class NodeState {
 
 export const MapContext = createContext<MapInfo>(undefined as any);
 
+// flash option defaults
+FlashElementOptions.defaults.waitForPriorFlashes = false;
+
 export function RootUI() {
 	const nodeTree = nodeTree_main;
 	const mapInfo = useMemo(()=>{
@@ -48,6 +51,7 @@ export function RootUI() {
 		}
 		return result;
 	}, []);
+	//const containerRef = useRef<HTMLDivElement | null>(null);
 	const context = useMemo(()=>{
 		let graph = new Graph({
 			columnWidth: 100,
@@ -66,7 +70,14 @@ export function RootUI() {
 			}}>
 				Toolbar
 			</Row>
-			<Row style={{position: "relative", height: "calc(100% - 30px)", padding: 100}}>
+			<Row
+				ref={c=>{
+					/*containerRef.current = GetDOM(c) as any;
+					context.containerEl = containerRef.current!;*/
+					context.containerEl = GetDOM(c) as any;
+				}}
+				style={{position: "relative", height: "calc(100% - 30px)", padding: 100}}
+			>
 				<MapContext.Provider value={mapInfo}>
 					<GraphContext.Provider value={context}>
 						<GraphColumnsVisualizer/>

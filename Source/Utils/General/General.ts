@@ -13,3 +13,20 @@ export function GetPageRect(el: Element) {
 		box.height,
 	);
 }
+/** Get bounding-rect of element-x relative to element-y. */
+export function GetRectRelative(x: Element, y: Element) {
+	var xRect = VRect.FromLTWH(x.getBoundingClientRect());
+	var yRect = VRect.FromLTWH(y.getBoundingClientRect());
+	return xRect.NewPosition(pos=>pos.Minus(yRect.Position));
+}
+
+export function GetMarginTopFromStyle(style: CSSStyleDeclaration) {
+	if (style.marginTop == "") return 0;
+	if (style.marginTop.includes("px")) return parseFloat(style.marginTop);
+	return 0; // ignores %-margins and such (we don't use %-margins in tree-grapher)
+}
+export function GetPaddingTopFromStyle(style: CSSStyleDeclaration) {
+	if (style.paddingTop == "") return 0;
+	if (style.paddingTop.includes("px")) return parseFloat(style.paddingTop);
+	return 0; // ignores %-paddings and such (we don't use %-paddings in tree-grapher)
+}
