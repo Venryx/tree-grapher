@@ -2,6 +2,7 @@ import {CE, VRect} from "js-vextensions";
 import {Graph} from "../Graph.js";
 import {n, RequiredBy} from "../Utils/@Internal/Types.js";
 import {GetMarginTopFromStyle, GetPaddingTopFromStyle, GetRectRelative} from "../Utils/General/General.js";
+import {TreeColumn} from "./TreeColumn.js";
 
 /** Converts, eg. "0.0.10.0" into "00.00.10.00", such that comparisons like XXX("0.0.10.0") > XXX("0.0.9.0") succeed. */
 export function TreePathAsSortableStr(treePath: string) {
@@ -17,21 +18,29 @@ export class NodeGroup {
 	graph: Graph;
 	path: string;
 	get ParentPath_Sortable() { return TreePathAsSortableStr(this.path); }
+	columnsPartOf: TreeColumn[] = [];
+	
 	leftColumnEl: HTMLElement;
 	//rightColumnEl: HTMLElement;
 	childHolderEl: HTMLElement|n;
 
 	// inputs/observed
+	// we don't use lcRect as much, so just refetch it each call
+	get LCRect() {
+		//return VRect.FromLTWH(this.leftColumnEl.getBoundingClientRect());
+		return this.leftColumnEl.getBoundingClientRect(); // atm we only use the height, so just return the native rect-struct
+	}
 	rect: VRect|n; // just storage for "actual rect" observed
 	// what the rect would be if we removed the above-gap/top-margin (ie. if we didn't care about intersections)
-	get rect_base(): VRect|n {
+	/*get rect_base(): VRect|n {
 		if (this.childHolderEl == null || this.rect == null) return null;
 		return this.rect.NewY(y=>y - GetMarginTopFromStyle(this.childHolderEl!.style));
-	}
+	}*/
 
-	UpdateRect() {
+	UpdateRect(checkForSameColumnEffects = true, checkForRightColumnEffects = true) {
 		if (this.childHolderEl == null) return null;
-		const oldRect = this.rect!;
+		const oldRect = this.rect;
+		//this.rect = GetPageRect(this.childHolderEl);
 		//const newRect = VRect.FromLTWH(this.childHolderEl.getBoundingClientRect());
 		const newRect = GetRectRelative(this.childHolderEl, this.graph.containerEl);
 		const rectChanged = !newRect.Equals(this.rect);
@@ -40,44 +49,78 @@ export class NodeGroup {
 
 		// if this is the first render, still call this (it's considered "moving/resizing" from rect-empty to the current rect)
 		if (rectChanged) {
+			this.graph.uiDebugKit?.FlashComp(this.childHolderEl, {text: `Rect changed. @rect:${newRect}`});
 			this.rect = newRect;
+			this.UpdateColumns();
+			if (checkForSameColumnEffects) this.CheckForSameColumnEffectsFromRectChange(newRect, oldRect);
+			if (checkForRightColumnEffects) this.CheckForRightColumnEffectsFromRectChange(newRect, oldRect);
 		}
 		return {newRect, oldRect, rectChanged};
 	}
-	/** Updates this.rect, then notifies next-groups of their potentially needing to update their shifts. */
-	CheckForMoveOrResize() {
-		const updateRectResult = this.UpdateRect();
-		if (updateRectResult == null) return;
-		const {newRect, oldRect, rectChanged} = updateRectResult;
-
-		if (rectChanged) {
-			this.graph.uiDebugKit?.FlashComp(this.childHolderEl, {text: `Rect changed. @rect:${newRect}`});
-
-			this.RecalculateLeftColumnAlign(); // this is very cheap, so just always do it
-			
-			//const changeCanAffectOwnShift = !newRect.NewY(-1).Equals(oldRect.NewY(-1)); // a simple y-pos change isn't meaningful; we already track+react-to that part "in-system"
-			const changeCanAffectOwnShift = !newRect.Equals(oldRect);
-			if (changeCanAffectOwnShift) {
-				this.RecalculateChildHolderShift(false); // no need to update rect, we already did
-				for (const nextGroup of this.graph.GetNextGroupsWithinColumnsFor(this)) {
-					nextGroup.RecalculateChildHolderShift();
-				}
+	
+	CheckForSameColumnEffectsFromRectChange(newRect: VRect, oldRect: VRect|n) {
+		this.RecalculateLeftColumnAlign(); // this is very cheap, so just always do it
+		
+		//const changeCanAffectOwnShift = !newRect.NewY(-1).Equals(oldRect.NewY(-1)); // a simple y-pos change isn't meaningful; we already track+react-to that part "in-system"
+		const changeCanAffectOwnShift = !newRect.Equals(oldRect);
+		if (changeCanAffectOwnShift) {
+			//this.RecalculateChildHolderShift(false); // no need to update rect, we already did
+			for (const nextGroup of this.graph.GetNextGroupsWithinColumnsFor(this)) {
+				nextGroup.RecalculateChildHolderShift();
 			}
+		}
 
-			const changeCanAffectChildGroupsThoroughly = newRect.x != oldRect.x || newRect.width != oldRect.width;
-			// technically we should also be checking if the *positions* of any child in our group has changed; ignoring for now, since pos-changes always imply size-changes atm (in my use-cases)
-			const changeCanAffectChildGroupShifts = newRect.y != oldRect.y || newRect.height != oldRect.height;
-			if (changeCanAffectChildGroupsThoroughly) {
-				const childGroups = this.graph.FindChildGroups(this);
-				for (const childGroup of childGroups) {
-					childGroup.CheckForMoveOrResize(); // need to call this, since it can respond to, eg. x-pos changes
-				}
-			} else if (changeCanAffectChildGroupShifts) {
-				const childGroups = this.graph.FindChildGroups(this);
-				for (const childGroup of childGroups) {
-					childGroup.RecalculateChildHolderShift();
-				}
+		const changeCanAffectChildGroupsThoroughly = oldRect == null || newRect.x != oldRect.x || newRect.width != oldRect.width;
+		// technically we should also be checking if the *positions* of any child in our group has changed; ignoring for now, since pos-changes always imply size-changes atm (in my use-cases)
+		const changeCanAffectChildGroupShifts = oldRect == null || newRect.y != oldRect.y || newRect.height != oldRect.height;
+		if (changeCanAffectChildGroupsThoroughly) {
+			const childGroups = this.graph.FindChildGroups(this);
+			for (const childGroup of childGroups) {
+				childGroup.UpdateRect(); // need to call this, since it can respond to, eg. x-pos changes
 			}
+		} else if (changeCanAffectChildGroupShifts) {
+			const childGroups = this.graph.FindChildGroups(this);
+			for (const childGroup of childGroups) {
+				childGroup.RecalculateChildHolderShift();
+			}
+		}
+	}
+	CheckForRightColumnEffectsFromRectChange(newRect: VRect, oldRect: VRect|n) {
+		const changeCanAffectChildGroupsThoroughly = oldRect == null || newRect.x != oldRect.x || newRect.width != oldRect.width;
+		// technically we should also be checking if the *positions* of any child in our group has changed; ignoring for now, since pos-changes always imply size-changes atm (in my use-cases)
+		const changeCanAffectChildGroupShifts = oldRect == null || newRect.y != oldRect.y || newRect.height != oldRect.height;
+		if (changeCanAffectChildGroupsThoroughly) {
+			const childGroups = this.graph.FindChildGroups(this);
+			for (const childGroup of childGroups) {
+				childGroup.UpdateRect(); // need to call this, since it can respond to, eg. x-pos changes
+			}
+		} else if (changeCanAffectChildGroupShifts) {
+			const childGroups = this.graph.FindChildGroups(this);
+			for (const childGroup of childGroups) {
+				childGroup.RecalculateChildHolderShift();
+			}
+		}
+	}
+
+	UpdateColumns() {
+		const newColumnsList = this.graph.GetColumnsForGroup(this);
+		const columnsToAdd = CE(newColumnsList).Exclude(...this.columnsPartOf);
+		const columnsToRemove = CE(this.columnsPartOf).Exclude(...newColumnsList);
+		const columnsToRemove_nextGroups = columnsToRemove.map(column=>column.FindNextGroup(this));
+
+		// first change the groups
+		columnsToAdd.forEach(a=>a.AddGroup(this));
+		columnsToRemove.forEach(a=>a.RemoveGroup(this));
+		this.columnsPartOf = newColumnsList;
+
+		// then apply the effects (must do after, else we can get a recursive situation where the columnsPartOf is out-of-date)
+		for (const column of columnsToAdd) {
+			const nextGroup = column.FindNextGroup(this);
+			if (nextGroup) nextGroup.RecalculateChildHolderShift();
+		}
+		for (const [i, column] of columnsToRemove.entries()) {
+			const nextGroup = columnsToRemove_nextGroups[i];
+			if (nextGroup) nextGroup.RecalculateChildHolderShift();
 		}
 	}
 
@@ -86,7 +129,7 @@ export class NodeGroup {
 		if (updateRectFirst) this.UpdateRect();
 		//if (checkForRectChangeFirst) this.CheckForMoveOrResize();
 
-		const leftColumnHeight = this.leftColumnEl.getBoundingClientRect().height;
+		const leftColumnHeight = this.LCRect.height;
 		const leftColumnHeight_withoutPadding = leftColumnHeight - GetPaddingTopFromStyle(this.leftColumnEl.style);
 		const idealMarginTop = -(this.rect.height / 2) + (leftColumnHeight_withoutPadding / 2);
 		
@@ -121,7 +164,7 @@ export class NodeGroup {
 		// left-column must not be attached yet; ignore (this is fine, cause left-column will rerun this func on mount)
 		if (this.leftColumnEl == null) return console.log(`Couldn't find leftColumnEl, for:${this.path}`);
 
-		const leftColumnHeight = this.leftColumnEl.getBoundingClientRect().height;
+		const leftColumnHeight = this.LCRect.height;
 		const leftColumnHeight_withoutPadding = leftColumnHeight - GetPaddingTopFromStyle(this.leftColumnEl.style);
 		
 		let alignPoint = 0;

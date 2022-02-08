@@ -32,7 +32,8 @@ export function useRef_nodeLeftColumn(treePath: string) {
 		resizeObserver.observe(ref.current!);
 		function onResize(entry: ResizeObserverEntry) {
 			if (ref.current == null || groupInfo.current == null) return;
-			groupInfo.current.RecalculateLeftColumnAlign();
+			//groupInfo.current.RecalculateLeftColumnAlign();
+			groupInfo.current.UpdateRect();
 		}
 		return ()=>resizeObserver.disconnect();
 	}, []);

@@ -1,6 +1,7 @@
 import { VRect } from "js-vextensions";
 import { Graph } from "../Graph.js";
 import { n, RequiredBy } from "../Utils/@Internal/Types.js";
+import { TreeColumn } from "./TreeColumn.js";
 /** Converts, eg. "0.0.10.0" into "00.00.10.00", such that comparisons like XXX("0.0.10.0") > XXX("0.0.9.0") succeed. */
 export declare function TreePathAsSortableStr(treePath: string): string;
 export declare class NodeGroup {
@@ -8,17 +9,19 @@ export declare class NodeGroup {
     graph: Graph;
     path: string;
     get ParentPath_Sortable(): string;
+    columnsPartOf: TreeColumn[];
     leftColumnEl: HTMLElement;
     childHolderEl: HTMLElement | n;
+    get LCRect(): DOMRect;
     rect: VRect | n;
-    get rect_base(): VRect | n;
-    UpdateRect(): {
+    UpdateRect(checkForSameColumnEffects?: boolean, checkForRightColumnEffects?: boolean): {
         newRect: VRect;
-        oldRect: VRect;
+        oldRect: n | VRect;
         rectChanged: boolean;
     } | null;
-    /** Updates this.rect, then notifies next-groups of their potentially needing to update their shifts. */
-    CheckForMoveOrResize(): void;
+    CheckForSameColumnEffectsFromRectChange(newRect: VRect, oldRect: VRect | n): void;
+    CheckForRightColumnEffectsFromRectChange(newRect: VRect, oldRect: VRect | n): void;
+    UpdateColumns(): void;
     RecalculateChildHolderShift(updateRectFirst?: boolean): void;
     RecalculateLeftColumnAlign(): void;
 }

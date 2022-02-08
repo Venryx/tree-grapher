@@ -15,3 +15,12 @@ Library for calculating where to draw tree nodes, while avoiding overlap.
 * 2\) Run: `npm install`
 * 3\) Run: `npm run examples-dev`
 * 4\) Navigate to `localhost:8080` in your browser.
+
+### TODO
+
+Short term:
+* Ensure that the system still works when a NodeChildHolder is displayed *below* the parent box. (as in DM-repo in some cases)
+* MS you can specify a padding between node-boxes.
+
+Long term:
+* MS a highly-customizable connector-line system is included with the library.

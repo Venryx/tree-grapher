@@ -86,16 +86,7 @@ export class Graph {
 	NotifyGroupChildHolderMount(childHolderEl: HTMLElement, treePath: string) {
 		const {group, alreadyExisted} = this.GetOrCreateGroup(treePath);
 		group.childHolderEl = childHolderEl;
-		group.rect = GetPageRect(childHolderEl);
-
-		const columns = this.GetColumnsForGroup(group);
-		for (const column of columns) {
-			if (column.groups_ordered.includes(group)) continue;
-			column.AddGroup(group);
-		}
-		for (const nextGroup of this.GetNextGroupsWithinColumnsFor(group)) {
-			nextGroup.RecalculateChildHolderShift();
-		}
+		group.UpdateRect();
 		return group;
 	}
 	NotifyGroupUIUnmount(group: NodeGroup) {

@@ -6,14 +6,14 @@ import {MapNode} from "../@SharedByExamples/MapNode";
 import {useForceUpdate} from "../@SharedByExamples/Utils/General";
 import {MapContext} from "../Root";
 
-export const textDoubleSplitter = " [x2:] ";
+export const textRepeatSplitter = " [x2:] ";
 export const NodeUI_Inner = observer((props: {node: MapNode, path: string})=>{
 	let {node, path} = props;
 	const mapInfo = useContext(MapContext);
 	const nodeState = mapInfo.GetNodeState(path);
 	const forceUpdate = useForceUpdate();
 	
-	const textIsDoubled = node.text.includes(textDoubleSplitter);
+	const textIsRepeated = node.text.includes(textRepeatSplitter);
 	
 	return (
 		<Row style={{
@@ -24,17 +24,31 @@ export const NodeUI_Inner = observer((props: {node: MapNode, path: string})=>{
 			padding: 5,
 		}}>
 			<Text>{node.text}</Text>
-			<Button ml="auto" p={5} text={textIsDoubled ? "x1" : "x2"} onClick={()=>{
-				if (textIsDoubled) {
-					node.text = node.text.split(textDoubleSplitter)[0];
-				} else {
-					node.text = node.text + textDoubleSplitter + node.text;
-				}
-				forceUpdate();
-			}}/>
-			<Button p="5px 10px" text={nodeState.expanded ? "-" : "+"} onClick={()=>{
-				nodeState.expanded = !nodeState.expanded;
-			}}/>
+			<Row ml="auto">
+				<Column>
+					<Button p={5} text={"←"} onClick={()=>{
+						node.width -= 50;
+						forceUpdate();
+					}}/>
+					<Button p={5} text={textIsRepeated ? "x1" : "x3"} onClick={()=>{
+						if (textIsRepeated) {
+							node.text = node.text.split(textRepeatSplitter)[0];
+						} else {
+							node.text = node.text + textRepeatSplitter + node.text + textRepeatSplitter + node.text;
+						}
+						forceUpdate();
+					}}/>
+				</Column>
+				<Column>
+					<Button p={5} text={"→"} onClick={()=>{
+						node.width += 50;
+						forceUpdate();
+					}}/>
+					<Button p="5px 10px" text={nodeState.expanded ? "-" : "+"} onClick={()=>{
+						nodeState.expanded = !nodeState.expanded;
+					}}/>
+				</Column>
+			</Row>
 		</Row>
 	);
 });

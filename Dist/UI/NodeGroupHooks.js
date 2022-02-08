@@ -56,7 +56,7 @@ export function useRef_nodeGroup(treePath) {
         function onResize(entry) {
             if (ref.current == null || groupInfo.current == null)
                 return;
-            groupInfo.current.CheckForMoveOrResize();
+            groupInfo.current.UpdateRect();
         }
         return () => resizeObserver.disconnect();
     }, []);
