@@ -1,4 +1,4 @@
-import { CE } from "js-vextensions";
+import { CE, VRect } from "js-vextensions";
 import { GetMarginTopFromStyle, GetPaddingTopFromStyle, GetRectRelative } from "../Utils/General/General.js";
 /** Converts, eg. "0.0.10.0" into "00.00.10.00", such that comparisons like XXX("0.0.10.0") > XXX("0.0.9.0") succeed. */
 export function TreePathAsSortableStr(treePath) {
@@ -15,6 +15,8 @@ export class NodeGroup {
     // inputs/observed
     // we don't use lcRect as much, so just refetch it each call
     get LCRect() {
+        if (this.leftColumnEl == null)
+            return new VRect(0, 0, 0, 0); // atm, we only use LCRect's height, so a height of 0 is fine while waiting for left-column to finish rendering
         //return VRect.FromLTWH(this.leftColumnEl.getBoundingClientRect());
         return this.leftColumnEl.getBoundingClientRect(); // atm we only use the height, so just return the native rect-struct
     }
@@ -120,7 +122,7 @@ export class NodeGroup {
             this.UpdateRect();
         //if (checkForRectChangeFirst) this.CheckForMoveOrResize();
         const leftColumnHeight = this.LCRect.height;
-        const leftColumnHeight_withoutPadding = leftColumnHeight - GetPaddingTopFromStyle(this.leftColumnEl.style);
+        const leftColumnHeight_withoutPadding = leftColumnHeight - (this.leftColumnEl ? GetPaddingTopFromStyle(this.leftColumnEl.style) : 0);
         const idealMarginTop = -(this.rect.height / 2) + (leftColumnHeight_withoutPadding / 2);
         let oldMarginTop = GetMarginTopFromStyle(this.childHolderEl.style);
         let maxMarginTop = idealMarginTop;

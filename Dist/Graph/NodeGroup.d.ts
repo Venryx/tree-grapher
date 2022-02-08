@@ -10,9 +10,9 @@ export declare class NodeGroup {
     path: string;
     get ParentPath_Sortable(): string;
     columnsPartOf: TreeColumn[];
-    leftColumnEl: HTMLElement;
+    leftColumnEl: HTMLElement | n;
     childHolderEl: HTMLElement | n;
-    get LCRect(): DOMRect;
+    get LCRect(): VRect | DOMRect;
     rect: VRect | n;
     UpdateRect(checkForSameColumnEffects?: boolean, checkForRightColumnEffects?: boolean): {
         newRect: VRect;

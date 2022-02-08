@@ -20,13 +20,14 @@ export class NodeGroup {
 	get ParentPath_Sortable() { return TreePathAsSortableStr(this.path); }
 	columnsPartOf: TreeColumn[] = [];
 	
-	leftColumnEl: HTMLElement;
+	leftColumnEl: HTMLElement|n;
 	//rightColumnEl: HTMLElement;
 	childHolderEl: HTMLElement|n;
 
 	// inputs/observed
 	// we don't use lcRect as much, so just refetch it each call
 	get LCRect() {
+		if (this.leftColumnEl == null) return new VRect(0, 0, 0, 0); // atm, we only use LCRect's height, so a height of 0 is fine while waiting for left-column to finish rendering
 		//return VRect.FromLTWH(this.leftColumnEl.getBoundingClientRect());
 		return this.leftColumnEl.getBoundingClientRect(); // atm we only use the height, so just return the native rect-struct
 	}
@@ -133,7 +134,7 @@ export class NodeGroup {
 		//if (checkForRectChangeFirst) this.CheckForMoveOrResize();
 
 		const leftColumnHeight = this.LCRect.height;
-		const leftColumnHeight_withoutPadding = leftColumnHeight - GetPaddingTopFromStyle(this.leftColumnEl.style);
+		const leftColumnHeight_withoutPadding = leftColumnHeight - (this.leftColumnEl ? GetPaddingTopFromStyle(this.leftColumnEl.style) : 0);
 		const idealMarginTop = -(this.rect.height / 2) + (leftColumnHeight_withoutPadding / 2);
 		
 		let oldMarginTop = GetMarginTopFromStyle(this.childHolderEl.style);
