@@ -1,4 +1,4 @@
-import React from "react";
+/*import React from "react";
 import {Component} from "react";
 import {Column, Row} from "./@Shared/Basics.js";
 
@@ -24,4 +24,4 @@ export class NodeUI_RightColumn extends Component<{children}, {}> {
 			</Column>
 		);
 	}
-}
+}*/

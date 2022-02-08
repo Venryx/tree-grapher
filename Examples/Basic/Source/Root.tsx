@@ -40,6 +40,7 @@ export const MapContext = createContext<MapInfo>(undefined as any);
 
 // flash option defaults
 FlashElementOptions.defaults.waitForPriorFlashes = false;
+FlashElementOptions.defaults.background = "rgba(0,0,0,.1)";
 
 export function RootUI() {
 	const nodeTree = nodeTree_main;

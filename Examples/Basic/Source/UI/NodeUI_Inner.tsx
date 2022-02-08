@@ -7,8 +7,8 @@ import {useForceUpdate} from "../@SharedByExamples/Utils/General";
 import {MapContext} from "../Root";
 
 export const textRepeatSplitter = " [x2:] ";
-export const NodeUI_Inner = observer((props: {node: MapNode, path: string})=>{
-	let {node, path} = props;
+export const NodeUI_Inner = observer((props: {node: MapNode, path: string, inBelowGroup?: boolean})=>{
+	let {node, path, inBelowGroup} = props;
 	const mapInfo = useContext(MapContext);
 	const nodeState = mapInfo.GetNodeState(path);
 	const forceUpdate = useForceUpdate();
@@ -20,7 +20,7 @@ export const NodeUI_Inner = observer((props: {node: MapNode, path: string})=>{
 			background: "rgba(100,100,100,.7)",
 			border: "1px solid black",
 			borderRadius: 10,
-			width: node.width,
+			width: node.width + (inBelowGroup ? -30 : 0), // if in below group, reduce width by 30, to make space for bar at left of group
 			padding: 5,
 		}}>
 			<Text>{node.text}</Text>

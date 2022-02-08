@@ -139,7 +139,7 @@ export class NodeGroup {
 		for (const column of this.graph.GetColumnsForGroup(this)) {
 			const previousGroup = column.FindPreviousGroup(this);
 			if (previousGroup) previousGroups.add(previousGroup);
-			previousGroup?.UpdateRect(); // this is necessary in some cases; idk why, but I don't have time to investigate atm
+			//previousGroup?.UpdateRect(); // this is necessary in some cases; idk why, but I don't have time to investigate atm
 			const rectToStayBelow = previousGroup?.rect ?? column.rect.NewBottom(GetPaddingTopFromStyle(this.graph.containerEl.style));
 
 			const deltaToBeJustBelow = rectToStayBelow.Bottom - this.rect!.Top;

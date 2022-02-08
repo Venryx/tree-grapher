@@ -127,7 +127,7 @@ export class NodeGroup {
             const previousGroup = column.FindPreviousGroup(this);
             if (previousGroup)
                 previousGroups.add(previousGroup);
-            previousGroup === null || previousGroup === void 0 ? void 0 : previousGroup.UpdateRect(); // this is necessary in some cases; idk why, but I don't have time to investigate atm
+            //previousGroup?.UpdateRect(); // this is necessary in some cases; idk why, but I don't have time to investigate atm
             const rectToStayBelow = (_a = previousGroup === null || previousGroup === void 0 ? void 0 : previousGroup.rect) !== null && _a !== void 0 ? _a : column.rect.NewBottom(GetPaddingTopFromStyle(this.graph.containerEl.style));
             const deltaToBeJustBelow = rectToStayBelow.Bottom - this.rect.Top;
             maxMarginTop = Math.max(maxMarginTop, CE(oldMarginTop + deltaToBeJustBelow).KeepAtLeast(idealMarginTop));

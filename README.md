@@ -19,7 +19,6 @@ Library for calculating where to draw tree nodes, while avoiding overlap.
 ### TODO
 
 Short term:
-* Ensure that the system still works when a NodeChildHolder is displayed *below* the parent box. (as in DM-repo in some cases)
 * MS you can specify a padding between node-boxes.
 
 Long term:

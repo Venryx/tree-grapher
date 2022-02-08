@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useRef } from "react";
 import { useCallbackRef } from "use-callback-ref";
 import { GraphContext } from "../Graph.js";
-export function useRef_nodeGroup(treePath) {
+export function useRef_nodeGroup(treePath, groupBelowParent = false) {
     const graph = useContext(GraphContext);
     let groupInfo = useRef(null);
     const store = useMemo(() => ({
@@ -11,6 +11,8 @@ export function useRef_nodeGroup(treePath) {
     }), []);
     let ref = useCallbackRef(null, el => {
         //let ref = useCallback(el=>{
+        if (groupBelowParent)
+            return;
         //ref2(el);
         //console.log(`${el ? "Mount" : "Unmount"} @wh:`, width, height);
         //console.log(`${el ? "Mount" : "Unmount"}`);
@@ -51,6 +53,8 @@ export function useRef_nodeGroup(treePath) {
         };*#/
     });*/
     useEffect(() => {
+        if (groupBelowParent)
+            return;
         const resizeObserver = new ResizeObserver(entries => onResize(entries[0]));
         resizeObserver.observe(ref.current);
         function onResize(entry) {

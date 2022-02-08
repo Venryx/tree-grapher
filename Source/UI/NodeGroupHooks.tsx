@@ -4,7 +4,7 @@ import {Graph, GraphContext} from "../Graph.js";
 import {Vector2, VRect, WaitXThenRun} from "js-vextensions";
 import {NodeGroup} from "../Graph/NodeGroup.js";
 
-export function useRef_nodeGroup(treePath: string) {
+export function useRef_nodeGroup(treePath: string, groupBelowParent = false) {
 	const graph = useContext(GraphContext);
 	let groupInfo = useRef<NodeGroup | null>(null);
 
@@ -16,6 +16,8 @@ export function useRef_nodeGroup(treePath: string) {
 
 	let ref = useCallbackRef<HTMLElement>(null, el=>{
 	//let ref = useCallback(el=>{
+		if (groupBelowParent) return;
+
 		//ref2(el);
 		//console.log(`${el ? "Mount" : "Unmount"} @wh:`, width, height);
 		//console.log(`${el ? "Mount" : "Unmount"}`);
@@ -58,6 +60,7 @@ export function useRef_nodeGroup(treePath: string) {
 	});*/
 
 	useEffect(()=>{
+		if (groupBelowParent) return;
 		const resizeObserver = new ResizeObserver(entries=>onResize(entries[0]));
 		resizeObserver.observe(ref.current!);
 		function onResize(entry: ResizeObserverEntry) {
