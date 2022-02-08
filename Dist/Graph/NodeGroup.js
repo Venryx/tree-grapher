@@ -30,6 +30,7 @@ export class NodeGroup {
         const oldRect = this.rect;
         //this.rect = GetPageRect(this.childHolderEl);
         //const newRect = VRect.FromLTWH(this.childHolderEl.getBoundingClientRect());
+        //console.log("Checking1");
         const newRect = GetRectRelative(this.childHolderEl, this.graph.containerEl);
         const rectChanged = !newRect.Equals(this.rect);
         //Object.assign(store, {width: newWidth, height: newHeight});
@@ -51,7 +52,8 @@ export class NodeGroup {
         //const changeCanAffectOwnShift = !newRect.NewY(-1).Equals(oldRect.NewY(-1)); // a simple y-pos change isn't meaningful; we already track+react-to that part "in-system"
         const changeCanAffectOwnShift = !newRect.Equals(oldRect);
         if (changeCanAffectOwnShift) {
-            //this.RecalculateChildHolderShift(false); // no need to update rect, we already did
+            // if our group's size just reduced (eg. by one of our nodes collapsing its children), we need to recalc our shift to ensure we don't extend past the map's top-border
+            //this.RecalculateChildHolderShift(false);
             for (const nextGroup of this.graph.GetNextGroupsWithinColumnsFor(this)) {
                 nextGroup.RecalculateChildHolderShift();
             }
@@ -128,6 +130,7 @@ export class NodeGroup {
             if (previousGroup)
                 previousGroups.add(previousGroup);
             //previousGroup?.UpdateRect(); // this is necessary in some cases; idk why, but I don't have time to investigate atm
+            //console.log("Checking1");
             const rectToStayBelow = (_a = previousGroup === null || previousGroup === void 0 ? void 0 : previousGroup.rect) !== null && _a !== void 0 ? _a : column.rect.NewBottom(GetPaddingTopFromStyle(this.graph.containerEl.style));
             const deltaToBeJustBelow = rectToStayBelow.Bottom - this.rect.Top;
             maxMarginTop = Math.max(maxMarginTop, CE(oldMarginTop + deltaToBeJustBelow).KeepAtLeast(idealMarginTop));

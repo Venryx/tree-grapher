@@ -29,6 +29,7 @@ export function NodeChildHolder(props: {children: MapNode[], childrenBelow?: boo
 				{
 					position: "relative",
 					marginLeft: 30,
+					//padding: 10,
 					background: StripesCSS({angle: (path.split("/").length - 1) * 45, stripeColor: "rgba(255,150,0,.5)"}),
 				},
 			)}

@@ -19,7 +19,7 @@ Library for calculating where to draw tree nodes, while avoiding overlap.
 ### TODO
 
 Short term:
-* MS you can specify a padding between node-boxes.
+* n/a
 
 Long term:
 * MS a highly-customizable connector-line system is included with the library.

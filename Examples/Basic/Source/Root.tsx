@@ -1,4 +1,4 @@
-import React, {createContext, useMemo, useRef} from "react";
+import React, {createContext, useCallback, useMemo, useRef, useState} from "react";
 import {BaseComponent, GetDOM} from "react-vextensions";
 import {Column, Row} from "react-vcomponents";
 import {NodeUI} from "./UI/NodeUI";
@@ -6,7 +6,7 @@ import {GetAllNodesInTree_ByPath, nodeTree_main} from "./@SharedByExamples/NodeD
 import {Graph, GraphContext, makeObservable_safe} from "tree-grapher";
 import {GraphColumnsVisualizer} from "./UI/GraphColumnsVisualizer";
 import {makeObservable, observable} from "mobx";
-import {FlashComp, FlashElementOptions} from "ui-debug-kit";
+import {FlashComp, FlashOptions} from "ui-debug-kit";
 
 // make some stuff global, for easy debugging
 Object.assign(globalThis, {
@@ -39,8 +39,8 @@ export class NodeState {
 export const MapContext = createContext<MapInfo>(undefined as any);
 
 // flash option defaults
-FlashElementOptions.defaults.waitForPriorFlashes = false;
-FlashElementOptions.defaults.background = "rgba(0,0,0,.1)";
+FlashOptions.defaults.waitForPriorFlashes = false;
+FlashOptions.defaults.background = "rgba(0,0,0,.1)";
 
 export function RootUI() {
 	const nodeTree = nodeTree_main;
@@ -61,6 +61,8 @@ export function RootUI() {
 		globalThis.graph = graph;
 		return graph;
 	}, []);
+	
+	let [containerElResolved, setContainerElResolved] = useState(false);
 
 	return (
 		<Column style={{height: "100%"}}>
@@ -72,19 +74,22 @@ export function RootUI() {
 				Toolbar
 			</Row>
 			<Row
-				ref={c=>{
+				ref={useCallback(c=>{
 					/*containerRef.current = GetDOM(c) as any;
 					context.containerEl = containerRef.current!;*/
 					context.containerEl = GetDOM(c) as any;
-				}}
+					if (context.containerEl != null) setContainerElResolved(true);
+					//console.log("Set1:", context.containerEl);
+				}, [])}
 				style={{position: "relative", height: "calc(100% - 30px)", padding: 100}}
 			>
+				{containerElResolved &&
 				<MapContext.Provider value={mapInfo}>
 					<GraphContext.Provider value={context}>
 						<GraphColumnsVisualizer/>
 						<NodeUI node={nodeTree} path="0"/>
 					</GraphContext.Provider>
-				</MapContext.Provider>
+				</MapContext.Provider>}
 			</Row>
 		</Column>
 	);

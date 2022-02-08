@@ -28,8 +28,11 @@ export function useRef_nodeLeftColumn(treePath) {
         function onResize(entry) {
             if (ref.current == null || groupInfo.current == null)
                 return;
-            //groupInfo.current.RecalculateLeftColumnAlign();
-            groupInfo.current.UpdateRect();
+            let info = groupInfo.current.UpdateRect();
+            // even if rect did not change, we still have to check for left-column realignment
+            if (info && !info.rectChanged) {
+                groupInfo.current.RecalculateLeftColumnAlign();
+            }
         }
         return () => resizeObserver.disconnect();
     }, []);
