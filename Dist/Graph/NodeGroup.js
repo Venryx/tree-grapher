@@ -6,6 +6,13 @@ export function TreePathAsSortableStr(treePath) {
     const maxPartLength = CE(parts.map(a => a.length)).Max();
     return parts.map(part => part.padStart(maxPartLength, "0")).join("/");
 }
+export function AreRectsEqual(rect1, rect2, fieldsToCheck = ["x", "y", "width", "height"]) {
+    for (const field of fieldsToCheck) {
+        if ((rect1 === null || rect1 === void 0 ? void 0 : rect1[field]) != (rect2 === null || rect2 === void 0 ? void 0 : rect2[field]))
+            return false;
+    }
+    return true;
+}
 export class NodeGroup {
     constructor(data) {
         this.columnsPartOf = [];
@@ -27,16 +34,14 @@ export class NodeGroup {
     }*/
     UpdateRect(checkForSameColumnEffects = true, checkForRightColumnEffects = true) {
         var _a;
-        if (this.childHolderEl == null)
-            return null;
         const oldRect = this.rect;
         //this.rect = GetPageRect(this.childHolderEl);
         //const newRect = VRect.FromLTWH(this.childHolderEl.getBoundingClientRect());
         //console.log("Checking1");
-        const newRect = GetRectRelative(this.childHolderEl, this.graph.containerEl);
-        const rectChanged = !newRect.Equals(this.rect);
+        const newRect = this.childHolderEl ? GetRectRelative(this.childHolderEl, this.graph.containerEl) : null;
+        const rectChanged = !AreRectsEqual(newRect, oldRect);
         //Object.assign(store, {width: newWidth, height: newHeight});
-        //graph.uiDebugKit?.FlashComp(ref.current, {text: `Rendering... @rc:${store.renderCount} @rect:${newRect}`});
+        //this.graph.uiDebugKit?.FlashComp(this.childHolderEl, {text: `Rendering... @rect:${newRect} @oldRect:${oldRect}`});
         // if this is the first render, still call this (it's considered "moving/resizing" from rect-empty to the current rect)
         if (rectChanged) {
             (_a = this.graph.uiDebugKit) === null || _a === void 0 ? void 0 : _a.FlashComp(this.childHolderEl, { text: `Rect changed. @rect:${newRect}` });
@@ -52,7 +57,7 @@ export class NodeGroup {
     CheckForSameColumnEffectsFromRectChange(newRect, oldRect) {
         this.RecalculateLeftColumnAlign(); // this is very cheap, so just always do it
         //const changeCanAffectOwnShift = !newRect.NewY(-1).Equals(oldRect.NewY(-1)); // a simple y-pos change isn't meaningful; we already track+react-to that part "in-system"
-        const changeCanAffectOwnShift = !newRect.Equals(oldRect);
+        const changeCanAffectOwnShift = !AreRectsEqual(newRect, oldRect);
         if (changeCanAffectOwnShift) {
             // if our group's size just reduced (eg. by one of our nodes collapsing its children), we need to recalc our shift to ensure we don't extend past the map's top-border
             //this.RecalculateChildHolderShift(false);
@@ -60,9 +65,9 @@ export class NodeGroup {
                 nextGroup.RecalculateChildHolderShift();
             }
         }
-        const changeCanAffectChildGroupsThoroughly = oldRect == null || newRect.x != oldRect.x || newRect.width != oldRect.width;
+        const changeCanAffectChildGroupsThoroughly = !AreRectsEqual(newRect, oldRect, ["x", "width"]);
         // technically we should also be checking if the *positions* of any child in our group has changed; ignoring for now, since pos-changes always imply size-changes atm (in my use-cases)
-        const changeCanAffectChildGroupShifts = oldRect == null || newRect.y != oldRect.y || newRect.height != oldRect.height;
+        const changeCanAffectChildGroupShifts = !AreRectsEqual(newRect, oldRect, ["y", "height"]);
         if (changeCanAffectChildGroupsThoroughly) {
             const childGroups = this.graph.FindChildGroups(this);
             for (const childGroup of childGroups) {
@@ -77,9 +82,9 @@ export class NodeGroup {
         }
     }
     CheckForRightColumnEffectsFromRectChange(newRect, oldRect) {
-        const changeCanAffectChildGroupsThoroughly = oldRect == null || newRect.x != oldRect.x || newRect.width != oldRect.width;
+        const changeCanAffectChildGroupsThoroughly = !AreRectsEqual(newRect, oldRect, ["x", "width"]);
         // technically we should also be checking if the *positions* of any child in our group has changed; ignoring for now, since pos-changes always imply size-changes atm (in my use-cases)
-        const changeCanAffectChildGroupShifts = oldRect == null || newRect.y != oldRect.y || newRect.height != oldRect.height;
+        const changeCanAffectChildGroupShifts = !AreRectsEqual(newRect, oldRect, ["y", "height"]);
         if (changeCanAffectChildGroupsThoroughly) {
             const childGroups = this.graph.FindChildGroups(this);
             for (const childGroup of childGroups) {
@@ -95,6 +100,7 @@ export class NodeGroup {
     }
     UpdateColumns() {
         const newColumnsList = this.graph.GetColumnsForGroup(this);
+        //Assert(newColumnsList.length > 0, "NodeGroup.UpdateColumns called, but no intersecting columns found!");
         const columnsToAdd = CE(newColumnsList).Exclude(...this.columnsPartOf);
         const columnsToRemove = CE(this.columnsPartOf).Exclude(...newColumnsList);
         const columnsToRemove_nextGroups = columnsToRemove.map(column => column.FindNextGroup(this));
@@ -112,6 +118,36 @@ export class NodeGroup {
             const nextGroup = columnsToRemove_nextGroups[i];
             if (nextGroup)
                 nextGroup.RecalculateChildHolderShift();
+        }
+    }
+    DetachAndDestroy() {
+        this.Detach();
+        // we want to make sure nothing tries to use this group after this point, so destroy it (ie. mangle its fields) so we detect bugs
+        this.Destroy();
+    }
+    Detach() {
+        const nextGroups = this.graph.GetNextGroupsWithinColumnsFor(this);
+        this.graph.groupsByPath.delete(this.path);
+        for (const column of this.columnsPartOf) {
+            column.RemoveGroup(this);
+        }
+        for (const nextGroup of nextGroups) {
+            nextGroup.RecalculateChildHolderShift();
+        }
+        // wait a tick for UI to actually be destroyed, then recalc stuff
+        /*WaitXThenRun(0, ()=>{
+            group.RecalculateLeftColumnAlign(); // back to 0
+            for (const nextGroup of nextGroups) {
+                nextGroup.RecalculateChildHolderShift();
+            }
+        });*/
+    }
+    IsDestroyed() {
+        return this.path == "[this object has been destroyed; seeing this indicates a bug]";
+    }
+    Destroy() {
+        for (const [key, value] of Object.entries(NodeGroup.prototype).filter(a => a["name"] != "IsDestroyed").concat(Object.entries(this))) {
+            this[key] = "[this object has been destroyed; seeing this indicates a bug]";
         }
     }
     RecalculateChildHolderShift(updateRectFirst = true) {
@@ -150,7 +186,7 @@ export class NodeGroup {
         }
     }
     RecalculateLeftColumnAlign() {
-        var _a, _b;
+        var _a, _b, _c;
         // left-column must not be attached yet; ignore (this is fine, cause left-column will rerun this func on mount)
         if (this.leftColumnEl == null)
             return console.log(`Couldn't find leftColumnEl, for:${this.path}`);
@@ -158,11 +194,11 @@ export class NodeGroup {
         const leftColumnHeight_withoutPadding = leftColumnHeight - GetPaddingTopFromStyle(this.leftColumnEl.style);
         let alignPoint = 0;
         if (this.childHolderEl != null) {
-            alignPoint = GetMarginTopFromStyle(this.childHolderEl.style) + (((_a = this.rect.height) !== null && _a !== void 0 ? _a : 0) / 2);
+            alignPoint = GetMarginTopFromStyle(this.childHolderEl.style) + (((_b = (_a = this.rect) === null || _a === void 0 ? void 0 : _a.height) !== null && _b !== void 0 ? _b : 0) / 2);
         }
         let gapBeforeInnerUI = CE(alignPoint - (leftColumnHeight_withoutPadding / 2)).KeepAtLeast(0); // can't have negative padding
         gapBeforeInnerUI = Math.floor(gapBeforeInnerUI);
-        (_b = this.graph.uiDebugKit) === null || _b === void 0 ? void 0 : _b.FlashComp(this.leftColumnEl, { text: `Recalced lc-align. @newPT:${gapBeforeInnerUI} @lcHeight_wp:${leftColumnHeight_withoutPadding}` });
+        (_c = this.graph.uiDebugKit) === null || _c === void 0 ? void 0 : _c.FlashComp(this.leftColumnEl, { text: `Recalced lc-align. @newPT:${gapBeforeInnerUI} @lcHeight_wp:${leftColumnHeight_withoutPadding}` });
         this.leftColumnEl.style.paddingTop = `${gapBeforeInnerUI}px`;
     }
 }

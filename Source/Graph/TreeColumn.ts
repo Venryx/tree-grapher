@@ -1,11 +1,12 @@
 import {Assert, CE, VRect} from "js-vextensions";
-import {n} from "../Utils/@Internal/Types.js";
+import {n, RequiredBy} from "../Utils/@Internal/Types.js";
 import {NodeGroup} from "./NodeGroup.js";
 
 export class TreeColumn {
-	constructor(data?: Partial<TreeColumn>) {
+	constructor(data?: RequiredBy<Partial<TreeColumn>, "index">) {
 		Object.assign(this, data);
 	}
+	index: number; // mostly for debugging
 	rect: VRect;
 
 	/** Sorted by tree-path, at insert time. */

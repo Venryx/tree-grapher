@@ -48,6 +48,7 @@ export class Graph {
 			//if (this.columns[i] == null) {
 			if (this.columns.length <= i) {
 				this.columns[i] = new TreeColumn({
+					index: i,
 					rect: new VRect(i * this.columnWidth, 0, this.columnWidth, Number.MAX_SAFE_INTEGER),
 				});
 			}
@@ -89,22 +90,23 @@ export class Graph {
 		group.UpdateRect();
 		return group;
 	}
-	NotifyGroupUIUnmount(group: NodeGroup) {
-		this.groupsByPath.delete(group.path);
-		const columns = this.GetColumnsForGroup(group);
-		for (const column of columns) {
-			column.RemoveGroup(group);
-		}
-		
-		// wait a tick for UI to actually be destroyed, then recalc stuff
-		WaitXThenRun(0, ()=>{
-			group.RecalculateLeftColumnAlign(); // back to 0
-			for (const nextGroup of this.GetNextGroupsWithinColumnsFor(group)) {
-				nextGroup.RecalculateChildHolderShift();
-			}
-		});
 
-		return group;
+	NotifyGroupLeftColumnUnmount(group: NodeGroup) {
+		group.leftColumnEl = null;
+		if (group.childHolderEl != null) {
+		} else {
+			group.DetachAndDestroy();
+		}
+	}
+	NotifyGroupChildHolderUnmount(group: NodeGroup) {
+		group.childHolderEl = null;
+		if (group.leftColumnEl != null) {
+			group.UpdateRect();
+			/*group.UpdateColumns();
+			group.RecalculateLeftColumnAlign();*/
+		} else {
+			group.DetachAndDestroy();
+		}
 	}
 }
 

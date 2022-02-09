@@ -1,15 +1,19 @@
-import { useContext, useEffect, useMemo, useRef } from "react";
+import { useContext, useMemo, useRef } from "react";
 import { useCallbackRef } from "use-callback-ref";
 import { GraphContext } from "../Graph.js";
+import { Assert } from "js-vextensions";
 export function useRef_nodeGroup(treePath, groupBelowParent = false) {
     const graph = useContext(GraphContext);
-    let groupInfo = useRef(null);
+    let ref_group = useRef(null);
     const store = useMemo(() => ({
         renderCount: 0,
         /*width: -1,
         height: -1,*/
     }), []);
-    let ref = useCallbackRef(null, el => {
+    // I think a plain closure-var would also work, but for consistency/clarity, we'll use a ref
+    //let resizeObserver: ResizeObserver;
+    let ref_resizeObserver = useRef(null);
+    let ref_childHolder = useCallbackRef(null, el => {
         //let ref = useCallback(el=>{
         if (groupBelowParent)
             return;
@@ -17,16 +21,26 @@ export function useRef_nodeGroup(treePath, groupBelowParent = false) {
         //console.log(`${el ? "Mount" : "Unmount"} @wh:`, width, height);
         //console.log(`${el ? "Mount" : "Unmount"}`);
         if (el) {
-            groupInfo.current = graph.NotifyGroupChildHolderMount(el, treePath);
-            groupInfo.current.RecalculateLeftColumnAlign(); // call once, for first render
-            groupInfo.current.RecalculateChildHolderShift(); // call once, for first render
+            let group = graph.NotifyGroupChildHolderMount(el, treePath);
+            ref_group.current = group;
+            // set up observer
+            const resizeObserver = new ResizeObserver(entries => {
+                let entry = entries[0];
+                //if (ref_childHolder.current == null || group.IsDestroyed()) return;
+                group.UpdateRect();
+            });
+            ref_resizeObserver.current = resizeObserver;
+            resizeObserver.observe(el);
+            group.RecalculateLeftColumnAlign(); // call once, for first render
+            group.RecalculateChildHolderShift(); // call once, for first render
         }
         else {
-            //graph.NotifyGroupUIUnmount(groupInfo.current!);
-            const group = groupInfo.current;
-            group.childHolderEl = null;
-            group.RecalculateLeftColumnAlign();
-            groupInfo.current = null;
+            const group = ref_group.current;
+            Assert(group && ref_resizeObserver.current, "Cannot call [ref_group/ref_resizeObserver].current = null twice in a row!");
+            ref_group.current = null;
+            ref_resizeObserver.current.disconnect();
+            ref_resizeObserver.current = null;
+            graph.NotifyGroupChildHolderUnmount(group);
         }
     });
     //}, []);
@@ -52,17 +66,5 @@ export function useRef_nodeGroup(treePath, groupBelowParent = false) {
             console.log("Test2");
         };*#/
     });*/
-    useEffect(() => {
-        if (groupBelowParent)
-            return;
-        const resizeObserver = new ResizeObserver(entries => onResize(entries[0]));
-        resizeObserver.observe(ref.current);
-        function onResize(entry) {
-            if (ref.current == null || groupInfo.current == null)
-                return;
-            groupInfo.current.UpdateRect();
-        }
-        return () => resizeObserver.disconnect();
-    }, []);
-    return { ref };
+    return { ref_childHolder, ref_group };
 }

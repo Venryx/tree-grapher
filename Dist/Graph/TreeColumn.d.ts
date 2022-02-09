@@ -1,8 +1,9 @@
 import { VRect } from "js-vextensions";
-import { n } from "../Utils/@Internal/Types.js";
+import { n, RequiredBy } from "../Utils/@Internal/Types.js";
 import { NodeGroup } from "./NodeGroup.js";
 export declare class TreeColumn {
-    constructor(data?: Partial<TreeColumn>);
+    constructor(data?: RequiredBy<Partial<TreeColumn>, "index">);
+    index: number;
     rect: VRect;
     /** Sorted by tree-path, at insert time. */
     groups_ordered: NodeGroup[];

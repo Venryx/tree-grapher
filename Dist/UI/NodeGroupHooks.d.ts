@@ -1,4 +1,6 @@
 /// <reference types="react" />
+import { NodeGroup } from "../Graph/NodeGroup.js";
 export declare function useRef_nodeGroup(treePath: string, groupBelowParent?: boolean): {
-    ref: import("react").MutableRefObject<HTMLElement | null>;
+    ref_childHolder: import("react").MutableRefObject<HTMLElement | null>;
+    ref_group: import("react").MutableRefObject<NodeGroup | null>;
 };

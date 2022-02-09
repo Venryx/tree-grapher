@@ -10,7 +10,7 @@ import {WaitXThenRun} from "js-vextensions";
 export function NodeChildHolder(props: {children: MapNode[], childrenBelow?: boolean, path: string}) {
 	let {children, childrenBelow, path} = props;
 	const forceUpdate = useForceUpdate();
-	let {ref} = useRef_nodeGroup(path, childrenBelow);
+	let {ref_childHolder} = useRef_nodeGroup(path, childrenBelow);
 
 	/*WaitXThenRun(0, ()=>{
 		if (ref.current) FlashComp(ref.current, {text: "Rendering"});
@@ -20,7 +20,7 @@ export function NodeChildHolder(props: {children: MapNode[], childrenBelow?: boo
 	return (
 		<Column
 			ref={useCallback(c=>{
-				ref.current = GetDOM(c) as any;
+				ref_childHolder.current = GetDOM(c) as any;
 				//ref(c ? GetDOM(c) as any : null), [ref]);
 			}, [])}
 			className="NodeChildHolder clickThrough"

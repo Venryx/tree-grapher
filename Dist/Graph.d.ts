@@ -23,5 +23,6 @@ export declare class Graph {
     };
     NotifyGroupLeftColumnMountOrRender(leftColumnEl: HTMLElement, treePath: string): NodeGroup;
     NotifyGroupChildHolderMount(childHolderEl: HTMLElement, treePath: string): NodeGroup;
-    NotifyGroupUIUnmount(group: NodeGroup): NodeGroup;
+    NotifyGroupLeftColumnUnmount(group: NodeGroup): void;
+    NotifyGroupChildHolderUnmount(group: NodeGroup): void;
 }
