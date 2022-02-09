@@ -16,18 +16,22 @@ export function useRef_nodeLeftColumn(treePath: string) {
 	let ref_leftColumn = useCallbackRef<HTMLElement>(null, el=>{
 	//let ref = useCallback(el=>{
 		if (el) {
-			let group = graph.NotifyGroupLeftColumnMountOrRender(el as any as HTMLElement, treePath);
+			let group = graph.NotifyGroupLeftColumnMount(el as any as HTMLElement, treePath);
 			ref_group.current = group;
 
 			// set up observer
+			// NOTE: ResizeObserver watches only for content-rect changes, *not* margin/padding changes (see: https://web.dev/resize-observer)
 			const resizeObserver = new ResizeObserver(entries=>{
 				let entry = entries[0];
 				//if (ref_leftColumn.current == null || group.IsDestroyed()) return;
-				let info = group.UpdateRect();
+				group.UpdateLCRect();
+
+				// idk why this is needed, but it is atm
+				/*let info = group.UpdateCHRect();
 				// even if rect did not change, we still have to check for left-column realignment
 				if (info && !info.rectChanged) {
 					group.RecalculateLeftColumnAlign();
-				}
+				}*/
 			});
 			ref_resizeObserver.current = resizeObserver;
 			resizeObserver.observe(el);

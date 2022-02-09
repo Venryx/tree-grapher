@@ -4,7 +4,7 @@ import {Graph, GraphContext} from "../Graph.js";
 import {Assert, Vector2, VRect, WaitXThenRun} from "js-vextensions";
 import {NodeGroup} from "../Graph/NodeGroup.js";
 
-export function useRef_nodeGroup(treePath: string, groupBelowParent = false) {
+export function useRef_nodeChildHolder(treePath: string, belowParent = false) {
 	const graph = useContext(GraphContext);
 	let ref_group = useRef<NodeGroup | null>(null);
 
@@ -20,21 +20,22 @@ export function useRef_nodeGroup(treePath: string, groupBelowParent = false) {
 
 	let ref_childHolder = useCallbackRef<HTMLElement>(null, el=>{
 	//let ref = useCallback(el=>{
-		if (groupBelowParent) return;
+		//if (groupBelowParent) return;
 
 		//ref2(el);
 		//console.log(`${el ? "Mount" : "Unmount"} @wh:`, width, height);
 		//console.log(`${el ? "Mount" : "Unmount"}`);
 
 		if (el) {
-			let group = graph.NotifyGroupChildHolderMount(el as any as HTMLElement, treePath);
+			let group = graph.NotifyGroupChildHolderMount(el as any as HTMLElement, treePath, belowParent);
 			ref_group.current = group;
 
 			// set up observer
+			// NOTE: ResizeObserver watches only for content-rect changes, *not* margin/padding changes (see: https://web.dev/resize-observer)
 			const resizeObserver = new ResizeObserver(entries=>{
 				let entry = entries[0];
 				//if (ref_childHolder.current == null || group.IsDestroyed()) return;
-				group.UpdateRect();
+				group.UpdateCHRect();
 			});
 			ref_resizeObserver.current = resizeObserver;
 			resizeObserver.observe(el);

@@ -28,10 +28,10 @@ export class Graph {
         return [...this.groupsByPath.values()].filter(a => a.path.startsWith(prefix));
     }
     GetColumnsForGroup(group) {
-        if (group.rect == null)
+        if (group.chRect == null)
             return [];
-        let firstIndex = Math.floor(group.rect.x / this.columnWidth);
-        let lastIndex = Math.floor(group.rect.Right / this.columnWidth);
+        let firstIndex = Math.floor(group.chRect.x / this.columnWidth);
+        let lastIndex = Math.floor(group.chRect.Right / this.columnWidth);
         // ensure all the necessary columns are created (start from 0, because we don't want gaps)
         for (let i = 0; i <= lastIndex; i++) {
             //if (this.columns[i] == null) {
@@ -68,20 +68,28 @@ export class Graph {
             alreadyExisted,
         };
     }
-    NotifyGroupLeftColumnMountOrRender(leftColumnEl, treePath) {
+    NotifyGroupLeftColumnMount(el, treePath) {
         const { group } = this.GetOrCreateGroup(treePath);
-        group.leftColumnEl = leftColumnEl;
+        group.leftColumnEl = el;
+        group.UpdateLCRect();
         return group;
     }
-    NotifyGroupChildHolderMount(childHolderEl, treePath) {
+    NotifyGroupChildHolderMount(el, treePath, belowParent) {
         const { group, alreadyExisted } = this.GetOrCreateGroup(treePath);
-        group.childHolderEl = childHolderEl;
-        group.UpdateRect();
+        group.childHolderEl = el;
+        group.childHolder_belowParent = belowParent;
+        group.UpdateCHRect();
+        return group;
+    }
+    NotifyGroupConnectorLinesUIMount(handle, treePath) {
+        const { group, alreadyExisted } = this.GetOrCreateGroup(treePath);
+        group.connectorLinesComp = handle;
         return group;
     }
     NotifyGroupLeftColumnUnmount(group) {
         group.leftColumnEl = null;
-        if (group.childHolderEl != null) {
+        if (group.childHolderEl != null || group.connectorLinesComp != null) {
+            group.UpdateLCRect();
         }
         else {
             group.DetachAndDestroy();
@@ -89,10 +97,18 @@ export class Graph {
     }
     NotifyGroupChildHolderUnmount(group) {
         group.childHolderEl = null;
-        if (group.leftColumnEl != null) {
-            group.UpdateRect();
+        if (group.leftColumnEl != null || group.connectorLinesComp != null) {
+            group.UpdateCHRect();
             /*group.UpdateColumns();
             group.RecalculateLeftColumnAlign();*/
+        }
+        else {
+            group.DetachAndDestroy();
+        }
+    }
+    NotifyGroupConnectorLinesUIUnmount(group) {
+        group.connectorLinesComp = null;
+        if (group.leftColumnEl != null || group.childHolderEl != null) {
         }
         else {
             group.DetachAndDestroy();

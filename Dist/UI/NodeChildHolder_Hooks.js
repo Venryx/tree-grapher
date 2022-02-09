@@ -2,7 +2,7 @@ import { useContext, useMemo, useRef } from "react";
 import { useCallbackRef } from "use-callback-ref";
 import { GraphContext } from "../Graph.js";
 import { Assert } from "js-vextensions";
-export function useRef_nodeChildHolder(treePath, groupBelowParent = false) {
+export function useRef_nodeChildHolder(treePath, belowParent = false) {
     const graph = useContext(GraphContext);
     let ref_group = useRef(null);
     const store = useMemo(() => ({
@@ -20,7 +20,7 @@ export function useRef_nodeChildHolder(treePath, groupBelowParent = false) {
         //console.log(`${el ? "Mount" : "Unmount"} @wh:`, width, height);
         //console.log(`${el ? "Mount" : "Unmount"}`);
         if (el) {
-            let group = graph.NotifyGroupChildHolderMount(el, treePath, groupBelowParent);
+            let group = graph.NotifyGroupChildHolderMount(el, treePath, belowParent);
             ref_group.current = group;
             // set up observer
             // NOTE: ResizeObserver watches only for content-rect changes, *not* margin/padding changes (see: https://web.dev/resize-observer)

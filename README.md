@@ -22,4 +22,4 @@ Short term:
 * n/a
 
 Long term:
-* MS a highly-customizable connector-line system is included with the library.
+* Fix glitch where if a node-ui-inner shrinks horizontally such that it also changes the height (due to browser layout system), it can cause the connector-lines to target the wrong (diff from border is -X rather than +X) positions. You can see this in the demo, by enabling x3 on the "0.0" node, then increasing its width, then decreasing its width. [not terribly high priority, since such resizing is expected to be rare in actual programs]

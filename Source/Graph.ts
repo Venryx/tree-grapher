@@ -8,6 +8,7 @@ import {GetPageRect} from "./Utils/General/General.js";
 import {makeObservable_safe} from "./Utils/General/MobX.js";
 import type {FlashComp} from "ui-debug-kit";
 import {NodeGroup} from "./Graph/NodeGroup.js";
+import {ConnectorLinesUI_Handle} from "./index.js";
 
 // maybe temp
 configure({enforceActions: "never"});
@@ -39,9 +40,9 @@ export class Graph {
 	}
 
 	GetColumnsForGroup(group: NodeGroup) {
-		if (group.rect == null) return [];
-		let firstIndex = Math.floor(group.rect.x / this.columnWidth);
-		let lastIndex = Math.floor(group.rect.Right / this.columnWidth);
+		if (group.chRect == null) return [];
+		let firstIndex = Math.floor(group.chRect.x / this.columnWidth);
+		let lastIndex = Math.floor(group.chRect.Right / this.columnWidth);
 
 		// ensure all the necessary columns are created (start from 0, because we don't want gaps)
 		for (let i = 0; i <= lastIndex; i++) {
@@ -79,31 +80,47 @@ export class Graph {
 			alreadyExisted,
 		};
 	}
-	NotifyGroupLeftColumnMountOrRender(leftColumnEl: HTMLElement, treePath: string) {
+
+	NotifyGroupLeftColumnMount(el: HTMLElement, treePath: string) {
 		const {group} = this.GetOrCreateGroup(treePath);
-		group.leftColumnEl = leftColumnEl;
+		group.leftColumnEl = el;
+		group.UpdateLCRect();
 		return group;
 	}
-	NotifyGroupChildHolderMount(childHolderEl: HTMLElement, treePath: string) {
+	NotifyGroupChildHolderMount(el: HTMLElement, treePath: string, belowParent: boolean) {
 		const {group, alreadyExisted} = this.GetOrCreateGroup(treePath);
-		group.childHolderEl = childHolderEl;
-		group.UpdateRect();
+		group.childHolderEl = el;
+		group.childHolder_belowParent = belowParent;
+		group.UpdateCHRect();
+		return group;
+	}
+	NotifyGroupConnectorLinesUIMount(handle: ConnectorLinesUI_Handle, treePath: string) {
+		const {group, alreadyExisted} = this.GetOrCreateGroup(treePath);
+		group.connectorLinesComp = handle;
 		return group;
 	}
 
 	NotifyGroupLeftColumnUnmount(group: NodeGroup) {
 		group.leftColumnEl = null;
-		if (group.childHolderEl != null) {
+		if (group.childHolderEl != null || group.connectorLinesComp != null) {
+			group.UpdateLCRect();
 		} else {
 			group.DetachAndDestroy();
 		}
 	}
 	NotifyGroupChildHolderUnmount(group: NodeGroup) {
 		group.childHolderEl = null;
-		if (group.leftColumnEl != null) {
-			group.UpdateRect();
+		if (group.leftColumnEl != null || group.connectorLinesComp != null) {
+			group.UpdateCHRect();
 			/*group.UpdateColumns();
 			group.RecalculateLeftColumnAlign();*/
+		} else {
+			group.DetachAndDestroy();
+		}
+	}
+	NotifyGroupConnectorLinesUIUnmount(group: NodeGroup) {
+		group.connectorLinesComp = null;
+		if (group.leftColumnEl != null || group.childHolderEl != null) {
 		} else {
 			group.DetachAndDestroy();
 		}

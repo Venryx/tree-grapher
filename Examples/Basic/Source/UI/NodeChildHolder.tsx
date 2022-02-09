@@ -3,14 +3,14 @@ import {Button, Column, Row} from "react-vcomponents";
 import {BaseComponent, cssHelper, GetDOM, UseCallback} from "react-vextensions";
 import {MapNode} from "../@SharedByExamples/MapNode";
 import {NodeUI} from "./NodeUI";
-import {StripesCSS, useForceUpdate, useRef_nodeGroup} from "tree-grapher";
+import {ConnectorLinesUI, StripesCSS, useForceUpdate, useRef_nodeChildHolder} from "tree-grapher";
 import {FlashComp} from "ui-debug-kit";
 import {WaitXThenRun} from "js-vextensions";
 
 export function NodeChildHolder(props: {children: MapNode[], childrenBelow?: boolean, path: string}) {
 	let {children, childrenBelow, path} = props;
 	const forceUpdate = useForceUpdate();
-	let {ref_childHolder} = useRef_nodeGroup(path, childrenBelow);
+	let {ref_childHolder} = useRef_nodeChildHolder(path, childrenBelow);
 
 	/*WaitXThenRun(0, ()=>{
 		if (ref.current) FlashComp(ref.current, {text: "Rendering"});
@@ -27,15 +27,16 @@ export function NodeChildHolder(props: {children: MapNode[], childrenBelow?: boo
 			style={css(
 				{
 					position: "relative",
-					marginLeft: 30,
+					paddingLeft: 30,
 					//padding: 10,
 					background: StripesCSS({angle: (path.split("/").length - 1) * 45, stripeColor: "rgba(255,150,0,.5)"}),
 				},
 			)}
 		>
 			<Button text="U" title="Update NodeChildHolder"
-				style={{position: "absolute", left: -30, top: `calc(50% - 15px)`, width: 30, height: 30}}
+				style={{position: "absolute", left: 0, top: `calc(50% - 15px)`, width: 30, height: 30}}
 				onClick={()=>forceUpdate()}/>
+			<ConnectorLinesUI treePath={path} width={30} linesFromAbove={childrenBelow}/>
 			{children.map((child, index)=>{
 				return <NodeUI key={index} node={child} inBelowGroup={childrenBelow} {...{path: `${path}/${index}`}}/>;
 			})}
