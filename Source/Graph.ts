@@ -8,7 +8,7 @@ import {GetPageRect} from "./Utils/General/General.js";
 import {makeObservable_safe} from "./Utils/General/MobX.js";
 import type {FlashComp} from "ui-debug-kit";
 import {NodeGroup} from "./Graph/NodeGroup.js";
-import {ConnectorLinesUI_Handle} from "./index.js";
+import {NodeConnectorOpts, ConnectorLinesUI_Handle} from "./index.js";
 
 // maybe temp
 configure({enforceActions: "never"});
@@ -81,9 +81,10 @@ export class Graph {
 		};
 	}
 
-	NotifyGroupLeftColumnMount(el: HTMLElement, treePath: string) {
+	NotifyGroupLeftColumnMount(el: HTMLElement, treePath: string, connectorOpts?: NodeConnectorOpts) {
 		const {group} = this.GetOrCreateGroup(treePath);
 		group.leftColumnEl = el;
+		group.leftColumn_connectorOpts = connectorOpts;
 		group.UpdateLCRect();
 		return group;
 	}

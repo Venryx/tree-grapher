@@ -68,9 +68,10 @@ export class Graph {
             alreadyExisted,
         };
     }
-    NotifyGroupLeftColumnMount(el, treePath) {
+    NotifyGroupLeftColumnMount(el, treePath, connectorOpts) {
         const { group } = this.GetOrCreateGroup(treePath);
         group.leftColumnEl = el;
+        group.leftColumn_connectorOpts = connectorOpts;
         group.UpdateLCRect();
         return group;
     }

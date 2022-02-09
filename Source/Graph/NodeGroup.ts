@@ -3,7 +3,7 @@ import {Graph} from "../Graph.js";
 import {n, RequiredBy} from "../Utils/@Internal/Types.js";
 import {GetMarginTopFromStyle, GetPaddingTopFromStyle, GetRectRelative} from "../Utils/General/General.js";
 import {TreeColumn} from "./TreeColumn.js";
-import {ConnectorLinesUI, ConnectorLinesUI_Handle} from "../UI/ConnectorLinesUI.js";
+import {ConnectorLinesUI, ConnectorLinesUI_Handle, NodeConnectorOpts} from "../UI/ConnectorLinesUI.js";
 
 /** Converts, eg. "0.0.10.0" into "00.00.10.00", such that comparisons like XXX("0.0.10.0") > XXX("0.0.9.0") succeed. */
 export function TreePathAsSortableStr(treePath: string) {
@@ -28,6 +28,7 @@ export class NodeGroup {
 	columnsPartOf: TreeColumn[] = [];
 	
 	leftColumnEl: HTMLElement|n;
+	leftColumn_connectorOpts?: NodeConnectorOpts;
 	//rightColumnEl: HTMLElement;
 	childHolderEl: HTMLElement|n;
 	childHolder_belowParent = false;
@@ -73,7 +74,8 @@ export class NodeGroup {
 				const pathParts = this.path.split("/");
 				const parentGroup = this.graph.groupsByPath.get(pathParts.slice(0, -1).join("/"));
 				this.graph.uiDebugKit?.FlashComp(this.leftColumnEl, {text: `InnerUI center-changed; try tell parent. @parentGroup:${parentGroup?.path ?? "null"}`});
-				if (parentGroup) parentGroup.NotifyChildNodeLCRectChanged(Number(pathParts.slice(-1)[0]), newRect);
+				const newInfo = new NodeConnectorInfo({rect: newRect, opts: this.leftColumn_connectorOpts});
+				if (parentGroup) parentGroup.NotifyChildNodeConnectorInfoChanged(Number(pathParts.slice(-1)[0]), newInfo);
 			}
 		}
 	}
@@ -273,11 +275,11 @@ export class NodeGroup {
 	// connector-lines system
 	// ==========
 
-	childRects = new Map<number, VRect|n>();
-	NotifyChildNodeLCRectChanged(childIndex: number, newRect: VRect|n) {
+	childConnectorInfos = new Map<number, NodeConnectorInfo>();
+	NotifyChildNodeConnectorInfoChanged(childIndex: number, newInfo: NodeConnectorInfo) {
 		/*if (this.chRect == null) return;
 		const newRect_rel = newRect?.NewPosition(pos=>pos.Minus(this.chRect!.Position));*/
-		this.childRects.set(childIndex, newRect);
+		this.childConnectorInfos.set(childIndex, newInfo);
 		this.RefreshConnectorLinesUI();
 	}
 	RefreshConnectorLinesUI() {
@@ -285,4 +287,12 @@ export class NodeGroup {
 		this.connectorLinesComp.forceUpdate();
 		this.graph.uiDebugKit?.FlashComp(this.connectorLinesComp.svgEl as any, {text: `Refreshed connector-lines-ui.`});
 	}
+}
+
+export class NodeConnectorInfo {
+	constructor(data: NodeConnectorInfo) {
+		Object.assign(this, data);
+	}
+	rect: VRect|n;
+	opts: NodeConnectorOpts|n;
 }

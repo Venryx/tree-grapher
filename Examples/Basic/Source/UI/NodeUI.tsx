@@ -23,11 +23,11 @@ export const NodeUI = observer((props: {node: MapNode, path: string, inBelowGrou
 				},
 				path == "0" && {alignSelf: "flex-start"}, // root node needs this, to not be stretched to fit container's height
 			)}>
-				<NodeUI_LeftColumn {...{treePath: path}}>
+				<NodeUI_LeftColumn treePath={path} connectorLineOpts={{color: path.split("/").length % 2 == 0 ? "green" : "blue"}}>
 					<NodeUI_Inner node={node} path={path} inBelowGroup={inBelowGroup}/>
 				</NodeUI_LeftColumn>
 				{nodeState.expanded && !node.childrenBelow &&
-				<NodeUI_RightColumn {...{treePath: path}}>
+				<NodeUI_RightColumn treePath={path}>
 					{childHolder}
 				</NodeUI_RightColumn>}
 			</Row>
@@ -37,7 +37,7 @@ export const NodeUI = observer((props: {node: MapNode, path: string, inBelowGrou
 	);
 });
 
-export function NodeUI_RightColumn(props: {children}) {
+export function NodeUI_RightColumn(props: {treePath: string, children}) {
 	let {children} = props;
 	return (
 		<Column className="rightColumn clickThrough"

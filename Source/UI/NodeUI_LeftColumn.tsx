@@ -6,8 +6,9 @@ import {NodeGroup} from "../Graph/NodeGroup.js";
 import {Column, Row} from "./@Shared/Basics.js";
 import ReactDOM from "react-dom";
 import {Assert} from "js-vextensions";
+import {NodeConnectorOpts} from "./ConnectorLinesUI.js";
 
-export function useRef_nodeLeftColumn(treePath: string) {
+export function useRef_nodeLeftColumn(treePath: string, connectorLineOpts?: NodeConnectorOpts) {
 	const graph = useContext(GraphContext);
 	let ref_group = useRef<NodeGroup | null>(null);
 
@@ -16,7 +17,7 @@ export function useRef_nodeLeftColumn(treePath: string) {
 	let ref_leftColumn = useCallbackRef<HTMLElement>(null, el=>{
 	//let ref = useCallback(el=>{
 		if (el) {
-			let group = graph.NotifyGroupLeftColumnMount(el as any as HTMLElement, treePath);
+			let group = graph.NotifyGroupLeftColumnMount(el as any as HTMLElement, treePath, connectorLineOpts);
 			ref_group.current = group;
 
 			// set up observer
@@ -56,11 +57,11 @@ export function useRef_nodeLeftColumn(treePath: string) {
 	return {ref_leftColumn, ref_group};
 }
 
-export const NodeUI_LeftColumn = (props: {treePath: string, children})=>{
-	let {treePath, children} = props;
+export const NodeUI_LeftColumn = (props: {treePath: string, connectorLineOpts?: NodeConnectorOpts, children})=>{
+	let {treePath, connectorLineOpts, children} = props;
 	const graph = useContext(GraphContext);
 	const group = graph.groupsByPath.get(treePath);
-	let {ref_leftColumn} = useRef_nodeLeftColumn(treePath);
+	let {ref_leftColumn} = useRef_nodeLeftColumn(treePath, connectorLineOpts);
 
 	return (
 		<Column

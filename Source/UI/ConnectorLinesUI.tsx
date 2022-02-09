@@ -6,6 +6,7 @@ import {NodeGroup} from "../Graph/NodeGroup.js";
 import {useForceUpdate} from "../index.js";
 import {useCallbackRef} from "use-callback-ref";
 import {GetPaddingTopFromStyle} from "../Utils/General/General.js";
+import {n} from "../Utils/@Internal/Types.js";
 
 export function useRef_connectorLinesUI(treePath: string, handle: ConnectorLinesUI_Handle) {
 	const graph = useContext(GraphContext);
@@ -27,9 +28,13 @@ export function useRef_connectorLinesUI(treePath: string, handle: ConnectorLines
 	return {ref_connectorLinesUI, ref_group};
 }
 
-export type ChildBoxInfo = {
-	color: string;
+export class NodeConnectorOpts {
+	color?: string;
+}
+
+export type ChildBoxInfo_AtRenderTime = {
 	offset: Vector2;
+	opts: NodeConnectorOpts|n,
 };
 
 export class ConnectorLinesUI_Handle {
@@ -50,7 +55,7 @@ export const ConnectorLinesUI = React.memo((props: {treePath: string, width: num
 	const group = ref_group.current;
 
 	let linkSpawnPoint = Vector2.zero;
-	let childBoxInfos: ChildBoxInfo[] = [];
+	let childBoxInfos: ChildBoxInfo_AtRenderTime[] = [];
 	if (group && group.chRect) {
 		let guessedInnerUI_marginBottom = 0;
 		if (group.lcRect && group.leftColumnEl) {
@@ -62,10 +67,10 @@ export const ConnectorLinesUI = React.memo((props: {treePath: string, width: num
 		linkSpawnPoint = linesFromAbove
 			? new Vector2(20, -guessedInnerUI_marginBottom)
 			: new Vector2(0, (group?.chRect?.height ?? 0) / 2);
-		childBoxInfos = [...group.childRects].filter(a=>a[1] != null).map(entry=>{
+		childBoxInfos = [...group.childConnectorInfos.values()].filter(a=>a.rect != null).map(entry=>{
 			return {
-				color: "red",
-				offset: new Vector2(entry[1]!.x, entry[1]!.Center.y).Minus(group.chRect!.Position),
+				offset: new Vector2(entry.rect!.x, entry.rect!.Center.y).Minus(group.chRect!.Position),
+				opts: entry.opts,
 			};
 		});
 	}
@@ -86,7 +91,7 @@ export const ConnectorLinesUI = React.memo((props: {treePath: string, width: num
 					const start = linkSpawnPoint;
 					const mid = child.offset.Minus(10, 0);
 					const end = child.offset;
-					return <path key={`connectorLine_${childID}`} style={{stroke: child.color, strokeWidth: 3, fill: "none"}}
+					return <path key={`connectorLine_${childID}`} style={{stroke: child.opts?.color ?? "gray", strokeWidth: 3, fill: "none"}}
 						d={`M${start.x},${start.y} L${mid.x},${mid.y} L${end.x},${end.y}`}/>;
 				}
 
@@ -102,7 +107,7 @@ export const ConnectorLinesUI = React.memo((props: {treePath: string, width: num
 				const curvedLine = style=>{
 					return <path //key={`connectorLine_${child.id}`}
 						style={E(
-							{stroke: child.color, strokeWidth: 3, fill: "none"},
+							{stroke: child.opts?.color ?? "gray", strokeWidth: 3, fill: "none"},
 							style,
 						)}
 						d={`M${start.x},${start.y} C${startControl.x},${startControl.y} ${endControl.x},${endControl.y} ${end.x},${end.y}`}/>;

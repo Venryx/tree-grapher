@@ -1,13 +1,17 @@
 import React from "react";
 import { Vector2 } from "js-vextensions";
 import { NodeGroup } from "../Graph/NodeGroup.js";
+import { n } from "../Utils/@Internal/Types.js";
 export declare function useRef_connectorLinesUI(treePath: string, handle: ConnectorLinesUI_Handle): {
     ref_connectorLinesUI: React.MutableRefObject<SVGSVGElement | null>;
     ref_group: React.MutableRefObject<NodeGroup | null>;
 };
-export declare type ChildBoxInfo = {
-    color: string;
+export declare class NodeConnectorOpts {
+    color?: string;
+}
+export declare type ChildBoxInfo_AtRenderTime = {
     offset: Vector2;
+    opts: NodeConnectorOpts | n;
 };
 export declare class ConnectorLinesUI_Handle {
     constructor(data: ConnectorLinesUI_Handle);

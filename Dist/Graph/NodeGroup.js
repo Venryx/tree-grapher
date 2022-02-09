@@ -19,7 +19,7 @@ export class NodeGroup {
         this.childHolder_belowParent = false;
         // connector-lines system
         // ==========
-        this.childRects = new Map();
+        this.childConnectorInfos = new Map();
         Object.assign(this, data);
     }
     get ParentPath_Sortable() { return TreePathAsSortableStr(this.path); }
@@ -57,8 +57,9 @@ export class NodeGroup {
                 const pathParts = this.path.split("/");
                 const parentGroup = this.graph.groupsByPath.get(pathParts.slice(0, -1).join("/"));
                 (_a = this.graph.uiDebugKit) === null || _a === void 0 ? void 0 : _a.FlashComp(this.leftColumnEl, { text: `InnerUI center-changed; try tell parent. @parentGroup:${(_b = parentGroup === null || parentGroup === void 0 ? void 0 : parentGroup.path) !== null && _b !== void 0 ? _b : "null"}` });
+                const newInfo = new NodeConnectorInfo({ rect: newRect, opts: this.leftColumn_connectorOpts });
                 if (parentGroup)
-                    parentGroup.NotifyChildNodeLCRectChanged(Number(pathParts.slice(-1)[0]), newRect);
+                    parentGroup.NotifyChildNodeConnectorInfoChanged(Number(pathParts.slice(-1)[0]), newInfo);
             }
         }
     }
@@ -243,10 +244,10 @@ export class NodeGroup {
             this.RefreshConnectorLinesUI();
         }
     }
-    NotifyChildNodeLCRectChanged(childIndex, newRect) {
+    NotifyChildNodeConnectorInfoChanged(childIndex, newInfo) {
         /*if (this.chRect == null) return;
         const newRect_rel = newRect?.NewPosition(pos=>pos.Minus(this.chRect!.Position));*/
-        this.childRects.set(childIndex, newRect);
+        this.childConnectorInfos.set(childIndex, newInfo);
         this.RefreshConnectorLinesUI();
     }
     RefreshConnectorLinesUI() {
@@ -255,5 +256,10 @@ export class NodeGroup {
             return;
         this.connectorLinesComp.forceUpdate();
         (_a = this.graph.uiDebugKit) === null || _a === void 0 ? void 0 : _a.FlashComp(this.connectorLinesComp.svgEl, { text: `Refreshed connector-lines-ui.` });
+    }
+}
+export class NodeConnectorInfo {
+    constructor(data) {
+        Object.assign(this, data);
     }
 }

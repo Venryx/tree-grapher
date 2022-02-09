@@ -22,6 +22,8 @@ export function useRef_connectorLinesUI(treePath, handle) {
     });
     return { ref_connectorLinesUI, ref_group };
 }
+export class NodeConnectorOpts {
+}
 export class ConnectorLinesUI_Handle {
     constructor(data) {
         Object.assign(this, data);
@@ -46,10 +48,10 @@ export const ConnectorLinesUI = React.memo((props) => {
         linkSpawnPoint = linesFromAbove
             ? new Vector2(20, -guessedInnerUI_marginBottom)
             : new Vector2(0, ((_b = (_a = group === null || group === void 0 ? void 0 : group.chRect) === null || _a === void 0 ? void 0 : _a.height) !== null && _b !== void 0 ? _b : 0) / 2);
-        childBoxInfos = [...group.childRects].filter(a => a[1] != null).map(entry => {
+        childBoxInfos = [...group.childConnectorInfos.values()].filter(a => a.rect != null).map(entry => {
             return {
-                color: "red",
-                offset: new Vector2(entry[1].x, entry[1].Center.y).Minus(group.chRect.Position),
+                offset: new Vector2(entry.rect.x, entry.rect.Center.y).Minus(group.chRect.Position),
+                opts: entry.opts,
             };
         });
     }
@@ -60,6 +62,7 @@ export const ConnectorLinesUI = React.memo((props) => {
             //top: 0, bottom: 0,
             overflow: "visible", zIndex: -1
         } }, childBoxInfos.map((child, index) => {
+        var _a, _b;
         if (child.offset == null)
             return null;
         const childID = `${treePath}_${index}`;
@@ -67,7 +70,7 @@ export const ConnectorLinesUI = React.memo((props) => {
             const start = linkSpawnPoint;
             const mid = child.offset.Minus(10, 0);
             const end = child.offset;
-            return React.createElement("path", { key: `connectorLine_${childID}`, style: { stroke: child.color, strokeWidth: 3, fill: "none" }, d: `M${start.x},${start.y} L${mid.x},${mid.y} L${end.x},${end.y}` });
+            return React.createElement("path", { key: `connectorLine_${childID}`, style: { stroke: (_b = (_a = child.opts) === null || _a === void 0 ? void 0 : _a.color) !== null && _b !== void 0 ? _b : "gray", strokeWidth: 3, fill: "none" }, d: `M${start.x},${start.y} L${mid.x},${mid.y} L${end.x},${end.y}` });
         }
         const start = linkSpawnPoint;
         let startControl = start.Plus(30, 0);
@@ -77,7 +80,8 @@ export const ConnectorLinesUI = React.memo((props) => {
         startControl = startControl.Plus(middleControl).Times(0.5); // average with middle-control
         endControl = endControl.Plus(middleControl).Times(0.5); // average with middle-control
         const curvedLine = style => {
-            return React.createElement("path", { style: E({ stroke: child.color, strokeWidth: 3, fill: "none" }, style), d: `M${start.x},${start.y} C${startControl.x},${startControl.y} ${endControl.x},${endControl.y} ${end.x},${end.y}` });
+            var _a, _b;
+            return React.createElement("path", { style: E({ stroke: (_b = (_a = child.opts) === null || _a === void 0 ? void 0 : _a.color) !== null && _b !== void 0 ? _b : "gray", strokeWidth: 3, fill: "none" }, style), d: `M${start.x},${start.y} C${startControl.x},${startControl.y} ${endControl.x},${endControl.y} ${end.x},${end.y}` });
         };
         const addDash = false;
         return React.createElement(Fragment, { key: `connectorLine_${childID}` },
