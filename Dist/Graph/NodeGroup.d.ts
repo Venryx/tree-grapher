@@ -16,7 +16,7 @@ export declare class NodeGroup {
     rect: VRect | n;
     UpdateRect(checkForSameColumnEffects?: boolean, checkForRightColumnEffects?: boolean): {
         newRect: VRect;
-        oldRect: n | VRect;
+        oldRect: VRect | n;
         rectChanged: boolean;
     } | null;
     CheckForSameColumnEffectsFromRectChange(newRect: VRect, oldRect: VRect | n): void;

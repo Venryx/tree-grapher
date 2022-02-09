@@ -3,8 +3,7 @@ import {Button, Column, Row} from "react-vcomponents";
 import {BaseComponent, cssHelper, GetDOM, UseCallback} from "react-vextensions";
 import {MapNode} from "../@SharedByExamples/MapNode";
 import {NodeUI} from "./NodeUI";
-import {useRef_nodeGroup} from "tree-grapher";
-import {StripesCSS, useForceUpdate} from "../@SharedByExamples/Utils/General";
+import {StripesCSS, useForceUpdate, useRef_nodeGroup} from "tree-grapher";
 import {FlashComp} from "ui-debug-kit";
 import {WaitXThenRun} from "js-vextensions";
 

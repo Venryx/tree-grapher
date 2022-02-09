@@ -3,8 +3,7 @@ import {BaseComponent, GetDOM} from "react-vextensions";
 import {Column, Row} from "react-vcomponents";
 import {NodeUI} from "./UI/NodeUI";
 import {GetAllNodesInTree_ByPath, nodeTree_main} from "./@SharedByExamples/NodeData";
-import {Graph, GraphContext, makeObservable_safe} from "tree-grapher";
-import {GraphColumnsVisualizer} from "./UI/GraphColumnsVisualizer";
+import {Graph, GraphColumnsVisualizer, GraphContext, makeObservable_safe} from "tree-grapher";
 import {makeObservable, observable} from "mobx";
 import {FlashComp, FlashOptions} from "ui-debug-kit";
 
