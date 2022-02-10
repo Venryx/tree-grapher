@@ -65,7 +65,7 @@ export const ConnectorLinesUI = React.memo((props: {treePath: string, width: num
 		}
 		
 		linkSpawnPoint = linesFromAbove
-			? new Vector2(20, -guessedInnerUI_marginBottom)
+			? new Vector2(width - 10, -guessedInnerUI_marginBottom)
 			: new Vector2(0, (group?.chRect?.height ?? 0) / 2);
 		childBoxInfos = [...group.childConnectorInfos.values()].filter(a=>a.rect != null).map(entry=>{
 			return {

@@ -22,7 +22,7 @@ export declare class Graph {
         group: NodeGroup;
         alreadyExisted: boolean;
     };
-    NotifyGroupLeftColumnMount(el: HTMLElement, treePath: string, connectorOpts?: NodeConnectorOpts): NodeGroup;
+    NotifyGroupLeftColumnMount(el: HTMLElement, treePath: string, connectorOpts?: NodeConnectorOpts, alignWithParent?: boolean): NodeGroup;
     NotifyGroupChildHolderMount(el: HTMLElement, treePath: string, belowParent: boolean): NodeGroup;
     NotifyGroupConnectorLinesUIMount(handle: ConnectorLinesUI_Handle, treePath: string): NodeGroup;
     NotifyGroupLeftColumnUnmount(group: NodeGroup): void;

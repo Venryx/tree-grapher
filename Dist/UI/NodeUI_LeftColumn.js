@@ -4,14 +4,14 @@ import { GraphContext } from "../Graph.js";
 import { Column } from "./@Shared/Basics.js";
 import ReactDOM from "react-dom";
 import { Assert } from "js-vextensions";
-export function useRef_nodeLeftColumn(treePath, connectorLineOpts) {
+export function useRef_nodeLeftColumn(treePath, connectorLineOpts, alignWithParent) {
     const graph = useContext(GraphContext);
     let ref_group = useRef(null);
     let ref_resizeObserver = useRef(null);
     let ref_leftColumn = useCallbackRef(null, el => {
         //let ref = useCallback(el=>{
         if (el) {
-            let group = graph.NotifyGroupLeftColumnMount(el, treePath, connectorLineOpts);
+            let group = graph.NotifyGroupLeftColumnMount(el, treePath, connectorLineOpts, alignWithParent);
             ref_group.current = group;
             // set up observer
             // NOTE: ResizeObserver watches only for content-rect changes, *not* margin/padding changes (see: https://web.dev/resize-observer)
@@ -47,10 +47,10 @@ export function useRef_nodeLeftColumn(treePath, connectorLineOpts) {
     return { ref_leftColumn, ref_group };
 }
 export const NodeUI_LeftColumn = (props) => {
-    let { treePath, connectorLineOpts, children } = props;
+    let { treePath, connectorLineOpts, alignWithParent, children } = props;
     const graph = useContext(GraphContext);
     const group = graph.groupsByPath.get(treePath);
-    let { ref_leftColumn } = useRef_nodeLeftColumn(treePath, connectorLineOpts);
+    let { ref_leftColumn } = useRef_nodeLeftColumn(treePath, connectorLineOpts, alignWithParent);
     return (React.createElement(Column
     //ref={ref}
     , { 

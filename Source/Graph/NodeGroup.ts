@@ -29,6 +29,7 @@ export class NodeGroup {
 	
 	leftColumnEl: HTMLElement|n;
 	leftColumn_connectorOpts?: NodeConnectorOpts;
+	leftColumn_alignWithParent?: boolean;
 	//rightColumnEl: HTMLElement;
 	childHolderEl: HTMLElement|n;
 	childHolder_belowParent = false;
@@ -38,6 +39,24 @@ export class NodeGroup {
 	lcRect: VRect|n; // just storage for "actual rect" observed
 	innerUIRect: VRect|n;
 	chRect: VRect|n; // just storage for "actual rect" observed
+
+	// base rects
+	/** Same as innerUIRect, but with the y-pos reduced to what it'd be if its container (ie. the left-column element) had set no padding-top; works alongside CHRect_Base(). */
+	get InnerUIRect_Base() {
+		// old approach
+		/*const chRect = this.CHRect_Base;
+		if (chRect == null) return null;
+		return chRect.Position.y + ((this.innerUIRect?.height ?? 0) / 2);*/
+		// new approach
+		if (this.leftColumnEl == null) return null;
+		return this.innerUIRect?.NewY(y=>y - GetPaddingTopFromStyle(this.leftColumnEl!.style));
+	}
+	/** Same as chRect, but with the margin removed; this is the "base"/resting-rect, which is the stable/reference point for (potentially multi-level) alignment operations. */
+	get CHRect_Base() {
+		if (this.childHolderEl == null) return null;
+		let marginTop = GetMarginTopFromStyle(this.childHolderEl.style);
+		return this.chRect?.NewY(a=>a - marginTop);
+	}
 
 	UpdateRects() {
 		this.UpdateLCRect();
@@ -214,10 +233,19 @@ export class NodeGroup {
 		// (this check happens after the UpdateRects, because some callers rely on UpdateRects being called [even if the shift itself isn't necessary]) // todo: probably clean this up
 		if (this.childHolder_belowParent) return;
 
-		const innerUIHeight = this.lcRect?.height ?? 0;
-		const idealMarginTop = -(this.chRect.height / 2) + (innerUIHeight / 2);
-		
 		let oldMarginTop = GetMarginTopFromStyle(this.childHolderEl.style);
+		const innerUIHeight = this.innerUIRect?.height ?? 0;
+		let idealMarginTop = -(this.chRect.height / 2) + (innerUIHeight / 2);
+
+		const childGroups = this.graph.FindChildGroups(this);
+		const childGroupToAlignWithOurInnerUI = childGroups.find(a=>a.leftColumn_alignWithParent);
+		if (childGroupToAlignWithOurInnerUI && childGroupToAlignWithOurInnerUI.innerUIRect) {
+			const childGroupInnerUICenter = childGroupToAlignWithOurInnerUI.innerUIRect.Center.y;
+			const childGroupInnerUICenter_base = childGroupInnerUICenter - oldMarginTop;
+			// set ideal margin-top to the value that would align the given child-group with our (left-column) inner-ui's center
+			idealMarginTop = this.InnerUIRect_Base!.Center.y - childGroupInnerUICenter_base;
+		}
+		
 		let maxMarginTop = idealMarginTop;
 		let previousGroups = new Set<NodeGroup>();
 		for (const column of this.graph.GetColumnsForGroup(this)) {
@@ -226,9 +254,7 @@ export class NodeGroup {
 			//previousGroup?.UpdateRect(); // this is necessary in some cases; idk why, but I don't have time to investigate atm
 			//console.log("Checking1");
 			const rectToStayBelow = previousGroup?.chRect ?? column.rect.NewBottom(GetPaddingTopFromStyle(this.graph.containerEl.style));
-
-			const deltaToBeJustBelow = rectToStayBelow.Bottom - this.chRect.Top;
-			maxMarginTop = Math.max(maxMarginTop, CE(oldMarginTop + deltaToBeJustBelow).KeepAtLeast(idealMarginTop));
+			maxMarginTop = Math.max(maxMarginTop, CE(rectToStayBelow.Bottom - this.CHRect_Base!.Top).KeepAtLeast(idealMarginTop));
 			//if (isNaN(maxMarginTop)) debugger;
 
 			//const pathForAboveGap = ;

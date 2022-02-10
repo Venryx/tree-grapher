@@ -46,7 +46,7 @@ export const ConnectorLinesUI = React.memo((props) => {
             guessedInnerUI_marginBottom = group.leftColumnEl.getBoundingClientRect().bottom - guessedInnerUI_rectBottom;
         }
         linkSpawnPoint = linesFromAbove
-            ? new Vector2(20, -guessedInnerUI_marginBottom)
+            ? new Vector2(width - 10, -guessedInnerUI_marginBottom)
             : new Vector2(0, ((_b = (_a = group === null || group === void 0 ? void 0 : group.chRect) === null || _a === void 0 ? void 0 : _a.height) !== null && _b !== void 0 ? _b : 0) / 2);
         childBoxInfos = [...group.childConnectorInfos.values()].filter(a => a.rect != null).map(entry => {
             return {

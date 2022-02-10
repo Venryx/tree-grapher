@@ -23,7 +23,7 @@ export const NodeUI = observer((props: {node: MapNode, path: string, inBelowGrou
 				},
 				path == "0" && {alignSelf: "flex-start"}, // root node needs this, to not be stretched to fit container's height
 			)}>
-				<NodeUI_LeftColumn treePath={path} connectorLineOpts={{color: path.split("/").length % 2 == 0 ? "green" : "blue"}}>
+				<NodeUI_LeftColumn treePath={path} alignWithParent={node.alignWithParent} connectorLineOpts={{color: path.split("/").length % 2 == 0 ? "green" : "blue"}}>
 					<NodeUI_Inner node={node} path={path} inBelowGroup={inBelowGroup}/>
 				</NodeUI_LeftColumn>
 				{nodeState.expanded && !node.childrenBelow &&

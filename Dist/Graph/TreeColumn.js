@@ -57,8 +57,10 @@ export class TreeColumn {
         const ownIndex = this.groups_ordered.indexOf(group);
         for (let i = ownIndex - 1; i >= 0; i--) {
             const group2 = this.groups_ordered[i];
-            if (group2.childHolderEl == null)
+            if (group2.childHolderEl == null || group2.chRect == null)
                 continue; // group is collapsed, so has no rect to care about
+            if (group2.chRect.width == 0 || group2.chRect.height == 0)
+                continue; // a width/height of 0 is invisible, so consider collapsed/irrelevant here too
             if (IsXAncestorOfY(group2.path, group.path))
                 continue;
             //if (IsXAncestor_OrSiblingOfAncestor_OfY(group2.path, group.path)) continue;
@@ -70,8 +72,10 @@ export class TreeColumn {
         const ownIndex = this.groups_ordered.indexOf(group);
         for (let i = ownIndex + 1; i < this.groups_ordered.length; i++) {
             const group2 = this.groups_ordered[i];
-            if (group2.childHolderEl == null)
+            if (group2.childHolderEl == null || group2.chRect == null)
                 continue; // group is collapsed, so has no rect to care about
+            if (group2.chRect.width == 0 || group2.chRect.height == 0)
+                continue; // a width/height of 0 is invisible, so consider collapsed/irrelevant here too
             if (IsXAncestorOfY(group2.path, group.path))
                 continue;
             //if (IsXAncestor_OrSiblingOfAncestor_OfY(group2.path, group.path)) continue;

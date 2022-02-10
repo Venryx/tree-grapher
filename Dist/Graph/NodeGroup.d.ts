@@ -14,23 +14,28 @@ export declare class NodeGroup {
     columnsPartOf: TreeColumn[];
     leftColumnEl: HTMLElement | n;
     leftColumn_connectorOpts?: NodeConnectorOpts;
+    leftColumn_alignWithParent?: boolean;
     childHolderEl: HTMLElement | n;
     childHolder_belowParent: boolean;
     connectorLinesComp: ConnectorLinesUI_Handle | n;
     lcRect: VRect | n;
     innerUIRect: VRect | n;
     chRect: VRect | n;
+    /** Same as innerUIRect, but with the y-pos reduced to what it'd be if its container (ie. the left-column element) had set no padding-top; works alongside CHRect_Base(). */
+    get InnerUIRect_Base(): VRect | null | undefined;
+    /** Same as chRect, but with the margin removed; this is the "base"/resting-rect, which is the stable/reference point for (potentially multi-level) alignment operations. */
+    get CHRect_Base(): VRect | null | undefined;
     UpdateRects(): void;
     UpdateLCRect(): {
         newRect: VRect | null;
-        oldRect: n | VRect;
+        oldRect: VRect | n;
         rectChanged: boolean;
     };
     /** Only to be called from NodeGroup.UpdateLCRect(). */
     private UpdateInnerUIRect;
     UpdateCHRect(checkForSameColumnEffects?: boolean, checkForRightColumnEffects?: boolean): {
         newRect: VRect | null;
-        oldRect: n | VRect;
+        oldRect: VRect | n;
         rectChanged: boolean;
     };
     CheckForSameColumnEffectsFromRectChange(newRect: VRect | n, oldRect: VRect | n): void;
