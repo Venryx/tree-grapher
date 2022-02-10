@@ -20,13 +20,14 @@ export function GetRectRelative(x: Element, y: Element) {
 	return xRect.NewPosition(pos=>pos.Minus(yRect.Position));
 }
 
-export function GetMarginTopFromStyle(style: CSSStyleDeclaration) {
-	if (style.marginTop == "") return 0;
-	if (style.marginTop.includes("px")) return parseFloat(style.marginTop);
+export function CSSScalarToPixels(scalar: string) {
+	if (scalar == "") return 0;
+	if (scalar.includes("px")) return parseFloat(scalar);
 	return 0; // ignores %-margins and such (we don't use %-margins in tree-grapher)
 }
+export function GetMarginTopFromStyle(style: CSSStyleDeclaration) {
+	return CSSScalarToPixels(style.marginTop);
+}
 export function GetPaddingTopFromStyle(style: CSSStyleDeclaration) {
-	if (style.paddingTop == "") return 0;
-	if (style.paddingTop.includes("px")) return parseFloat(style.paddingTop);
-	return 0; // ignores %-paddings and such (we don't use %-paddings in tree-grapher)
+	return CSSScalarToPixels(style.paddingTop);
 }

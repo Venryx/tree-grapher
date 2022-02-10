@@ -5,6 +5,7 @@ import {useContext} from "react";
 import {Button, Column, Row} from "react-vcomponents";
 import {GraphContext} from "../../Graph.js";
 import {n} from "../../Utils/@Internal/Types.js";
+import {CSSScalarToPixels, GetMarginTopFromStyle} from "../../Utils/General/General.js";
 import {useForceUpdate} from "../../Utils/UI.js";
 
 export const GraphColumnsVisualizer = observer((props: {levelsToScrollContainer?: number})=>{
@@ -20,21 +21,31 @@ export const GraphColumnsVisualizer = observer((props: {levelsToScrollContainer?
 		let timer = new Timer(100, ()=>{
 			if (ref.current == null) return;
 
+			const rectTop_preMargin = ref.current.getBoundingClientRect().top;
+			const newMarginTopToBeVisible_inPageViewport = 0 - rectTop_preMargin; // these rects are in viewport space, so "0" as the target-y just means top-of-viewport!
+
+			let newMarginTopToBeVisible_inScrollContainerViewport = 0;
 			if (levelsToScrollContainer != null) {
 				let nextUp: HTMLElement|n = ref.current;
 				for (let i = 0; i < levelsToScrollContainer; i++) {
 					nextUp = nextUp?.parentElement;
 				}
 				if (nextUp instanceof HTMLElement) {
-					const deltaNeeded = nextUp.getBoundingClientRect().top - ref.current.getBoundingClientRect().top;
-					const newVal = marginTopNeededToBeVisible + deltaNeeded;
-					if (newVal != marginTopNeededToBeVisible) {
-						setMarginTopNeededToBeVisible(newVal);
-					}
+					newMarginTopToBeVisible_inScrollContainerViewport = nextUp.getBoundingClientRect().top - rectTop_preMargin;
 				}
 			}
 
-			//forceUpdate();
+			let newMarginTopToBeVisible_inBothViewports = Math.max(newMarginTopToBeVisible_inPageViewport, newMarginTopToBeVisible_inScrollContainerViewport);
+			if (newMarginTopToBeVisible_inBothViewports != marginTopNeededToBeVisible) {
+				setMarginTopNeededToBeVisible(newMarginTopToBeVisible_inBothViewports);
+			}
+
+			/*const newHeight = ref.current.getBoundingClientRect().height;
+			if (newHeight != height) {
+				setHeight(newHeight);
+			} else {
+				forceUpdate();
+			}*/
 			setHeight(ref.current.getBoundingClientRect().height); // this also triggers update (needed for block above)
 		}).Start();
 		return ()=>timer.Stop();

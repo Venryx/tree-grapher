@@ -14,17 +14,16 @@ export function GetRectRelative(x, y) {
     var yRect = VRect.FromLTWH(y.getBoundingClientRect());
     return xRect.NewPosition(pos => pos.Minus(yRect.Position));
 }
-export function GetMarginTopFromStyle(style) {
-    if (style.marginTop == "")
+export function CSSScalarToPixels(scalar) {
+    if (scalar == "")
         return 0;
-    if (style.marginTop.includes("px"))
-        return parseFloat(style.marginTop);
+    if (scalar.includes("px"))
+        return parseFloat(scalar);
     return 0; // ignores %-margins and such (we don't use %-margins in tree-grapher)
 }
+export function GetMarginTopFromStyle(style) {
+    return CSSScalarToPixels(style.marginTop);
+}
 export function GetPaddingTopFromStyle(style) {
-    if (style.paddingTop == "")
-        return 0;
-    if (style.paddingTop.includes("px"))
-        return parseFloat(style.paddingTop);
-    return 0; // ignores %-paddings and such (we don't use %-paddings in tree-grapher)
+    return CSSScalarToPixels(style.paddingTop);
 }

@@ -15,20 +15,28 @@ export const GraphColumnsVisualizer = observer((props) => {
         let timer = new Timer(100, () => {
             if (ref.current == null)
                 return;
+            const rectTop_preMargin = ref.current.getBoundingClientRect().top;
+            const newMarginTopToBeVisible_inPageViewport = 0 - rectTop_preMargin; // these rects are in viewport space, so "0" as the target-y just means top-of-viewport!
+            let newMarginTopToBeVisible_inScrollContainerViewport = 0;
             if (levelsToScrollContainer != null) {
                 let nextUp = ref.current;
                 for (let i = 0; i < levelsToScrollContainer; i++) {
                     nextUp = nextUp === null || nextUp === void 0 ? void 0 : nextUp.parentElement;
                 }
                 if (nextUp instanceof HTMLElement) {
-                    const deltaNeeded = nextUp.getBoundingClientRect().top - ref.current.getBoundingClientRect().top;
-                    const newVal = marginTopNeededToBeVisible + deltaNeeded;
-                    if (newVal != marginTopNeededToBeVisible) {
-                        setMarginTopNeededToBeVisible(newVal);
-                    }
+                    newMarginTopToBeVisible_inScrollContainerViewport = nextUp.getBoundingClientRect().top - rectTop_preMargin;
                 }
             }
-            //forceUpdate();
+            let newMarginTopToBeVisible_inBothViewports = Math.max(newMarginTopToBeVisible_inPageViewport, newMarginTopToBeVisible_inScrollContainerViewport);
+            if (newMarginTopToBeVisible_inBothViewports != marginTopNeededToBeVisible) {
+                setMarginTopNeededToBeVisible(newMarginTopToBeVisible_inBothViewports);
+            }
+            /*const newHeight = ref.current.getBoundingClientRect().height;
+            if (newHeight != height) {
+                setHeight(newHeight);
+            } else {
+                forceUpdate();
+            }*/
             setHeight(ref.current.getBoundingClientRect().height); // this also triggers update (needed for block above)
         }).Start();
         return () => timer.Stop();
