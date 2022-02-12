@@ -27,12 +27,12 @@ export function useRef_nodeChildHolder(treePath, belowParent = false) {
             const resizeObserver = new ResizeObserver(entries => {
                 let entry = entries[0];
                 //if (ref_childHolder.current == null || group.IsDestroyed()) return;
-                group.UpdateCHRect();
+                group.UpdateCHRect({ from: "ref_childHolder" });
             });
             ref_resizeObserver.current = resizeObserver;
             resizeObserver.observe(el);
-            group.RecalculateLeftColumnAlign(); // call once, for first render
-            group.RecalculateChildHolderShift(); // call once, for first render
+            group.RecalculateLeftColumnAlign({ from: "NCH_Hooks_ResizeObs" }); // call once, for first render
+            group.RecalculateChildHolderShift({ from: "NCH_Hooks_ResizeObs" }); // call once, for first render
         }
         else {
             const group = ref_group.current;

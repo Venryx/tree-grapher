@@ -14,7 +14,7 @@ export class TreeColumn {
 	AddGroup(group: NodeGroup) {
 		let i = 0;
 		// keep increasing i, while we keep seeing elements that we should be inserted after
-		while (this.groups_ordered[i] != null && this.groups_ordered[i].ParentPath_Sortable <= group.ParentPath_Sortable) {
+		while (this.groups_ordered[i] != null && this.groups_ordered[i].path_sortable <= group.path_sortable) {
 			Assert(this.groups_ordered[i].path != group.path, `Tried to insert a group for a path that already exists! @path:${group.path}`);
 			i++;
 		}
@@ -65,8 +65,7 @@ export class TreeColumn {
 		const ownIndex = this.groups_ordered.indexOf(group);
 		for (let i = ownIndex - 1; i >= 0; i--) {
 			const group2 = this.groups_ordered[i];
-			if (group2.childHolderEl == null || group2.chRect == null) continue; // group is collapsed, so has no rect to care about
-			if (group2.chRect.width == 0 || group2.chRect.height == 0) continue; // a width/height of 0 is invisible, so consider collapsed/irrelevant here too
+			if (group2.childHolderEl == null || !group2.CHRect_Valid) continue; // group is collapsed or empty, so has no rect to care about
 			if (IsXAncestorOfY(group2.path, group.path)) continue;
 			//if (IsXAncestor_OrSiblingOfAncestor_OfY(group2.path, group.path)) continue;
 			return group2;
@@ -77,8 +76,7 @@ export class TreeColumn {
 		const ownIndex = this.groups_ordered.indexOf(group);
 		for (let i = ownIndex + 1; i < this.groups_ordered.length; i++) {
 			const group2 = this.groups_ordered[i];
-			if (group2.childHolderEl == null || group2.chRect == null) continue; // group is collapsed, so has no rect to care about
-			if (group2.chRect.width == 0 || group2.chRect.height == 0) continue; // a width/height of 0 is invisible, so consider collapsed/irrelevant here too
+			if (group2.childHolderEl == null || !group2.CHRect_Valid) continue; // group is collapsed or empty, so has no rect to care about
 			if (IsXAncestorOfY(group2.path, group.path)) continue;
 			//if (IsXAncestor_OrSiblingOfAncestor_OfY(group2.path, group.path)) continue;
 			return group2;

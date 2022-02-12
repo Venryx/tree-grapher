@@ -27,3 +27,31 @@ export function GetMarginTopFromStyle(style) {
 export function GetPaddingTopFromStyle(style) {
     return CSSScalarToPixels(style.paddingTop);
 }
+// for debugging-related logs and/or flash-kit entries
+export function StrForChange(oldVal, newVal) {
+    const oldStr = "" + oldVal;
+    const newStr = "" + newVal;
+    const rightStr = newStr == oldStr ? "[same]" : newStr;
+    return `${oldStr}->${rightStr}`;
+}
+export function Args(requiredData, optionalData) {
+    return Object.assign({}, requiredData, optionalData);
+}
+export function UnwrapArgs(args, defaultArgs) {
+    return Object.assign({}, defaultArgs, args);
+}
+export function Method(defaultArgs_required, defaultArgs_optional, funcGetter // to return this "method itself"
+) {
+    const defaultArgs = Args(defaultArgs_required, defaultArgs_optional);
+    const FinalArgs = (args) => {
+        return Object.assign({}, defaultArgs, args);
+    };
+    const func = funcGetter(FinalArgs);
+    return func;
+}
+export function ROSizeArrToStr(sizes) {
+    const stringifiableCopy = sizes.map(size => {
+        return { inlineSize: size.inlineSize, blockSize: size.blockSize };
+    });
+    return JSON.stringify(stringifiableCopy);
+}

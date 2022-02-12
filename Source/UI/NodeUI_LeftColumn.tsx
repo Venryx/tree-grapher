@@ -7,6 +7,7 @@ import {Column, Row} from "./@Shared/Basics.js";
 import ReactDOM from "react-dom";
 import {Assert} from "js-vextensions";
 import {NodeConnectorOpts} from "./ConnectorLinesUI.js";
+import {ROSizeArrToStr} from "../Utils/General/General.js";
 
 export function useRef_nodeLeftColumn(treePath: string, connectorLineOpts?: NodeConnectorOpts, alignWithParent?: boolean) {
 	const graph = useContext(GraphContext);
@@ -24,8 +25,15 @@ export function useRef_nodeLeftColumn(treePath: string, connectorLineOpts?: Node
 			// NOTE: ResizeObserver watches only for content-rect changes, *not* margin/padding changes (see: https://web.dev/resize-observer)
 			const resizeObserver = new ResizeObserver(entries=>{
 				let entry = entries[0];
+				group.graph.uiDebugKit?.FlashComp(group.leftColumnEl, {text: `LC_ResizeObs change. @bboxSize:${ROSizeArrToStr(entry.borderBoxSize)} @cboxSize:${ROSizeArrToStr(entry.contentBoxSize)} @rect:${JSON.stringify(entry.contentRect)}`});
 				//if (ref_leftColumn.current == null || group.IsDestroyed()) return;
-				group.UpdateLCRect();
+				group.UpdateLCRect({from: "LC_ResizeObs", intResponse: false, extResponse: false});
+				group.RecalculateChildHolderShift({from: "LC_ResizeObs"});
+				//group.RecalculateLeftColumnAlign({from: "LC_ResizeObs"});
+				//group.UpdateCHRect({from: "LC_ResizeObs"});
+				//group.UpdateLCRect(true, false);
+				//group.RecalculateLeftColumnAlign({from: "LC_ResizeObs"});
+				//setTimeout(()=>group.RecalculateLeftColumnAlign());
 
 				// idk why this is needed, but it is atm
 				/*let info = group.UpdateCHRect();
@@ -37,7 +45,7 @@ export function useRef_nodeLeftColumn(treePath: string, connectorLineOpts?: Node
 			ref_resizeObserver.current = resizeObserver;
 			resizeObserver.observe(el);
 
-			group.RecalculateLeftColumnAlign();
+			group.RecalculateLeftColumnAlign({from: "ref_leftColumn"});
 		} else {
 			const group = ref_group.current;
 			Assert(group && ref_resizeObserver.current, "Cannot call [ref_group/ref_resizeObserver].current = null twice in a row!");

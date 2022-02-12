@@ -30,7 +30,6 @@ export class ConnectorLinesUI_Handle {
     }
 }
 export const ConnectorLinesUI = React.memo((props) => {
-    var _a, _b;
     const { treePath, width, linesFromAbove } = props;
     const forceUpdate = useForceUpdate();
     const handle = useMemo(() => new ConnectorLinesUI_Handle({ props: props, svgEl: null, forceUpdate }), []);
@@ -38,7 +37,7 @@ export const ConnectorLinesUI = React.memo((props) => {
     const group = ref_group.current;
     let linkSpawnPoint = Vector2.zero;
     let childBoxInfos = [];
-    if (group && group.chRect) {
+    if (group && group.chRect && group.ChildHolderAnchorPoint({ from: "ConnectorLinesUI" }) != null) {
         let guessedInnerUI_marginBottom = 0;
         if (group.lcRect && group.leftColumnEl) {
             let guessedInnerUI = group.leftColumnEl ? group.leftColumnEl.childNodes[group.leftColumnEl.childNodes.length - 1] : null;
@@ -47,7 +46,7 @@ export const ConnectorLinesUI = React.memo((props) => {
         }
         linkSpawnPoint = linesFromAbove
             ? new Vector2(width - 10, -guessedInnerUI_marginBottom)
-            : new Vector2(0, ((_b = (_a = group === null || group === void 0 ? void 0 : group.chRect) === null || _a === void 0 ? void 0 : _a.height) !== null && _b !== void 0 ? _b : 0) / 2);
+            : new Vector2(0, group.ConvertFromGlobalSpace_YPos(group.ChildHolderAnchorPoint({ from: "ConnectorLinesUI" }), group.chRect));
         childBoxInfos = [...group.childConnectorInfos.values()].filter(a => a.rect != null).map(entry => {
             return {
                 offset: new Vector2(entry.rect.x, entry.rect.Center.y).Minus(group.chRect.Position),

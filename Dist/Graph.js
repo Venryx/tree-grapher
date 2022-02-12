@@ -73,14 +73,14 @@ export class Graph {
         group.leftColumnEl = el;
         group.leftColumn_connectorOpts = connectorOpts;
         group.leftColumn_alignWithParent = alignWithParent;
-        group.UpdateLCRect();
+        group.UpdateLCRect({ from: "NotifyGroupLeftColumnMount" });
         return group;
     }
     NotifyGroupChildHolderMount(el, treePath, belowParent) {
         const { group, alreadyExisted } = this.GetOrCreateGroup(treePath);
         group.childHolderEl = el;
         group.childHolder_belowParent = belowParent;
-        group.UpdateCHRect();
+        group.UpdateCHRect({ from: "NotifyGroupChildHolderMount" });
         return group;
     }
     NotifyGroupConnectorLinesUIMount(handle, treePath) {
@@ -91,7 +91,7 @@ export class Graph {
     NotifyGroupLeftColumnUnmount(group) {
         group.leftColumnEl = null;
         if (group.childHolderEl != null || group.connectorLinesComp != null) {
-            group.UpdateLCRect();
+            group.UpdateLCRect({ from: "NotifyGroupLeftColumnUnmount" });
         }
         else {
             group.DetachAndDestroy();
@@ -100,7 +100,7 @@ export class Graph {
     NotifyGroupChildHolderUnmount(group) {
         group.childHolderEl = null;
         if (group.leftColumnEl != null || group.connectorLinesComp != null) {
-            group.UpdateCHRect();
+            group.UpdateCHRect({ from: "NotifyGroupChildHolderUnmount" });
             /*group.UpdateColumns();
             group.RecalculateLeftColumnAlign();*/
         }

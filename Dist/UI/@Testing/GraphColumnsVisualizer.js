@@ -1,15 +1,27 @@
-import { CE, Range, Timer } from "js-vextensions";
+import { CE, Range, Timer, Vector2 } from "js-vextensions";
 import { observer } from "mobx-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useContext } from "react";
 import { Column, Row } from "react-vcomponents";
 import { GraphContext } from "../../Graph.js";
+import { useForceUpdate } from "../../Utils/UI.js";
 export const GraphColumnsVisualizer = observer((props) => {
     const { levelsToScrollContainer } = props;
     const graph = useContext(GraphContext);
-    //const forceUpdate = useForceUpdate();
+    const forceUpdate = useForceUpdate();
+    //const [store] = useState({mousePos: new Vector2(-1, -1)});
+    const [mousePos, setMousePos] = useState(new Vector2(-1, -1));
     const [height, setHeight] = useState(0);
     const ref = useRef(null);
+    useEffect(() => {
+        let mouseMoveListener = (e) => {
+            if (ref.current == null)
+                return;
+            setMousePos(new Vector2(e.clientX - ref.current.getBoundingClientRect().x, e.clientY - ref.current.getBoundingClientRect().y));
+        };
+        document.addEventListener("mousemove", mouseMoveListener);
+        return () => document.removeEventListener("mousemove", mouseMoveListener);
+    });
     let [marginTopNeededToBeVisible, setMarginTopNeededToBeVisible] = useState(0);
     useEffect(() => {
         let timer = new Timer(100, () => {
@@ -31,17 +43,19 @@ export const GraphColumnsVisualizer = observer((props) => {
             if (newMarginTopToBeVisible_inBothViewports != marginTopNeededToBeVisible) {
                 setMarginTopNeededToBeVisible(newMarginTopToBeVisible_inBothViewports);
             }
-            /*const newHeight = ref.current.getBoundingClientRect().height;
+            const newHeight = ref.current.getBoundingClientRect().height;
             if (newHeight != height) {
                 setHeight(newHeight);
-            } else {
+            }
+            else {
                 forceUpdate();
-            }*/
-            setHeight(ref.current.getBoundingClientRect().height); // this also triggers update (needed for block above)
+            }
         }).Start();
         return () => timer.Stop();
     });
     return (React.createElement("div", { ref: ref, style: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, overflow: "hidden" } },
+        mousePos.x != -1 &&
+            React.createElement("div", { style: { position: "absolute", right: 0, top: 0 } }, `${mousePos.x}, ${mousePos.y} (mouse)`),
         React.createElement(Row, { style: {
                 position: "absolute", left: 0, right: 0, top: marginTopNeededToBeVisible, bottom: 0,
                 pointerEvents: "none",

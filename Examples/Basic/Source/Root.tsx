@@ -5,7 +5,7 @@ import {NodeUI} from "./UI/NodeUI";
 import {GetAllNodesInTree_ByPath, nodeTree_main} from "./@SharedByExamples/NodeData";
 import {Graph, GraphColumnsVisualizer, GraphContext, makeObservable_safe} from "tree-grapher";
 import {makeObservable, observable} from "mobx";
-import {FlashComp, FlashOptions} from "ui-debug-kit";
+import {FinalizerEntry, FlashComp, FlashOptions, MAX_TIMEOUT_DURATION, SetDebugMode} from "ui-debug-kit";
 
 // make some stuff global, for easy debugging
 Object.assign(globalThis, {
@@ -40,6 +40,34 @@ export const MapContext = createContext<MapInfo>(undefined as any);
 // flash option defaults
 FlashOptions.defaults.waitForPriorFlashes = false;
 FlashOptions.defaults.background = "rgba(0,0,0,.1)";
+// debug mode
+SetDebugMode(true);
+/*FlashOptions.defaults.duration = -1;
+FlashOptions.defaults.fadeDuration = -1;*/
+FlashOptions.finalizers.push(new FinalizerEntry({
+	func: opts=>{
+		opts.recordStackTrace = true;
+		opts.duration = -1; // show persistingly
+		opts.fadeDuration = 5; // but have fade in 5s
+
+		// during highlighted period
+		opts.background = "rgba(0,0,0,.7)"
+
+		// during fade period
+		if (opts.color.startsWith("hsla(")) {
+			const valsArrayStr = opts.color.slice(opts.color.indexOf("(") + 1, opts.color.indexOf(")"));
+			const vals = valsArrayStr.split(",").map(a=>a.trim());
+			const newAlpha = Number(vals[3]) * .7;
+			opts.fadeOverrides = {
+				background: "rgba(0,0,0,.1)",
+				color: `hsla(${vals[0]},${vals[1]},${vals[2]},${newAlpha})`,
+				pseudoEl_extraStyles: `
+					z-index: 99;
+				`,
+			};
+		}
+	},
+}))
 
 export function RootUI() {
 	const nodeTree = nodeTree_main;
