@@ -37,7 +37,7 @@ export const ConnectorLinesUI = React.memo((props) => {
     const group = ref_group.current;
     let linkSpawnPoint = Vector2.zero;
     let childBoxInfos = [];
-    if (group && group.chRect && group.ChildHolderAnchorPoint({ from: "ConnectorLinesUI" }) != null) {
+    if (group && group.chRect && group.lineSourcePoint != null) {
         let guessedInnerUI_marginBottom = 0;
         if (group.lcRect && group.leftColumnEl) {
             let guessedInnerUI = group.leftColumnEl ? group.leftColumnEl.childNodes[group.leftColumnEl.childNodes.length - 1] : null;
@@ -46,7 +46,7 @@ export const ConnectorLinesUI = React.memo((props) => {
         }
         linkSpawnPoint = linesFromAbove
             ? new Vector2(width - 10, -guessedInnerUI_marginBottom)
-            : new Vector2(0, group.ConvertFromGlobalSpace_YPos(group.ChildHolderAnchorPoint({ from: "ConnectorLinesUI" }), group.chRect));
+            : new Vector2(0, group.ConvertFromGlobalSpace_YPos(group.lineSourcePoint, group.chRect));
         childBoxInfos = [...group.childConnectorInfos.values()].filter(a => a.rect != null).map(entry => {
             return {
                 offset: new Vector2(entry.rect.x, entry.rect.Center.y).Minus(group.chRect.Position),

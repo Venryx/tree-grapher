@@ -14,6 +14,7 @@ export declare class Graph {
     };
     columns: TreeColumn[];
     groupsByPath: Map<string, NodeGroup>;
+    FindParentGroup(childGroup: NodeGroup): NodeGroup | undefined;
     FindChildGroups(parentGroup: NodeGroup): NodeGroup[];
     FindDescendantGroups(parentGroup: NodeGroup): NodeGroup[];
     GetColumnsForGroup(group: NodeGroup): TreeColumn[];

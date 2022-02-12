@@ -1,9 +1,10 @@
-import { VRect } from "js-vextensions";
+import { CE, VRect } from "js-vextensions";
 import { configure, observable } from "mobx";
 import { createContext } from "react";
 import { TreeColumn } from "./Graph/TreeColumn.js";
 import { makeObservable_safe } from "./Utils/General/MobX.js";
-import { NodeGroup } from "./Graph/NodeGroup.js";
+import { NodeGroup, TreePathAsSortableStr } from "./Graph/NodeGroup.js";
+import { Wave, MyCHMounted, MyCHUnmounted, MyLCMounted, MyLCUnmounted } from "./index.js";
 // maybe temp
 configure({ enforceActions: "never" });
 //const defaultGraph = new Graph({columnWidth: 100});
@@ -19,13 +20,20 @@ export class Graph {
         });
         Object.assign(this, data);
     }
+    FindParentGroup(childGroup) {
+        return this.groupsByPath.get(childGroup.path_parts.slice(0, -1).join("/"));
+    }
     FindChildGroups(parentGroup) {
         const prefix = parentGroup.path + "/";
-        return [...this.groupsByPath.values()].filter(a => a.path.startsWith(prefix) && a.path.split("/").length == parentGroup.path.split("/").length + 1);
+        let result = [...this.groupsByPath.values()].filter(a => a.path.startsWith(prefix) && a.path_parts.length == parentGroup.path_parts.length + 1);
+        result = CE(result).OrderBy(a => TreePathAsSortableStr(a.path));
+        return result;
     }
     FindDescendantGroups(parentGroup) {
         const prefix = parentGroup.path + "/";
-        return [...this.groupsByPath.values()].filter(a => a.path.startsWith(prefix));
+        let result = [...this.groupsByPath.values()].filter(a => a.path.startsWith(prefix));
+        result = CE(result).OrderBy(a => TreePathAsSortableStr(a.path));
+        return result;
     }
     GetColumnsForGroup(group) {
         if (group.chRect == null)
@@ -73,14 +81,18 @@ export class Graph {
         group.leftColumnEl = el;
         group.leftColumn_connectorOpts = connectorOpts;
         group.leftColumn_alignWithParent = alignWithParent;
-        group.UpdateLCRect({ from: "NotifyGroupLeftColumnMount" });
+        new Wave(this, group, [
+            new MyLCMounted({ sender: group })
+        ]).Down_StartWave();
         return group;
     }
     NotifyGroupChildHolderMount(el, treePath, belowParent) {
         const { group, alreadyExisted } = this.GetOrCreateGroup(treePath);
         group.childHolderEl = el;
         group.childHolder_belowParent = belowParent;
-        group.UpdateCHRect({ from: "NotifyGroupChildHolderMount" });
+        new Wave(this, group, [
+            new MyCHMounted({ sender: group })
+        ]).Down_StartWave();
         return group;
     }
     NotifyGroupConnectorLinesUIMount(handle, treePath) {
@@ -91,7 +103,9 @@ export class Graph {
     NotifyGroupLeftColumnUnmount(group) {
         group.leftColumnEl = null;
         if (group.childHolderEl != null || group.connectorLinesComp != null) {
-            group.UpdateLCRect({ from: "NotifyGroupLeftColumnUnmount" });
+            new Wave(this, group, [
+                new MyLCUnmounted({ sender: group })
+            ]).Down_StartWave();
         }
         else {
             group.DetachAndDestroy();
@@ -100,9 +114,9 @@ export class Graph {
     NotifyGroupChildHolderUnmount(group) {
         group.childHolderEl = null;
         if (group.leftColumnEl != null || group.connectorLinesComp != null) {
-            group.UpdateCHRect({ from: "NotifyGroupChildHolderUnmount" });
-            /*group.UpdateColumns();
-            group.RecalculateLeftColumnAlign();*/
+            new Wave(this, group, [
+                new MyCHUnmounted({ sender: group })
+            ]).Down_StartWave();
         }
         else {
             group.DetachAndDestroy();

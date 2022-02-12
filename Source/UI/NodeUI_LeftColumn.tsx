@@ -8,6 +8,8 @@ import ReactDOM from "react-dom";
 import {Assert} from "js-vextensions";
 import {NodeConnectorOpts} from "./ConnectorLinesUI.js";
 import {ROSizeArrToStr} from "../Utils/General/General.js";
+import {Wave} from "../Waves/Wave.js";
+import {MyLCResized} from "../Waves/Messages.js";
 
 export function useRef_nodeLeftColumn(treePath: string, connectorLineOpts?: NodeConnectorOpts, alignWithParent?: boolean) {
 	const graph = useContext(GraphContext);
@@ -26,26 +28,14 @@ export function useRef_nodeLeftColumn(treePath: string, connectorLineOpts?: Node
 			const resizeObserver = new ResizeObserver(entries=>{
 				let entry = entries[0];
 				group.graph.uiDebugKit?.FlashComp(group.leftColumnEl, {text: `LC_ResizeObs change. @bboxSize:${ROSizeArrToStr(entry.borderBoxSize)} @cboxSize:${ROSizeArrToStr(entry.contentBoxSize)} @rect:${JSON.stringify(entry.contentRect)}`});
-				//if (ref_leftColumn.current == null || group.IsDestroyed()) return;
-				group.UpdateLCRect({from: "LC_ResizeObs", intResponse: false, extResponse: false});
-				group.RecalculateChildHolderShift({from: "LC_ResizeObs"});
-				//group.RecalculateLeftColumnAlign({from: "LC_ResizeObs"});
-				//group.UpdateCHRect({from: "LC_ResizeObs"});
-				//group.UpdateLCRect(true, false);
-				//group.RecalculateLeftColumnAlign({from: "LC_ResizeObs"});
-				//setTimeout(()=>group.RecalculateLeftColumnAlign());
-
-				// idk why this is needed, but it is atm
-				/*let info = group.UpdateCHRect();
-				// even if rect did not change, we still have to check for left-column realignment
-				if (info && !info.rectChanged) {
-					group.RecalculateLeftColumnAlign();
-				}*/
+				new Wave(graph, group, [
+					new MyLCResized({sender: "LCResizeObs"}),
+				]).Down_StartWave();
 			});
 			ref_resizeObserver.current = resizeObserver;
 			resizeObserver.observe(el);
 
-			group.RecalculateLeftColumnAlign({from: "ref_leftColumn"});
+			//group.RecalculateLeftColumnAlign({from: "ref_leftColumn"});
 		} else {
 			const group = ref_group.current;
 			Assert(group && ref_resizeObserver.current, "Cannot call [ref_group/ref_resizeObserver].current = null twice in a row!");
