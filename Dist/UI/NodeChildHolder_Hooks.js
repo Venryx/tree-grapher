@@ -1,8 +1,8 @@
 import { useContext, useMemo, useRef } from "react";
 import { useCallbackRef } from "use-callback-ref";
 import { GraphContext } from "../Graph.js";
-import { Assert } from "js-vextensions";
-import { MyCHRectChanged, Wave } from "../index.js";
+import { Assert, VRect } from "js-vextensions";
+import { MyCHResized, Wave } from "../index.js";
 export function useRef_nodeChildHolder(treePath, belowParent = false) {
     const graph = useContext(GraphContext);
     let ref_group = useRef(null);
@@ -27,8 +27,16 @@ export function useRef_nodeChildHolder(treePath, belowParent = false) {
             // NOTE: ResizeObserver watches only for content-rect changes, *not* margin/padding changes (see: https://web.dev/resize-observer)
             const resizeObserver = new ResizeObserver(entries => {
                 let entry = entries[0];
+                if (group.IsDestroyed()) {
+                    console.warn("group.IsDestroyed() returned true in node-child-holder resizer-observer; this should not happen. Did you forget to wrap your usage of `ref_leftColumn` in a useCallback hook?");
+                    return;
+                }
+                /*if (group.childHolderEl_sizeChangesToIgnore > 0) {
+                    group.childHolderEl_sizeChangesToIgnore--;
+                    return;
+                }*/
                 new Wave(graph, group, [
-                    new MyCHRectChanged({ sender: "CHResizeObs" }),
+                    new MyCHResized({ me: group, sender_extra: "CHResizeObs", newSize: VRect.FromLTWH(entry.contentRect).Size }),
                 ]).Down_StartWave();
             });
             ref_resizeObserver.current = resizeObserver;

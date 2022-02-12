@@ -53,6 +53,10 @@ export const ConnectorLinesUI = React.memo((props: {treePath: string, width: num
 	const handle = useMemo(()=>new ConnectorLinesUI_Handle({props: props as any, svgEl: null as any, forceUpdate}), []);
 	const {ref_connectorLinesUI, ref_group} = useRef_connectorLinesUI(treePath, handle);
 	const group = ref_group.current;
+	if (group && group.IsDestroyed()) {
+		console.warn("group.IsDestroyed() returned true in resizer-observer; this should not happen. Did you forget to wrap your usage of `ref_leftColumn` in a useCallback hook?");
+		return null;
+	}
 
 	let linkSpawnPoint = Vector2.zero;
 	let childBoxInfos: ChildBoxInfo_AtRenderTime[] = [];

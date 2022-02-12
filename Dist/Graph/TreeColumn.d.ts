@@ -10,8 +10,10 @@ export declare class TreeColumn {
     AddGroup(group: NodeGroup): void;
     RemoveGroup(group: NodeGroup): void;
     GetNodeGroupInfo(childHolderEl: HTMLElement): NodeGroup | undefined;
-    FindPreviousGroup(group: NodeGroup): NodeGroup | n;
-    FindNextGroup(group: NodeGroup): NodeGroup | n;
+    FindPreviousGroups(group: NodeGroup): NodeGroup[];
+    FindPreviousGroup_LowestCHRect(group: NodeGroup): NodeGroup | n;
+    FindNextGroups(group: NodeGroup): NodeGroup[];
+    FindNextGroup_HighestCHRect(group: NodeGroup): NodeGroup | n;
 }
 export declare function IsXAncestorOfY(xPath: string, yPath: string): boolean;
 export declare function IsXAncestor_OrSiblingOfAncestor_OfY(xPath: string, yPath: string): boolean;

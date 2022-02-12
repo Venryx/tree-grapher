@@ -4,7 +4,7 @@ import { createContext } from "react";
 import { TreeColumn } from "./Graph/TreeColumn.js";
 import { makeObservable_safe } from "./Utils/General/MobX.js";
 import { NodeGroup, TreePathAsSortableStr } from "./Graph/NodeGroup.js";
-import { Wave, MyCHMounted, MyCHUnmounted, MyLCMounted, MyLCUnmounted } from "./index.js";
+import { Wave, MyCHMounted, MyCHUnmounted, MyLCMounted } from "./index.js";
 // maybe temp
 configure({ enforceActions: "never" });
 //const defaultGraph = new Graph({columnWidth: 100});
@@ -56,9 +56,13 @@ export class Graph {
         let result = new Set();
         const columns = this.GetColumnsForGroup(group);
         for (const column of columns) {
-            const nextGroup = column.FindNextGroup(group);
+            //const nextGroup = column.FindNextGroup(group);
+            const nextGroup = column.FindNextGroup_HighestCHRect(group);
             if (nextGroup)
                 result.add(nextGroup);
+            /*for (const nextGroup of column.FindNextGroups(group)) {
+                result.add(nextGroup);
+            }*/
         }
         return result;
     }
@@ -82,7 +86,7 @@ export class Graph {
         group.leftColumn_connectorOpts = connectorOpts;
         group.leftColumn_alignWithParent = alignWithParent;
         new Wave(this, group, [
-            new MyLCMounted({ sender: group })
+            new MyLCMounted({ me: group })
         ]).Down_StartWave();
         return group;
     }
@@ -91,7 +95,7 @@ export class Graph {
         group.childHolderEl = el;
         group.childHolder_belowParent = belowParent;
         new Wave(this, group, [
-            new MyCHMounted({ sender: group })
+            new MyCHMounted({ me: group })
         ]).Down_StartWave();
         return group;
     }
@@ -101,21 +105,23 @@ export class Graph {
         return group;
     }
     NotifyGroupLeftColumnUnmount(group) {
+        if (group.IsDestroyed())
+            return;
         group.leftColumnEl = null;
-        if (group.childHolderEl != null || group.connectorLinesComp != null) {
+        /*if (group.childHolderEl != null || group.connectorLinesComp != null) {
             new Wave(this, group, [
-                new MyLCUnmounted({ sender: group })
+                new MyLCUnmounted({me: group})
             ]).Down_StartWave();
-        }
-        else {
-            group.DetachAndDestroy();
-        }
+        } else {*/
+        group.DetachAndDestroy();
     }
     NotifyGroupChildHolderUnmount(group) {
+        if (group.IsDestroyed())
+            return;
         group.childHolderEl = null;
         if (group.leftColumnEl != null || group.connectorLinesComp != null) {
             new Wave(this, group, [
-                new MyCHUnmounted({ sender: group })
+                new MyCHUnmounted({ me: group })
             ]).Down_StartWave();
         }
         else {
@@ -123,6 +129,8 @@ export class Graph {
         }
     }
     NotifyGroupConnectorLinesUIUnmount(group) {
+        if (group.IsDestroyed())
+            return;
         group.connectorLinesComp = null;
         if (group.leftColumnEl != null || group.childHolderEl != null) {
         }

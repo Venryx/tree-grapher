@@ -23,4 +23,4 @@ export declare const ConnectorLinesUI: React.MemoExoticComponent<(props: {
     treePath: string;
     width: number;
     linesFromAbove?: boolean;
-}) => JSX.Element>;
+}) => JSX.Element | null>;

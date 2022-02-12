@@ -53,31 +53,45 @@ export class TreeColumn {
             shiftNeeded,
         };
     }*/
-    FindPreviousGroup(group) {
+    FindPreviousGroups(group) {
         const ownIndex = this.groups_ordered.indexOf(group);
+        const result = new Array();
         for (let i = ownIndex - 1; i >= 0; i--) {
             const group2 = this.groups_ordered[i];
             if (group2.childHolderEl == null || !group2.CHRect_Valid)
                 continue; // group is collapsed or empty, so has no rect to care about
             if (IsXAncestorOfY(group2.path, group.path))
                 continue;
+            if (IsXAncestorOfY(group.path, group2.path))
+                continue;
             //if (IsXAncestor_OrSiblingOfAncestor_OfY(group2.path, group.path)) continue;
-            return group2;
+            result.push(group2);
         }
-        return null;
+        return result;
     }
-    FindNextGroup(group) {
+    FindPreviousGroup_LowestCHRect(group) {
+        const prevGroups = this.FindPreviousGroups(group);
+        return CE(prevGroups).OrderByDescending(a => { var _a, _b; return (_b = (_a = a.chRect) === null || _a === void 0 ? void 0 : _a.Bottom) !== null && _b !== void 0 ? _b : -1000; })[0];
+    }
+    FindNextGroups(group) {
         const ownIndex = this.groups_ordered.indexOf(group);
+        const result = new Array();
         for (let i = ownIndex + 1; i < this.groups_ordered.length; i++) {
             const group2 = this.groups_ordered[i];
             if (group2.childHolderEl == null || !group2.CHRect_Valid)
                 continue; // group is collapsed or empty, so has no rect to care about
             if (IsXAncestorOfY(group2.path, group.path))
                 continue;
+            if (IsXAncestorOfY(group.path, group2.path))
+                continue;
             //if (IsXAncestor_OrSiblingOfAncestor_OfY(group2.path, group.path)) continue;
-            return group2;
+            result.push(group2);
         }
-        return null;
+        return result;
+    }
+    FindNextGroup_HighestCHRect(group) {
+        const nextGroups = this.FindNextGroups(group);
+        return CE(nextGroups).OrderBy(a => { var _a, _b; return (_b = (_a = a.chRect) === null || _a === void 0 ? void 0 : _a.y) !== null && _b !== void 0 ? _b : Number.MAX_SAFE_INTEGER; })[0];
     }
 }
 export function IsXAncestorOfY(xPath, yPath) {

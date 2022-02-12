@@ -5,7 +5,7 @@ import {GraphContext} from "../Graph.js";
 import {NodeGroup} from "../Graph/NodeGroup.js";
 import {Column, Row} from "./@Shared/Basics.js";
 import ReactDOM from "react-dom";
-import {Assert} from "js-vextensions";
+import {Assert, VRect} from "js-vextensions";
 import {NodeConnectorOpts} from "./ConnectorLinesUI.js";
 import {ROSizeArrToStr} from "../Utils/General/General.js";
 import {Wave} from "../Waves/Wave.js";
@@ -27,9 +27,18 @@ export function useRef_nodeLeftColumn(treePath: string, connectorLineOpts?: Node
 			// NOTE: ResizeObserver watches only for content-rect changes, *not* margin/padding changes (see: https://web.dev/resize-observer)
 			const resizeObserver = new ResizeObserver(entries=>{
 				let entry = entries[0];
-				group.graph.uiDebugKit?.FlashComp(group.leftColumnEl, {text: `LC_ResizeObs change. @bboxSize:${ROSizeArrToStr(entry.borderBoxSize)} @cboxSize:${ROSizeArrToStr(entry.contentBoxSize)} @rect:${JSON.stringify(entry.contentRect)}`});
+				if (group.IsDestroyed()) {
+					console.warn("group.IsDestroyed() returned true in left-column resizer-observer; this should not happen. Did you forget to wrap your usage of `ref_leftColumn` in a useCallback hook?");
+					return;
+				}
+				/*if (group.leftColumnEl_sizeChangesToIgnore > 0) {
+					group.leftColumnEl_sizeChangesToIgnore--;
+					return;
+				}*/
+
+				//group.graph.uiDebugKit?.FlashComp(group.leftColumnEl, {text: `LC_ResizeObs change. @bboxSize:${ROSizeArrToStr(entry.borderBoxSize)} @cboxSize:${ROSizeArrToStr(entry.contentBoxSize)} @rect:${JSON.stringify(entry.contentRect)}`});
 				new Wave(graph, group, [
-					new MyLCResized({sender: "LCResizeObs"}),
+					new MyLCResized({me: group, sender_extra: "LCResizeObs", newSize: VRect.FromLTWH(entry.contentRect).Size}),
 				]).Down_StartWave();
 			});
 			ref_resizeObserver.current = resizeObserver;

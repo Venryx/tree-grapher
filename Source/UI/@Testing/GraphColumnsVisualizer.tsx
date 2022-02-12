@@ -63,7 +63,7 @@ export const GraphColumnsVisualizer = observer((props: {levelsToScrollContainer?
 	})
 
 	return (
-		<div ref={ref} style={{position: "absolute", left: 0, right: 0, top: 0, bottom: 0, overflow: "hidden"}}>
+		<div ref={ref} style={{position: "absolute", left: 0, right: 0, top: 0, bottom: 0, overflow: "hidden", pointerEvents: "none"}}>
 			{mousePos.x != -1 &&
 			<div style={{position: "absolute", right: 0, top: 0}}>
 				{`${mousePos.x}, ${mousePos.y} (mouse)`}
@@ -71,7 +71,6 @@ export const GraphColumnsVisualizer = observer((props: {levelsToScrollContainer?
 			{/* vertical lines */}
 			<Row style={{
 				position: "absolute", left: 0, right: 0, top: marginTopNeededToBeVisible, bottom: 0,
-				pointerEvents: "none",
 			}}>
 				{graph.columns.map((column, index)=>{
 					return (
@@ -89,7 +88,6 @@ export const GraphColumnsVisualizer = observer((props: {levelsToScrollContainer?
 			{/* horizontal lines */}
 			<Column style={{
 				position: "absolute", left: 0, right: 0, top: 0, bottom: 0,
-				pointerEvents: "none",
 			}}>
 				{Range(0, CE(height).CeilingTo(100), 100, false).map((rowDistFromTop, index)=>{
 					return (

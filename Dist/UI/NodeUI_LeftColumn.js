@@ -3,8 +3,7 @@ import { useCallbackRef } from "use-callback-ref";
 import { GraphContext } from "../Graph.js";
 import { Column } from "./@Shared/Basics.js";
 import ReactDOM from "react-dom";
-import { Assert } from "js-vextensions";
-import { ROSizeArrToStr } from "../Utils/General/General.js";
+import { Assert, VRect } from "js-vextensions";
 import { Wave } from "../Waves/Wave.js";
 import { MyLCResized } from "../Waves/Messages.js";
 export function useRef_nodeLeftColumn(treePath, connectorLineOpts, alignWithParent) {
@@ -19,11 +18,18 @@ export function useRef_nodeLeftColumn(treePath, connectorLineOpts, alignWithPare
             // set up observer
             // NOTE: ResizeObserver watches only for content-rect changes, *not* margin/padding changes (see: https://web.dev/resize-observer)
             const resizeObserver = new ResizeObserver(entries => {
-                var _a;
                 let entry = entries[0];
-                (_a = group.graph.uiDebugKit) === null || _a === void 0 ? void 0 : _a.FlashComp(group.leftColumnEl, { text: `LC_ResizeObs change. @bboxSize:${ROSizeArrToStr(entry.borderBoxSize)} @cboxSize:${ROSizeArrToStr(entry.contentBoxSize)} @rect:${JSON.stringify(entry.contentRect)}` });
+                if (group.IsDestroyed()) {
+                    console.warn("group.IsDestroyed() returned true in left-column resizer-observer; this should not happen. Did you forget to wrap your usage of `ref_leftColumn` in a useCallback hook?");
+                    return;
+                }
+                /*if (group.leftColumnEl_sizeChangesToIgnore > 0) {
+                    group.leftColumnEl_sizeChangesToIgnore--;
+                    return;
+                }*/
+                //group.graph.uiDebugKit?.FlashComp(group.leftColumnEl, {text: `LC_ResizeObs change. @bboxSize:${ROSizeArrToStr(entry.borderBoxSize)} @cboxSize:${ROSizeArrToStr(entry.contentBoxSize)} @rect:${JSON.stringify(entry.contentRect)}`});
                 new Wave(graph, group, [
-                    new MyLCResized({ sender: "LCResizeObs" }),
+                    new MyLCResized({ me: group, sender_extra: "LCResizeObs", newSize: VRect.FromLTWH(entry.contentRect).Size }),
                 ]).Down_StartWave();
             });
             ref_resizeObserver.current = resizeObserver;

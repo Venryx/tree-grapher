@@ -51,7 +51,10 @@ FlashOptions.finalizers.push(new FinalizerEntry({
 		opts.fadeDuration = 5; // but have fade in 5s
 
 		// during highlighted period
-		opts.background = "rgba(0,0,0,.7)"
+		opts.background = "rgba(0,0,0,.7)";
+		opts.pseudoEl_extraStyles = `
+			white-space: pre;
+		`;
 
 		// during fade period
 		if (opts.color.startsWith("hsla(")) {
@@ -63,6 +66,7 @@ FlashOptions.finalizers.push(new FinalizerEntry({
 				color: `hsla(${vals[0]},${vals[1]},${vals[2]},${newAlpha})`,
 				pseudoEl_extraStyles: `
 					z-index: 99;
+					white-space: pre;
 				`,
 			};
 		}

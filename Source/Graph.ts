@@ -67,8 +67,12 @@ export class Graph {
 		let result = new Set<NodeGroup>();
 		const columns = this.GetColumnsForGroup(group);
 		for (const column of columns) {
-			const nextGroup = column.FindNextGroup(group);
+			//const nextGroup = column.FindNextGroup(group);
+			const nextGroup = column.FindNextGroup_HighestCHRect(group);
 			if (nextGroup) result.add(nextGroup);
+			/*for (const nextGroup of column.FindNextGroups(group)) {
+				result.add(nextGroup);
+			}*/
 		}
 		return result;
 	}
@@ -94,7 +98,7 @@ export class Graph {
 		group.leftColumn_connectorOpts = connectorOpts;
 		group.leftColumn_alignWithParent = alignWithParent;
 		new Wave(this, group, [
-			new MyLCMounted({sender: group})
+			new MyLCMounted({me: group})
 		]).Down_StartWave();
 		return group;
 	}
@@ -103,7 +107,7 @@ export class Graph {
 		group.childHolderEl = el;
 		group.childHolder_belowParent = belowParent;
 		new Wave(this, group, [
-			new MyCHMounted({sender: group})
+			new MyCHMounted({me: group})
 		]).Down_StartWave();
 		return group;
 	}
@@ -114,26 +118,28 @@ export class Graph {
 	}
 
 	NotifyGroupLeftColumnUnmount(group: NodeGroup) {
+		if (group.IsDestroyed()) return;
 		group.leftColumnEl = null;
-		if (group.childHolderEl != null || group.connectorLinesComp != null) {
+		/*if (group.childHolderEl != null || group.connectorLinesComp != null) {
 			new Wave(this, group, [
-				new MyLCUnmounted({sender: group})
+				new MyLCUnmounted({me: group})
 			]).Down_StartWave();
-		} else {
-			group.DetachAndDestroy();
-		}
+		} else {*/
+		group.DetachAndDestroy();
 	}
 	NotifyGroupChildHolderUnmount(group: NodeGroup) {
+		if (group.IsDestroyed()) return;
 		group.childHolderEl = null;
 		if (group.leftColumnEl != null || group.connectorLinesComp != null) {
 			new Wave(this, group, [
-				new MyCHUnmounted({sender: group})
+				new MyCHUnmounted({me: group})
 			]).Down_StartWave();
 		} else {
 			group.DetachAndDestroy();
 		}
 	}
 	NotifyGroupConnectorLinesUIUnmount(group: NodeGroup) {
+		if (group.IsDestroyed()) return;
 		group.connectorLinesComp = null;
 		if (group.leftColumnEl != null || group.childHolderEl != null) {
 		} else {

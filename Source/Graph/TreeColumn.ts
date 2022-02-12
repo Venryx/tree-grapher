@@ -61,27 +61,39 @@ export class TreeColumn {
 			shiftNeeded,
 		};
 	}*/
-	FindPreviousGroup(group: NodeGroup): NodeGroup|n {
+	FindPreviousGroups(group: NodeGroup): NodeGroup[] {
 		const ownIndex = this.groups_ordered.indexOf(group);
+		const result = new Array<NodeGroup>();
 		for (let i = ownIndex - 1; i >= 0; i--) {
 			const group2 = this.groups_ordered[i];
 			if (group2.childHolderEl == null || !group2.CHRect_Valid) continue; // group is collapsed or empty, so has no rect to care about
 			if (IsXAncestorOfY(group2.path, group.path)) continue;
+			if (IsXAncestorOfY(group.path, group2.path)) continue;
 			//if (IsXAncestor_OrSiblingOfAncestor_OfY(group2.path, group.path)) continue;
-			return group2;
+			result.push(group2);
 		}
-		return null;
+		return result;
 	}
-	FindNextGroup(group: NodeGroup): NodeGroup|n {
+	FindPreviousGroup_LowestCHRect(group: NodeGroup): NodeGroup|n {
+		const prevGroups = this.FindPreviousGroups(group);
+		return CE(prevGroups).OrderByDescending(a=>a.chRect?.Bottom ?? -1000)[0];
+	}
+	FindNextGroups(group: NodeGroup): NodeGroup[] {
 		const ownIndex = this.groups_ordered.indexOf(group);
+		const result = new Array<NodeGroup>();
 		for (let i = ownIndex + 1; i < this.groups_ordered.length; i++) {
 			const group2 = this.groups_ordered[i];
 			if (group2.childHolderEl == null || !group2.CHRect_Valid) continue; // group is collapsed or empty, so has no rect to care about
 			if (IsXAncestorOfY(group2.path, group.path)) continue;
+			if (IsXAncestorOfY(group.path, group2.path)) continue;
 			//if (IsXAncestor_OrSiblingOfAncestor_OfY(group2.path, group.path)) continue;
-			return group2;
+			result.push(group2);
 		}
-		return null;
+		return result;
+	}
+	FindNextGroup_HighestCHRect(group: NodeGroup): NodeGroup|n {
+		const nextGroups = this.FindNextGroups(group);
+		return CE(nextGroups).OrderBy(a=>a.chRect?.y ?? Number.MAX_SAFE_INTEGER)[0];
 	}
 }
 
