@@ -5,7 +5,8 @@ import { IDetached, MyCHMounted, MyCHRectChanged, MyCHResized, MyCHShiftChanged,
 /** Converts, eg. "0.0.10.0" into "00.00.10.00", such that comparisons like XXX("0.0.10.0") > XXX("0.0.9.0") succeed. */
 export function TreePathAsSortableStr(treePath) {
     const parts = treePath.split("/");
-    const maxPartLength = CE(parts.map(a => a.length)).Max();
+    //const maxPartLength = CE(parts.map(a=>a.length)).Max();
+    const maxPartLength = 6; // for paths to be *globally* sortable, we have to hard-code a large max-part-length (we choose 6, so system can sort values from range 0-999,999)
     return parts.map(part => part.padStart(maxPartLength, "0")).join("/");
 }
 export function AreRectsEqual(rect1, rect2, fieldsToCheck = ["x", "y", "width", "height"]) {
@@ -168,8 +169,8 @@ export class NodeGroup {
             this.RecalculateLineSourcePoint(wave);
         if (fx.recalcLCAlign)
             this.RecalculateLeftColumnAlign(wave);
-        if (fx.recalcCHShift)
-            this.RecalculateChildHolderShift(wave);
+        // todo: fix that the below had to be commented for the map-loading to work (...better) in dm-repo
+        /*if (fx.recalcCHShift)*/ this.RecalculateChildHolderShift(wave);
         /*if (fx.updateLCRect)*/ this.UpdateLCRect(wave);
         /*if (fx.updateCHRect)*/ this.UpdateCHRect(wave);
         /*if (fx.updateConnectorLines)*/ this.UpdateConnectorLines();
@@ -187,6 +188,18 @@ export class NodeGroup {
             // if lc-rect right-edge changes, then the x-pos of the ch-rect needs to change, so call UpdateCHRect
             if ((newRect === null || newRect === void 0 ? void 0 : newRect.Right) != (oldRect === null || oldRect === void 0 ? void 0 : oldRect.Right)) {
                 this.UpdateCHRect(wave);
+            }
+            // same-column
+            let echoesSentTo = [];
+            if ((newRect === null || newRect === void 0 ? void 0 : newRect.Bottom) != (oldRect === null || oldRect === void 0 ? void 0 : oldRect.Bottom)) {
+                // todo: fix that this fails for the case where our lc-rect's height progressively increases (due to child-contents loading), with peer nodes below it that are not expanded
+                //		(since they're not expanded, they're not recognized as "next groups" by the column system, and so their rects become outdated -- causing the connector-lines )
+                for (const nextGroup of this.graph.GetNextGroupsWithinColumnsFor(this)) {
+                    echoesSentTo.push(nextGroup.path);
+                    wave.AddEchoWave(new Wave(this.graph, nextGroup, [
+                        new MyPrevGroupRectBottomChanged({ me: nextGroup, sender_extra: `prevGroup:${this.path}` })
+                    ]));
+                }
             }
         }
         return { newRect, oldRect, rectChanged };
@@ -401,7 +414,11 @@ export class NodeGroup {
         /*if (this.chRect == null) return;
         const newRect_rel = newRect?.NewPosition(pos=>pos.Minus(this.chRect!.Position));*/
         for (const [i, childGroup] of this.graph.FindChildGroups(this).entries()) {
-            const newInfo = new NodeConnectorInfo({ rect: childGroup.innerUIRect, opts: childGroup.leftColumn_connectorOpts });
+            const newInfo = new NodeConnectorInfo({
+                group: childGroup,
+                rect: childGroup.innerUIRect,
+                opts: childGroup.leftColumn_connectorOpts,
+            });
             this.childConnectorInfos.set(i, newInfo);
         }
         this.RefreshConnectorLinesUI();

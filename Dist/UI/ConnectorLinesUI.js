@@ -51,7 +51,22 @@ export const ConnectorLinesUI = React.memo((props) => {
         linkSpawnPoint = linesFromAbove
             ? new Vector2(width - 10, -guessedInnerUI_marginBottom)
             : new Vector2(0, group.ConvertFromGlobalSpace_YPos(group.lineSourcePoint, group.chRect));
+        // todo: remove this hack/workaround
+        if (!linesFromAbove) {
+            group.ForceUpdateRects(null);
+            if (group.innerUIRect) {
+                linkSpawnPoint = new Vector2(0, group.ConvertFromGlobalSpace_YPos(group.innerUIRect.Center.y, group.chRect));
+            }
+        }
         childBoxInfos = [...group.childConnectorInfos.values()].filter(a => a.rect != null).map(entry => {
+            // todo: remove this hack/workaround
+            if (true) {
+                entry.group.ForceUpdateRects(null);
+                return {
+                    offset: new Vector2(entry.group.innerUIRect.x, entry.group.innerUIRect.Center.y).Minus(group.chRect.Position),
+                    opts: entry.opts,
+                };
+            }
             return {
                 offset: new Vector2(entry.rect.x, entry.rect.Center.y).Minus(group.chRect.Position),
                 opts: entry.opts,

@@ -17,7 +17,7 @@ export function useRef_nodeChildHolder(treePath: string, belowParent = false) {
 
 	// I think a plain closure-var would also work, but for consistency/clarity, we'll use a ref
 	//let resizeObserver: ResizeObserver;
-	let ref_resizeObserver = useRef<ResizeObserver | null>(null);
+	//let ref_resizeObserver = useRef<ResizeObserver | null>(null);
 
 	let ref_childHolder = useCallbackRef<HTMLElement>(null, el=>{
 	//let ref = useCallback(el=>{
@@ -33,7 +33,7 @@ export function useRef_nodeChildHolder(treePath: string, belowParent = false) {
 
 			// set up observer
 			// NOTE: ResizeObserver watches only for content-rect changes, *not* margin/padding changes (see: https://web.dev/resize-observer)
-			const resizeObserver = new ResizeObserver(entries=>{
+			/*const resizeObserver = new ResizeObserver(entries=>{
 				let entry = entries[0];
 				if (group.IsDestroyed()) {
 					console.warn("group.IsDestroyed() returned true in node-child-holder resizer-observer; this should not happen. Did you forget to wrap your usage of `ref_leftColumn` in a useCallback hook?");
@@ -42,23 +42,24 @@ export function useRef_nodeChildHolder(treePath: string, belowParent = false) {
 				/*if (group.childHolderEl_sizeChangesToIgnore > 0) {
 					group.childHolderEl_sizeChangesToIgnore--;
 					return;
-				}*/
+				}*#/
 
 				new Wave(graph, group, [
 					new MyCHResized({me: group, sender_extra: "CHResizeObs", newSize: VRect.FromLTWH(entry.contentRect).Size}),
 				]).Down_StartWave();
 			});
 			ref_resizeObserver.current = resizeObserver;
-			resizeObserver.observe(el);
+			resizeObserver.observe(el);*/
 
 			//group.RecalculateLeftColumnAlign({from: "NCH_Hooks_ResizeObs"}); // call once, for first render
 			//group.RecalculateChildHolderShift({from: "NCH_Hooks_ResizeObs"}); // call once, for first render
 		} else {
 			const group = ref_group.current;
-			Assert(group && ref_resizeObserver.current, "Cannot call [ref_group/ref_resizeObserver].current = null twice in a row!");
+			//Assert(group && ref_resizeObserver.current, "Cannot call [ref_group/ref_resizeObserver].current = null twice in a row!");
+			Assert(group, "Cannot call [ref_group/ref_resizeObserver].current = null twice in a row!");
 			ref_group.current = null;
-			ref_resizeObserver.current!.disconnect();
-			ref_resizeObserver.current = null;
+			/*ref_resizeObserver.current!.disconnect();
+			ref_resizeObserver.current = null;*/
 			graph.NotifyGroupChildHolderUnmount(group);
 		}
 	});

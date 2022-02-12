@@ -46,14 +46,14 @@ export declare class NodeGroup {
     RunEffects(fx: WaveEffects, wave: Wave): void;
     UpdateLCRect(wave: Wave): {
         newRect: VRect | null;
-        oldRect: VRect | n;
+        oldRect: n | VRect;
         rectChanged: boolean;
     };
     /** Only to be called from NodeGroup.UpdateLCRect(). */
     private UpdateInnerUIRect;
     UpdateCHRect(wave: Wave): {
         newRect: VRect | null;
-        oldRect: VRect | n;
+        oldRect: n | VRect;
         rectChanged: boolean;
     };
     UpdateColumns(): void;
@@ -71,6 +71,7 @@ export declare class NodeGroup {
 }
 export declare class NodeConnectorInfo {
     constructor(data: NodeConnectorInfo);
+    group: NodeGroup;
     rect: VRect | n;
     opts: NodeConnectorOpts | n;
 }
