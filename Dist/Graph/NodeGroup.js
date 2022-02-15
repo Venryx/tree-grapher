@@ -61,6 +61,8 @@ export class NodeGroup {
         }
     }*/
     ForceUpdateRects(wave) {
+        if (this.IsDestroyed())
+            return; // temp; probably only needed because of the "hack/workaround" calls to ForceUpdateRects
         //Assert(wave.phase == "up", "Can only call ForceUpdateRects during wave's up-phase!");
         this.lcRect = this.leftColumnEl ? GetRectRelative(this.leftColumnEl, this.graph.containerEl) : null;
         this.innerUIRect = this.leftColumnEl && this.lcRect ? this.lcRect.NewTop(top => top + GetPaddingTopFromStyle(this.leftColumnEl.style)) : null;

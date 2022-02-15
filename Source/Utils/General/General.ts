@@ -1,4 +1,4 @@
-import {VRect} from "js-vextensions";
+import {Assert, VRect} from "js-vextensions";
 import {RequiredBy} from "../@Internal/Types.js";
 
 /** Element's bounding-rect relative to the page, ie. the top-left pixel when scrolled to the very top of the page. (so y = GetViewportRect().y + window.pageYOffset) */
@@ -16,6 +16,7 @@ export function GetPageRect(el: Element) {
 }
 /** Get bounding-rect of element-x relative to element-y. */
 export function GetRectRelative(x: Element, y: Element) {
+	Assert(x instanceof Element && x.getBoundingClientRect != null, "X is not an Element!");
 	var xRect = VRect.FromLTWH(x.getBoundingClientRect());
 	var yRect = VRect.FromLTWH(y.getBoundingClientRect());
 	return xRect.NewPosition(pos=>pos.Minus(yRect.Position));
