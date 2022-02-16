@@ -16,23 +16,12 @@ Library for calculating where to draw tree nodes, while avoiding overlap.
 * 3\) Run: `npm run examples-dev`
 * 4\) Navigate to `localhost:8080` in your browser.
 
-## Design
-
-### Wave system (change/update propagation)
-
-* Change-propagation is split into two phases: the "down wave" and "up wave".
-* During each wave, cross-node-group propagation occurs not by calling functions, but rather by adding a "message" to the wave, with the message containing a "for" field to say who should receive it. (if applicable)
-* During the up-wave, propagation can occur "sideways", through the tree-column system; but in this case, it's still easier to follow, because those "sideway" propagations occur in a new "down wave" starting at those sideways matches, and these waves occur after the current up-wave has fully completed.
-* Each "wave" contains a full list of "messages" that were sent by the node-groups, so that's the most convenient place to "debug" / probe for flaws.
-* This abstraction isn't "algorithmically necessary", but I think it will help the debugging process substantially.
-
 ## Tasks
 
 Short term:
 * The connector-lines are not displayed.
 * There is no padding between nodes.
 * There are some hard-coded things (like the map-wide padding) that need to be un-hard-coded.
-* There are lots of missing types in Core.ts (which need to have proper types, for easy usage of the library).
 * There's still lots of stuff from the old implementation that's not useful anymore and needs to be removed.
 
 Long term:
