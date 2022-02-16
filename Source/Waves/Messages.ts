@@ -79,7 +79,6 @@ export class MyCHRectChanged extends Message {
 	constructor(data: MyCHRectChanged) { super(); this.Populate!(data); }
 	oldRect: VRect|n;
 	newRect: VRect|n;
-	echoesSentTo: string[];
 }
 
 export class IDetached extends Message {

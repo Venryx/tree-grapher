@@ -1,9 +1,8 @@
 /// <reference types="react" />
-import { TreeColumn } from "./Graph/TreeColumn.js";
-import { RequiredBy } from "./Utils/@Internal/Types.js";
 import type { FlashComp } from "ui-debug-kit";
 import { NodeGroup } from "./Graph/NodeGroup.js";
-import { NodeConnectorOpts, ConnectorLinesUI_Handle } from "./index.js";
+import { ConnectorLinesUI_Handle, NodeConnectorOpts } from "./index.js";
+import { RequiredBy } from "./Utils/@Internal/Types.js";
 export declare const GraphContext: import("react").Context<Graph>;
 export declare class Graph {
     constructor(data: RequiredBy<Partial<Graph>, "columnWidth">);
@@ -12,13 +11,10 @@ export declare class Graph {
     uiDebugKit?: {
         FlashComp: typeof FlashComp;
     };
-    columns: TreeColumn[];
     groupsByPath: Map<string, NodeGroup>;
     FindParentGroup(childGroup: NodeGroup): NodeGroup | undefined;
     FindChildGroups(parentGroup: NodeGroup): NodeGroup[];
     FindDescendantGroups(parentGroup: NodeGroup): NodeGroup[];
-    GetColumnsForGroup(group: NodeGroup): TreeColumn[];
-    GetNextGroupsWithinColumnsFor(group: NodeGroup): Set<NodeGroup>;
     GetOrCreateGroup(treePath: string): {
         group: NodeGroup;
         alreadyExisted: boolean;

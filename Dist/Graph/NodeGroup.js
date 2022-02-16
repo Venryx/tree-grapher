@@ -1,7 +1,6 @@
 import { CE, Vector2 } from "js-vextensions";
 import { GetMarginTopFromStyle, GetPaddingTopFromStyle, GetRectRelative } from "../Utils/General/General.js";
-import { Wave } from "../Waves/Wave.js";
-import { IDetached, MyCHMounted, MyCHRectChanged, MyCHResized, MyCHShiftChanged, MyCHUnmounted, MyInnerUIRectChanged, MyLCAlignChanged, MyLCRectChanged, MyLCResized, MyLineSourcePointChanged, MyPrevGroupRectBottomChanged, XHasChildY } from "../index.js";
+import { MyCHMounted, MyCHRectChanged, MyCHResized, MyCHUnmounted, MyInnerUIRectChanged, MyLCAlignChanged, MyLCRectChanged, MyLCResized, MyLineSourcePointChanged, MyPrevGroupRectBottomChanged, XHasChildY } from "../index.js";
 /** Converts, eg. "0.0.10.0" into "00.00.10.00", such that comparisons like XXX("0.0.10.0") > XXX("0.0.9.0") succeed. */
 export function TreePathAsSortableStr(treePath) {
     const parts = treePath.split("/");
@@ -29,7 +28,6 @@ export class WaveEffects {
 }
 export class NodeGroup {
     constructor(data) {
-        this.columnsPartOf = [];
         //childHolderEl_sizeChangesToIgnore = 0;
         this.childHolder_belowParent = false;
         // new
@@ -121,11 +119,6 @@ export class NodeGroup {
                     fx.recalcLineSourcePoint = true;
                     fx.recalcLCAlign = true;
                     fx.updateLCRect = true;
-                    for (const nextGroup of this.graph.GetNextGroupsWithinColumnsFor(this)) {
-                        wave.AddEchoWave(new Wave(this.graph, nextGroup, [
-                            new MyPrevGroupRectBottomChanged({ me: nextGroup, sender_extra: `prevGroup:${this.path}` })
-                        ]));
-                    }
                 }
             }
         }
@@ -164,17 +157,11 @@ export class NodeGroup {
         this.RunEffects(fx, wave);
     }
     RunEffects(fx, wave) {
-        if (fx.updateColumns)
-            this.UpdateColumns();
-        // this needs to happen once *first*, since lc-align and such can depend on the location of the child inner-ui-centers
-        if (fx.recalcCHShift)
-            this.RecalculateChildHolderShift(wave);
         if (fx.recalcLineSourcePoint)
             this.RecalculateLineSourcePoint(wave);
         if (fx.recalcLCAlign)
             this.RecalculateLeftColumnAlign(wave);
         // todo: fix that the below had to be commented for the map-loading to work (...better) in dm-repo
-        /*if (fx.recalcCHShift)*/ this.RecalculateChildHolderShift(wave);
         /*if (fx.updateLCRect)*/ this.UpdateLCRect(wave);
         /*if (fx.updateCHRect)*/ this.UpdateCHRect(wave);
         /*if (fx.updateConnectorLines)*/ this.UpdateConnectorLines();
@@ -192,18 +179,6 @@ export class NodeGroup {
             // if lc-rect right-edge changes, then the x-pos of the ch-rect needs to change, so call UpdateCHRect
             if ((newRect === null || newRect === void 0 ? void 0 : newRect.Right) != (oldRect === null || oldRect === void 0 ? void 0 : oldRect.Right)) {
                 this.UpdateCHRect(wave);
-            }
-            // same-column
-            let echoesSentTo = [];
-            if ((newRect === null || newRect === void 0 ? void 0 : newRect.Bottom) != (oldRect === null || oldRect === void 0 ? void 0 : oldRect.Bottom)) {
-                // todo: fix that this fails for the case where our lc-rect's height progressively increases (due to child-contents loading), with peer nodes below it that are not expanded
-                //		(since they're not expanded, they're not recognized as "next groups" by the column system, and so their rects become outdated -- causing the connector-lines )
-                for (const nextGroup of this.graph.GetNextGroupsWithinColumnsFor(this)) {
-                    echoesSentTo.push(nextGroup.path);
-                    wave.AddEchoWave(new Wave(this.graph, nextGroup, [
-                        new MyPrevGroupRectBottomChanged({ me: nextGroup, sender_extra: `prevGroup:${this.path}` })
-                    ]));
-                }
             }
         }
         return { newRect, oldRect, rectChanged };
@@ -230,45 +205,9 @@ export class NodeGroup {
         // if this is the first render, still call this (it's considered "moving/resizing" from rect-empty to the current rect)
         if (rectChanged) {
             this.chRect = newRect;
-            this.UpdateColumns(); // for echo-waves, must ensure up-to-date
-            // same-column
-            let echoesSentTo = [];
-            if ((newRect === null || newRect === void 0 ? void 0 : newRect.Bottom) != (oldRect === null || oldRect === void 0 ? void 0 : oldRect.Bottom)) {
-                for (const nextGroup of this.graph.GetNextGroupsWithinColumnsFor(this)) {
-                    echoesSentTo.push(nextGroup.path);
-                    wave.AddEchoWave(new Wave(this.graph, nextGroup, [
-                        new MyPrevGroupRectBottomChanged({ me: nextGroup, sender_extra: `prevGroup:${this.path}` })
-                    ]));
-                }
-            }
-            wave.AddMessage(new MyCHRectChanged({ me: this, oldRect, newRect, echoesSentTo }));
+            wave.AddMessage(new MyCHRectChanged({ me: this, oldRect, newRect }));
         }
         return { newRect, oldRect, rectChanged };
-    }
-    UpdateColumns() {
-        const oldColumnsList = this.columnsPartOf;
-        const newColumnsList = this.graph.GetColumnsForGroup(this);
-        //Assert(newColumnsList.length > 0, "NodeGroup.UpdateColumns called, but no intersecting columns found!");
-        const columnsToAdd = CE(newColumnsList).Exclude(...this.columnsPartOf);
-        const columnsToRemove = CE(this.columnsPartOf).Exclude(...newColumnsList);
-        //const columnsToRemove_nextGroups = columnsToRemove.map(column=>column.FindNextGroup(this));
-        // first change the groups
-        columnsToAdd.forEach(a => a.AddGroup(this));
-        columnsToRemove.forEach(a => a.RemoveGroup(this));
-        this.columnsPartOf = newColumnsList;
-        /*this.graph.uiDebugKit?.FlashComp(this.leftColumnEl, {
-            text: `Columns:${StrForChange(oldColumnsList.map(a=>a.index).join(","), this.columnsPartOf.map(a=>a.index).join(","))}`
-        });*/
-        // then apply the effects (must do after, else we can get a recursive situation where the columnsPartOf is out-of-date)
-        /*for (const column of columnsToAdd) {
-            const nextGroup = column.FindNextGroup(this);
-            //if (nextGroup) nextGroup.RecalculateChildHolderShift();
-            if (nextGroup) nextGroup.UpdateRects();
-        }
-        for (const [i, column] of columnsToRemove.entries()) {
-            const nextGroup = columnsToRemove_nextGroups[i];
-            if (nextGroup) nextGroup.RecalculateChildHolderShift();
-        }*/
     }
     DetachAndDestroy() {
         this.Detach();
@@ -276,16 +215,7 @@ export class NodeGroup {
         this.Destroy();
     }
     Detach() {
-        const nextGroups = this.graph.GetNextGroupsWithinColumnsFor(this);
         this.graph.groupsByPath.delete(this.path);
-        for (const column of this.columnsPartOf) {
-            column.RemoveGroup(this);
-        }
-        for (const nextGroup of nextGroups) {
-            new Wave(this.graph, nextGroup, [
-                new IDetached({ me: this }),
-            ]).Down_StartWave();
-        }
     }
     IsDestroyed() {
         return this.path == "[this object has been destroyed; seeing this indicates a bug]";
@@ -297,81 +227,6 @@ export class NodeGroup {
         this.childHolderEl?.remove();*/
         for (const [key, value] of Object.entries(NodeGroup.prototype).filter(a => a["name"] != "IsDestroyed").concat(Object.entries(this))) {
             this[key] = "[this object has been destroyed; seeing this indicates a bug]";
-        }
-    }
-    RecalculateChildHolderShift(wave, updateCHRectFirst = true) {
-        var _a, _b;
-        if (updateCHRectFirst) {
-            this.UpdateCHRect(wave); // needed, in certain cases
-            this.UpdateLCRect(wave); // needed fsr
-        }
-        if (this.childHolderEl == null)
-            return;
-        if (this.leftColumnEl == null)
-            return;
-        if (this.chRect == null)
-            return;
-        //if (checkForRectChangeFirst) this.CheckForMoveOrResize();
-        // if child-holder is below parent, it just uses relative positioning, so no need for manual margins/shifts
-        // (this check happens after the UpdateRects, because some callers rely on UpdateRects being called [even if the shift itself isn't necessary]) // todo: probably clean this up
-        if (this.childHolder_belowParent)
-            return;
-        let oldMarginTop = GetMarginTopFromStyle(this.childHolderEl.style);
-        const innerUIHeight = (_b = (_a = this.innerUIRect) === null || _a === void 0 ? void 0 : _a.height) !== null && _b !== void 0 ? _b : 0;
-        let idealMarginTop = -(this.chRect.height / 2) + (innerUIHeight / 2);
-        const childGroups = this.graph.FindChildGroups(this);
-        const childGroupToAlignWithOurInnerUI = childGroups.find(a => a.leftColumn_alignWithParent);
-        if (childGroupToAlignWithOurInnerUI && childGroupToAlignWithOurInnerUI.innerUIRect) {
-            childGroupToAlignWithOurInnerUI.ForceUpdateRects(wave); // todo: remove this workaround/hack
-            const childGroupInnerUICenter = childGroupToAlignWithOurInnerUI.innerUIRect.Center.y;
-            const childGroupInnerUICenter_base = childGroupInnerUICenter - oldMarginTop;
-            // set ideal margin-top to the value that would align the given child-group with our (left-column) inner-ui's center
-            idealMarginTop = this.InnerUIRect_Base.Center.y - childGroupInnerUICenter_base;
-            //if (idealMarginTop < -100) debugger;
-        }
-        let maxMarginTop = idealMarginTop;
-        let prevGroups = new Set();
-        for (const column of this.graph.GetColumnsForGroup(this)) {
-            const rectToStayBelow = column.rect.NewBottom(GetPaddingTopFromStyle(this.graph.containerEl.style));
-            maxMarginTop = Math.max(maxMarginTop, CE(rectToStayBelow.Bottom - this.CHRect_Base.Top).KeepAtLeast(idealMarginTop));
-            const columnPrevGroups = column.FindPreviousGroups(this);
-            if (columnPrevGroups.length) {
-                for (const prevGroup of columnPrevGroups) {
-                    if (prevGroups.has(prevGroup))
-                        continue;
-                    prevGroups.add(prevGroup);
-                    //previousGroup?.UpdateRect(); // this is necessary in some cases; idk why, but I don't have time to investigate atm
-                    //console.log("Checking1");
-                    const rectToStayBelow = prevGroup.chRect;
-                    if (rectToStayBelow == null)
-                        continue;
-                    maxMarginTop = Math.max(maxMarginTop, CE(rectToStayBelow.Bottom - this.CHRect_Base.Top).KeepAtLeast(idealMarginTop));
-                    //if (isNaN(maxMarginTop)) debugger;
-                }
-            }
-        }
-        maxMarginTop = Math.floor(maxMarginTop);
-        //this.graph.uiDebugKit?.FlashComp(this.childHolderEl, {text: `CH-shift[mt]:${StrForChange(oldMarginTop, maxMarginTop)} @prevGroups:[${[...previousGroups].map(a=>a.path).join(",")}]`});
-        const newMarginTop = maxMarginTop;
-        if (newMarginTop != oldMarginTop) {
-            this.childHolderEl.style.marginTop = `${newMarginTop}px`;
-            wave.AddMessage(new MyCHShiftChanged({ me: this, oldVal: oldMarginTop, newVal: newMarginTop }));
-            // we just changed the margin, so update our rects (ResizeObserver can't detect this)
-            this.UpdateCHRect(wave);
-            // our descendants rects are now outdated; we are in up-wave phase, so cannot call update funcs on them, but we can call the side-effect-less ForceUpdateRects method
-            if (wave.phase == "up") {
-                const delta = new Vector2(0, newMarginTop - oldMarginTop);
-                for (const descendant of this.graph.FindDescendantGroups(this)) {
-                    //descendant.QuickShiftRects(wave, delta);
-                    descendant.ForceUpdateRects(wave);
-                }
-            }
-            //this.UpdateCHRect(false, false); // don't check for effects (other than left-column-align below); for this code-path, other effects do not need checking/updating [are you sure?]
-            //this.RecalculateLeftColumnAlign({extResponse: true, from: "RecalculateChildHolderShift"});
-            //setTimeout(()=>this.RecalculateLeftColumnAlign());
-            /*for (const nextGroup of this.graph.GetNextGroupsWithinColumnsFor(this)) {
-                nextGroup.CheckForMoveOrResize();
-            }*/
         }
     }
     /** Stores the y-pos that should be used as the center target for the inner-ui's center, and the child-holder's connector-lines origins/anchors. (in global space) */

@@ -1,8 +1,8 @@
+import { Assert } from "js-vextensions";
 import React, { useCallback, useContext, useRef } from "react";
+import ReactDOM from "react-dom";
 import { useCallbackRef } from "use-callback-ref";
 import { GraphContext } from "../Graph.js";
-import ReactDOM from "react-dom";
-import { Assert } from "js-vextensions";
 import { GetRectRelative } from "../Utils/General/General.js";
 export function useRef_nodeLeftColumn(treePath, connectorLineOpts, alignWithParent) {
     const graph = useContext(GraphContext);
@@ -21,10 +21,6 @@ export function useRef_nodeLeftColumn(treePath, connectorLineOpts, alignWithPare
                     console.warn("group.IsDestroyed() returned true in left-column resizer-observer; this should not happen. Did you forget to wrap your usage of `ref_leftColumn` in a useCallback hook?");
                     return;
                 }
-                /*if (group.leftColumnEl_sizeChangesToIgnore > 0) {
-                    group.leftColumnEl_sizeChangesToIgnore--;
-                    return;
-                }*/
                 //group.graph.uiDebugKit?.FlashComp(group.leftColumnEl, {text: `LC_ResizeObs change. @bboxSize:${ROSizeArrToStr(entry.borderBoxSize)} @cboxSize:${ROSizeArrToStr(entry.contentBoxSize)} @rect:${JSON.stringify(entry.contentRect)}`});
                 /*new Wave(graph, group, [
                     new MyLCResized({me: group, sender_extra: "LCResizeObs", newSize: VRect.FromLTWH(entry.contentRect).Size}),
@@ -64,10 +60,5 @@ export const NodeUI_LeftColumn = (props) => {
         ref: useCallback(c => {
             ref_leftColumn.current = ReactDOM.findDOMNode(c);
             //ref(c ? GetDOM(c) as any : null), [ref]);
-        }, []), className: "innerBoxColumn clickThrough", style: Object.assign({
-            //position: "relative",
-            position: "absolute",
-            /*paddingTop: gapBeforeInnerUI,
-            paddingBottom: gapAfterInnerUI,*/
-        }) }, children));
+        }, []), className: "innerBoxColumn clickThrough", style: Object.assign({ position: "absolute" }) }, children));
 };

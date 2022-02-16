@@ -1,15 +1,11 @@
-import React, {useCallback, useContext, useEffect, useRef} from "react";
-import {Component} from "react";
+import {Assert} from "js-vextensions";
+import React, {useCallback, useContext, useRef} from "react";
+import ReactDOM from "react-dom";
 import {useCallbackRef} from "use-callback-ref";
 import {GraphContext} from "../Graph.js";
 import {NodeGroup} from "../Graph/NodeGroup.js";
-import {Column, Row} from "./@Shared/Basics.js";
-import ReactDOM from "react-dom";
-import {Assert, VRect} from "js-vextensions";
+import {GetRectRelative} from "../Utils/General/General.js";
 import {NodeConnectorOpts} from "./ConnectorLinesUI.js";
-import {GetRectRelative, ROSizeArrToStr} from "../Utils/General/General.js";
-import {Wave} from "../Waves/Wave.js";
-import {MyLCResized} from "../Waves/Messages.js";
 
 export function useRef_nodeLeftColumn(treePath: string, connectorLineOpts?: NodeConnectorOpts, alignWithParent?: boolean) {
 	const graph = useContext(GraphContext);
@@ -31,10 +27,6 @@ export function useRef_nodeLeftColumn(treePath: string, connectorLineOpts?: Node
 					console.warn("group.IsDestroyed() returned true in left-column resizer-observer; this should not happen. Did you forget to wrap your usage of `ref_leftColumn` in a useCallback hook?");
 					return;
 				}
-				/*if (group.leftColumnEl_sizeChangesToIgnore > 0) {
-					group.leftColumnEl_sizeChangesToIgnore--;
-					return;
-				}*/
 
 				//group.graph.uiDebugKit?.FlashComp(group.leftColumnEl, {text: `LC_ResizeObs change. @bboxSize:${ROSizeArrToStr(entry.borderBoxSize)} @cboxSize:${ROSizeArrToStr(entry.contentBoxSize)} @rect:${JSON.stringify(entry.contentRect)}`});
 				/*new Wave(graph, group, [
@@ -85,12 +77,7 @@ export const NodeUI_LeftColumn = (props: {treePath: string, connectorLineOpts?: 
 			}, [])}
 			className="innerBoxColumn clickThrough"
 			style={Object.assign(
-				{
-					//position: "relative",
-					position: "absolute",
-					/*paddingTop: gapBeforeInnerUI,
-					paddingBottom: gapAfterInnerUI,*/
-				},
+				{position: "absolute"},
 			)}
 		>
 			{children}

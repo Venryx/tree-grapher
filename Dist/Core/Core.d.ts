@@ -1,23 +1,25 @@
 import { FlexNode } from './FlexNode.js';
+export declare type ChildrenFunc = (data: any) => any;
+export declare type NodeSizeFunc = (self: FlexNode) => any;
+export declare type SpacingFunc = (nodeA: FlexNode, nodeB: FlexNode) => any;
 export declare class FlexTreeOptions {
     static defaults: Readonly<{
         children: (data: any) => any;
         nodeSize: (node: any) => any;
         spacing: number;
     }>;
-    children: any;
-    nodeSize: any;
-    spacing: any;
+    children: ChildrenFunc;
+    nodeSize: NodeSizeFunc;
+    spacing: SpacingFunc;
 }
 export declare class FlexTreeLayout {
     constructor(options?: Partial<FlexTreeOptions>);
     opts: FlexTreeOptions;
     accessor(name: string): any;
-    receiveTree(tree: FlexNode): any;
-    wrap(FlexClass: typeof FlexNode, treeData: any, children: any): FlexNode;
-    nodeSize(arg?: any): any;
-    spacing(arg?: any): any;
-    children(arg?: any): any;
-    hierarchy(treeData: any, children?: any): FlexNode;
-    dump(tree: any): string;
+    receiveTree<Datum>(tree: FlexNode<Datum>): FlexNode<Datum>;
+    nodeSize(arg?: NodeSizeFunc): NodeSizeFunc | this;
+    spacing(arg?: SpacingFunc): SpacingFunc | this;
+    children(arg?: ChildrenFunc): ChildrenFunc | this;
+    hierarchy<Datum>(treeData: Datum, children?: any): FlexNode<Datum>;
+    dump(tree: FlexNode): string;
 }

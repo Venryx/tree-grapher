@@ -1,11 +1,9 @@
-import { CE, Vector2, VRect } from "js-vextensions";
-import { configure, observable } from "mobx";
+import { CE, Vector2 } from "js-vextensions";
+import { configure } from "mobx";
 import { createContext } from "react";
-import { TreeColumn } from "./Graph/TreeColumn.js";
-import { makeObservable_safe } from "./Utils/General/MobX.js";
-import { NodeGroup, TreePathAsSortableStr } from "./Graph/NodeGroup.js";
-import { Wave, MyCHMounted, MyCHUnmounted, MyLCMounted } from "./index.js";
 import { FlexTreeLayout } from "./Core/Core.js";
+import { NodeGroup, TreePathAsSortableStr } from "./Graph/NodeGroup.js";
+import { MyCHMounted, MyCHUnmounted, MyLCMounted, Wave } from "./index.js";
 // maybe temp
 configure({ enforceActions: "never" });
 //const defaultGraph = new Graph({columnWidth: 100});
@@ -14,7 +12,6 @@ export const GraphContext = createContext(defaultGraph);
 export class Graph {
     constructor(data) {
         this.containerEl = document.body; // start out the "container" as the body, just so there aren't null errors prior to container-ref resolving
-        this.columns = []; // @O
         this.groupsByPath = new Map();
         // new
         // ==========
@@ -33,7 +30,9 @@ export class Graph {
                         ? [(_a = data.innerUIRect) === null || _a === void 0 ? void 0 : _a.width, (_b = data.innerUIRect) === null || _b === void 0 ? void 0 : _b.height]
                         : [(_c = data.innerUIRect) === null || _c === void 0 ? void 0 : _c.height, (_d = data.innerUIRect) === null || _d === void 0 ? void 0 : _d.width];
                 },
-                spacing: (nodeA, nodeB) => nodeA.path(nodeB).length,
+                spacing: (nodeA, nodeB) => {
+                    return nodeA.path(nodeB).length;
+                },
             });
             /*const groupsArray = [...graphInfo.groupsByPath.values()];
             const tree = layout.hierarchy(groupsArray);*/
@@ -45,8 +44,11 @@ export class Graph {
                     : new Vector2(node.y, node.x);
                 return newPos;
             });
-            const minX = CE(nodePositions_base.map(a => a.x)).Min();
-            const minY = CE(nodePositions_base.map(a => a.y)).Min();
+            const minX = CE(nodePositions_base.map((pos, i) => pos.x)).Min();
+            const minY = CE(nodePositions_base.map((pos, i) => {
+                const group = tree.nodes[i].data;
+                return pos.y - Number(group.innerUIRect.height / 2);
+            })).Min();
             const offset = new Vector2(100 - minX, 100 - minY);
             for (const [i, node] of tree.nodes.entries()) {
                 const group = node.data;
@@ -62,9 +64,6 @@ export class Graph {
                 console.log(`For ${group.path}, assigned pos: ${group.assignedPosition}`);
             }
         };
-        makeObservable_safe(this, {
-            columns: observable.shallow,
-        });
         Object.assign(this, data);
     }
     FindParentGroup(childGroup) {
@@ -80,37 +79,6 @@ export class Graph {
         const prefix = parentGroup.path + "/";
         let result = [...this.groupsByPath.values()].filter(a => a.path.startsWith(prefix));
         result = CE(result).OrderBy(a => TreePathAsSortableStr(a.path));
-        return result;
-    }
-    GetColumnsForGroup(group) {
-        if (group.chRect == null)
-            return [];
-        let firstIndex = Math.floor(group.chRect.x / this.columnWidth);
-        let lastIndex = Math.floor(group.chRect.Right / this.columnWidth);
-        // ensure all the necessary columns are created (start from 0, because we don't want gaps)
-        for (let i = 0; i <= lastIndex; i++) {
-            //if (this.columns[i] == null) {
-            if (this.columns.length <= i) {
-                this.columns[i] = new TreeColumn({
-                    index: i,
-                    rect: new VRect(i * this.columnWidth, 0, this.columnWidth, Number.MAX_SAFE_INTEGER),
-                });
-            }
-        }
-        return this.columns.slice(firstIndex, lastIndex + 1);
-    }
-    GetNextGroupsWithinColumnsFor(group) {
-        let result = new Set();
-        const columns = this.GetColumnsForGroup(group);
-        for (const column of columns) {
-            //const nextGroup = column.FindNextGroup(group);
-            const nextGroup = column.FindNextGroup_HighestCHRect(group);
-            if (nextGroup)
-                result.add(nextGroup);
-            /*for (const nextGroup of column.FindNextGroups(group)) {
-                result.add(nextGroup);
-            }*/
-        }
         return result;
     }
     GetOrCreateGroup(treePath) {

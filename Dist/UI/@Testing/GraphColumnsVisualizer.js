@@ -11,6 +11,7 @@ export const GraphColumnsVisualizer = observer((props) => {
     const forceUpdate = useForceUpdate();
     //const [store] = useState({mousePos: new Vector2(-1, -1)});
     const [mousePos, setMousePos] = useState(new Vector2(-1, -1));
+    const [width, setWidth] = useState(0);
     const [height, setHeight] = useState(0);
     const ref = useRef(null);
     useEffect(() => {
@@ -43,8 +44,9 @@ export const GraphColumnsVisualizer = observer((props) => {
             if (newMarginTopToBeVisible_inBothViewports != marginTopNeededToBeVisible) {
                 setMarginTopNeededToBeVisible(newMarginTopToBeVisible_inBothViewports);
             }
-            const newHeight = ref.current.getBoundingClientRect().height;
-            if (newHeight != height) {
+            const { width: newWidth, height: newHeight } = ref.current.getBoundingClientRect();
+            if (newWidth != width || newHeight != height) {
+                setWidth(newWidth);
                 setHeight(newHeight);
             }
             else {
@@ -53,24 +55,21 @@ export const GraphColumnsVisualizer = observer((props) => {
         }).Start();
         return () => timer.Stop();
     });
+    const columnOffsets = Range(0, CE(width).CeilingTo(100), 100, false);
+    const rowOffsets = Range(0, CE(height).CeilingTo(100), 100, false);
     return (React.createElement("div", { ref: ref, style: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, overflow: "hidden", pointerEvents: "none" } },
         mousePos.x != -1 &&
             React.createElement("div", { style: { position: "absolute", right: 0, top: 0 } }, `${mousePos.x}, ${mousePos.y} (mouse)`),
         React.createElement(Row, { style: {
                 position: "absolute", left: 0, right: 0, top: marginTopNeededToBeVisible, bottom: 0,
-            } }, graph.columns.map((column, index) => {
-            return (React.createElement(Column, { key: index, style: { display: "inline-flex", width: 100, height: "100%", border: "solid hsla(40,100%,50%,.5)", borderWidth: "0 1px 0 0" } },
-                React.createElement(Row, null,
-                    "#",
-                    index,
-                    " C:",
-                    column.groups_ordered.length)));
+            } }, columnOffsets.map((columnOffset, index) => {
+            return (React.createElement(Column, { key: index, style: { display: "inline-flex", width: 100, height: "100%", border: "solid hsla(40,100%,50%,.5)", borderWidth: "0 1px 0 0" } }));
         })),
         React.createElement(Column, { style: {
                 position: "absolute", left: 0, right: 0, top: 0, bottom: 0,
-            } }, Range(0, CE(height).CeilingTo(100), 100, false).map((rowDistFromTop, index) => {
-            return (React.createElement(Row, { key: index, style: { display: "inline-flex", width: "100%", height: 100, border: "solid hsla(40,100%,50%,.5)", borderWidth: "0 0 1px 0" } }, graph.columns.map((column, columnIndex) => {
-                return (React.createElement("div", { key: columnIndex, style: { display: "inline-flex", width: 100, height: 100, opacity: .5, fontSize: 11 } }, rowDistFromTop > 0 ? `${columnIndex * graph.columnWidth},${rowDistFromTop}` : ""));
+            } }, rowOffsets.map((rowOffset, index) => {
+            return (React.createElement(Row, { key: index, style: { display: "inline-flex", width: "100%", height: 100, border: "solid hsla(40,100%,50%,.5)", borderWidth: "0 0 1px 0" } }, columnOffsets.map((columnOffset, columnIndex) => {
+                return (React.createElement("div", { key: columnIndex, style: { display: "inline-flex", width: 100, height: 100, opacity: .5, fontSize: 11 } }, `${columnOffset},${rowOffset}`));
             })));
         }))));
 });

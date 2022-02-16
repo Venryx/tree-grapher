@@ -1,30 +1,40 @@
-import { hierarchy } from "d3-hierarchy";
-export declare class FlexNode extends hierarchy.prototype.constructor {
-    constructor(data: any, nodeSize: (self: FlexNode) => any, spacing: (self: FlexNode, oNode: FlexNode) => any);
-    func_nodeSize: (self: FlexNode) => any;
-    func_spacing: (self: FlexNode, oNode: FlexNode) => any;
+import { HierarchyPointNode } from "d3-hierarchy";
+import { NodeSizeFunc, SpacingFunc } from "./Core.js";
+declare const FlexNode_base: new (..._: any[]) => HierarchyPointNode<any>;
+export declare class FlexNode<Datum = any> extends FlexNode_base {
+    constructor(data: Datum, nodeSize: (self: FlexNode) => any, spacing: (self: FlexNode, oNode: FlexNode) => any);
+    func_nodeSize: NodeSizeFunc;
+    func_spacing: SpacingFunc;
+    data: Datum;
+    /** Only set if wrapFlexNode is used for this node. */
+    length: number;
     copy(): any;
     get size(): any;
     spacing(oNode: any): any;
-    get nodes(): any;
+    get nodes(): this[];
     get xSize(): any;
     get ySize(): any;
-    get top(): any;
+    get top(): number;
     get bottom(): any;
     get left(): number;
-    get right(): any;
-    get root(): any;
-    get numChildren(): any;
+    get right(): number;
+    get root(): this;
+    get numChildren(): number;
     get hasChildren(): boolean;
     get noChildren(): boolean;
-    get firstChild(): any;
-    get lastChild(): any;
-    get extents(): any;
-    get nodeExtents(): {
-        top: any;
+    get firstChild(): this | null;
+    get lastChild(): this | null;
+    get extents(): {
+        top: number;
         bottom: any;
         left: number;
-        right: any;
+        right: number;
+    };
+    get nodeExtents(): {
+        top: number;
+        bottom: any;
+        left: number;
+        right: number;
     };
     static maxExtents(e0: any, e1: any): {
         top: number;
@@ -33,13 +43,25 @@ export declare class FlexNode extends hierarchy.prototype.constructor {
         right: number;
     };
 }
-export declare class FlexNode_Wrapper extends FlexNode {
+export declare function wrapFlexNode<T extends FlexNode, Datum = any>(FlexClass: new (..._: any[]) => T, treeData: Datum, children: any, nodeSize: NodeSizeFunc, spacing: SpacingFunc): T;
+export declare class FlexNode_Wrapper<Datum extends FlexNode = FlexNode<any>> extends FlexNode<Datum> {
     constructor(data: any, nodeSize: (self: FlexNode) => any, spacing: (self: FlexNode, oNode: FlexNode) => any);
     get size(): any;
     spacing(oNode: FlexNode): any;
-    get x(): any;
-    set x(v: any);
-    get y(): any;
-    set y(v: any);
+    get x(): number;
+    set x(v: number);
+    get y(): number;
+    set y(v: number);
+    relX: number;
+    prelim: number;
+    shift: number;
+    change: number;
+    lExt: FlexNode_Wrapper<Datum>;
+    lExtRelX: number;
+    lThr: any;
+    rExt: FlexNode_Wrapper<Datum>;
+    rExtRelX: number;
+    rThr: any;
     update(): this;
 }
+export {};

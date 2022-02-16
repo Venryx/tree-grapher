@@ -53,7 +53,6 @@ export declare class MyCHRectChanged extends Message {
     constructor(data: MyCHRectChanged);
     oldRect: VRect | n;
     newRect: VRect | n;
-    echoesSentTo: string[];
 }
 export declare class IDetached extends Message {
     constructor(data: IDetached);

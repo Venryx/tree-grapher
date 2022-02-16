@@ -1,5 +1,5 @@
 // based on: https://github.com/Klortho/d3-flextree
-import { FlexNode, FlexNode_Wrapper } from './FlexNode.js';
+import { FlexNode, FlexNode_Wrapper, wrapFlexNode } from './FlexNode.js';
 export class FlexTreeOptions {
 }
 FlexTreeOptions.defaults = Object.freeze({
@@ -7,10 +7,8 @@ FlexTreeOptions.defaults = Object.freeze({
     nodeSize: node => node.data.size,
     spacing: 0,
 });
-// Create a layout function with customizable options. Per D3-style, the
-// options can be set at any time using setter methods. The layout function
-// will compute the tree node positions based on the options in effect at the
-// time it is called.
+// Create a layout function with customizable options. Per D3-style, the options can be set at any time using setter methods.
+// The layout function will compute the tree node positions based on the options in effect at the time it is called.
 export class FlexTreeLayout {
     constructor(options) {
         this.opts = Object.assign({}, FlexTreeOptions.defaults, options);
@@ -20,31 +18,9 @@ export class FlexTreeLayout {
         return typeof opt === 'function' ? opt : () => opt;
     }
     receiveTree(tree) {
-        const wtree = this.wrap(FlexNode_Wrapper, tree, node => node.children);
+        const wtree = wrapFlexNode(FlexNode_Wrapper, tree, node => node.children, this.accessor('nodeSize'), this.accessor('spacing'));
         wtree.update();
         return wtree.data;
-    }
-    wrap(FlexClass, treeData, children) {
-        const _wrap = (data, parent) => {
-            const node = new FlexClass(data, this.accessor('nodeSize'), this.accessor('spacing'));
-            Object.assign(node, {
-                parent,
-                depth: parent === null ? 0 : parent.depth + 1,
-                height: 0,
-                length: 1,
-            });
-            const kidsData = children(data) || [];
-            node.children = kidsData.length === 0 ? null
-                : kidsData.map(kd => _wrap(kd, node));
-            if (node.children) {
-                Object.assign(node, node.children.reduce((hl, kid) => ({
-                    height: Math.max(hl.height, kid.height + 1),
-                    length: hl.length + kid.length,
-                }), node));
-            }
-            return node;
-        };
-        return _wrap(treeData, null);
     }
     nodeSize(arg) {
         return arguments.length ? (this.opts.nodeSize = arg, this) : this.opts.nodeSize;
@@ -57,7 +33,7 @@ export class FlexTreeLayout {
     }
     hierarchy(treeData, children) {
         const kids = typeof children === 'undefined' ? this.opts.children : children;
-        return this.wrap(FlexNode, treeData, kids);
+        return wrapFlexNode(FlexNode, treeData, kids, this.accessor('nodeSize'), this.accessor('spacing'));
     }
     dump(tree) {
         const nodeSize = this.accessor('nodeSize');

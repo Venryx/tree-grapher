@@ -15,6 +15,7 @@ export const GraphColumnsVisualizer = observer((props: {levelsToScrollContainer?
 
 	//const [store] = useState({mousePos: new Vector2(-1, -1)});
 	const [mousePos, setMousePos] = useState(new Vector2(-1, -1));
+	const [width, setWidth] = useState(0);
 	const [height, setHeight] = useState(0);
 
 	const ref = useRef<HTMLDivElement>(null);
@@ -52,8 +53,9 @@ export const GraphColumnsVisualizer = observer((props: {levelsToScrollContainer?
 				setMarginTopNeededToBeVisible(newMarginTopToBeVisible_inBothViewports);
 			}
 
-			const newHeight = ref.current.getBoundingClientRect().height;
-			if (newHeight != height) {
+			const {width: newWidth, height: newHeight} = ref.current.getBoundingClientRect();
+			if (newWidth != width || newHeight != height) {
+				setWidth(newWidth);
 				setHeight(newHeight);
 			} else {
 				forceUpdate();
@@ -62,6 +64,8 @@ export const GraphColumnsVisualizer = observer((props: {levelsToScrollContainer?
 		return ()=>timer.Stop();
 	})
 
+	const columnOffsets = Range(0, CE(width).CeilingTo(100), 100, false);
+	const rowOffsets = Range(0, CE(height).CeilingTo(100), 100, false);
 	return (
 		<div ref={ref} style={{position: "absolute", left: 0, right: 0, top: 0, bottom: 0, overflow: "hidden", pointerEvents: "none"}}>
 			{mousePos.x != -1 &&
@@ -72,10 +76,10 @@ export const GraphColumnsVisualizer = observer((props: {levelsToScrollContainer?
 			<Row style={{
 				position: "absolute", left: 0, right: 0, top: marginTopNeededToBeVisible, bottom: 0,
 			}}>
-				{graph.columns.map((column, index)=>{
+				{columnOffsets.map((columnOffset, index)=>{
 					return (
 						<Column key={index} style={{display: "inline-flex", width: 100, height: "100%", border: "solid hsla(40,100%,50%,.5)", borderWidth: "0 1px 0 0"}}>
-							<Row>#{index} C:{column.groups_ordered.length}</Row>
+							{/*<Row>#{index} C:{column.groups_ordered.length}</Row>*/}
 							{/*<Row>
 								<Button text="More" onClick={()=>{
 									alert("TODO");
@@ -89,13 +93,13 @@ export const GraphColumnsVisualizer = observer((props: {levelsToScrollContainer?
 			<Column style={{
 				position: "absolute", left: 0, right: 0, top: 0, bottom: 0,
 			}}>
-				{Range(0, CE(height).CeilingTo(100), 100, false).map((rowDistFromTop, index)=>{
+				{rowOffsets.map((rowOffset, index)=>{
 					return (
 						<Row key={index} style={{display: "inline-flex", width: "100%", height: 100, border: "solid hsla(40,100%,50%,.5)", borderWidth: "0 0 1px 0"}}>
-							{graph.columns.map((column, columnIndex)=>{
+							{columnOffsets.map((columnOffset, columnIndex)=>{
 								return (
 									<div key={columnIndex} style={{display: "inline-flex", width: 100, height: 100, opacity: .5, fontSize: 11}}>
-										{rowDistFromTop > 0 ? `${columnIndex * graph.columnWidth},${rowDistFromTop}` : ""}
+										{`${columnOffset},${rowOffset}`}
 									</div>
 								);
 							})}

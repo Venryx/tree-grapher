@@ -1,7 +1,6 @@
 import { Vector2, VRect } from "js-vextensions";
 import { Graph } from "../Graph.js";
 import { n, RequiredBy } from "../Utils/@Internal/Types.js";
-import { TreeColumn } from "./TreeColumn.js";
 import { ConnectorLinesUI_Handle, NodeConnectorOpts } from "../UI/ConnectorLinesUI.js";
 import { Wave } from "../Waves/Wave.js";
 /** Converts, eg. "0.0.10.0" into "00.00.10.00", such that comparisons like XXX("0.0.10.0") > XXX("0.0.9.0") succeed. */
@@ -22,7 +21,6 @@ export declare class NodeGroup {
     path: string;
     path_parts: string[];
     path_sortable: string;
-    columnsPartOf: TreeColumn[];
     leftColumnEl: HTMLElement | n;
     leftColumn_connectorOpts?: NodeConnectorOpts;
     leftColumn_alignWithParent?: boolean;
@@ -47,22 +45,20 @@ export declare class NodeGroup {
     RunEffects(fx: WaveEffects, wave: Wave): void;
     UpdateLCRect(wave: Wave): {
         newRect: VRect | null;
-        oldRect: VRect | n;
+        oldRect: n | VRect;
         rectChanged: boolean;
     };
     /** Only to be called from NodeGroup.UpdateLCRect(). */
     private UpdateInnerUIRect;
     UpdateCHRect(wave: Wave): {
         newRect: VRect | null;
-        oldRect: VRect | n;
+        oldRect: n | VRect;
         rectChanged: boolean;
     };
-    UpdateColumns(): void;
     DetachAndDestroy(): void;
     Detach(): void;
     IsDestroyed(): boolean;
     Destroy(): void;
-    RecalculateChildHolderShift(wave: Wave, updateCHRectFirst?: boolean): void;
     /** Stores the y-pos that should be used as the center target for the inner-ui's center, and the child-holder's connector-lines origins/anchors. (in global space) */
     RecalculateLineSourcePoint(wave: Wave): void;
     RecalculateLeftColumnAlign(wave: Wave): void;
