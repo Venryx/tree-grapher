@@ -17,8 +17,9 @@ export class FlexNode<Datum = any> extends (hierarchy.prototype.constructor as n
 	length: number;
 
 	copy() {
+		const self = this;
 		// [Is this actually correct? Seems that `this.data` should be passed instead of `this`...] 
-		const c = wrapFlexNode(this.constructor as new(..._)=>typeof this, this, node=>node.children, this.func_nodeSize, this.func_spacing);
+		const c = wrapFlexNode<FlexNode_Wrapper<typeof self>, typeof self>(this.constructor as any, this, node=>node.children, this.func_nodeSize, this.func_spacing);
 		c.each(node=>node.data = (node.data as any).data);
 		return c;
 	}

@@ -7,6 +7,7 @@ export class FlexNode extends hierarchy.prototype.constructor {
         this.func_spacing = spacing;
     }
     copy() {
+        const self = this;
         // [Is this actually correct? Seems that `this.data` should be passed instead of `this`...] 
         const c = wrapFlexNode(this.constructor, this, node => node.children, this.func_nodeSize, this.func_spacing);
         c.each(node => node.data = node.data.data);

@@ -20,7 +20,7 @@ export const NodeUI_Inner = observer((props: {node: MapNode, path: string, inBel
 			background: "rgba(100,100,100,.7)",
 			border: "1px solid black",
 			borderRadius: 10,
-			width: node.width + (inBelowGroup ? -30 : 0), // if in below group, reduce width by 30, to make space for bar at left of group
+			width: node.width + (inBelowGroup ? -20 : 0), // if in below group, reduce width by 20, to make space for bar at left of group
 			//margin: "5px 0",
 			padding: 5,
 		}}>

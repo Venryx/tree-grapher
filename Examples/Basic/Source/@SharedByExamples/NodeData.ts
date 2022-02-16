@@ -35,7 +35,11 @@ export const nodeTree_main = NewNode({id: "0", expanded: true,
 				NewNode({id: "0.1.0", expanded: true,
 					childrenBelow: true,
 					children: [
-						NewNode({id: "0.1.0.0", expanded: true}),
+						NewNode({id: "0.1.0.0", expanded: true,
+							children: [
+								NewNode({id: "0.1.0.0.1", expanded: true}),
+							]
+						}),
 						NewNode({id: "0.1.0.1", expanded: true}),
 					],
 				}),

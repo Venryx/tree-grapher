@@ -3,7 +3,6 @@ import { configure } from "mobx";
 import { createContext } from "react";
 import { FlexTreeLayout } from "./Core/Core.js";
 import { NodeGroup, TreePathAsSortableStr } from "./Graph/NodeGroup.js";
-import { MyCHMounted, MyCHUnmounted, MyLCMounted, Wave } from "./index.js";
 // maybe temp
 configure({ enforceActions: "never" });
 //const defaultGraph = new Graph({columnWidth: 100});
@@ -16,22 +15,33 @@ export class Graph {
         // new
         // ==========
         this.RunLayout = (direction = "leftToRight") => {
-            var _a;
+            var _a, _b;
             const layout = new FlexTreeLayout({
                 children: (data) => {
-                    const result = this.FindChildGroups(data);
-                    console.log(`For ${data.path}, found children:`, result);
-                    return result;
+                    const children = this.FindChildGroups(data);
+                    const children_noSelfSideBoxes = children.filter(a => !a.leftColumn_connectorOpts.parentIsAbove);
+                    const children_noSelfSideBoxes_addChildSideBoxes = CE(children_noSelfSideBoxes).SelectMany(child => {
+                        let result = [child];
+                        for (const grandChild of this.FindChildGroups(child)) {
+                            if (grandChild.leftColumn_connectorOpts.parentIsAbove) {
+                                result.push(grandChild);
+                            }
+                        }
+                        return result;
+                    });
+                    console.log(`For ${data.path}, found children:`, children_noSelfSideBoxes_addChildSideBoxes);
+                    return children_noSelfSideBoxes_addChildSideBoxes;
                 },
                 nodeSize: node => {
                     var _a, _b, _c, _d;
                     const data = node.data;
                     return direction == "topToBottom"
-                        ? [(_a = data.innerUIRect) === null || _a === void 0 ? void 0 : _a.width, (_b = data.innerUIRect) === null || _b === void 0 ? void 0 : _b.height]
-                        : [(_c = data.innerUIRect) === null || _c === void 0 ? void 0 : _c.height, (_d = data.innerUIRect) === null || _d === void 0 ? void 0 : _d.width];
+                        ? [(_a = data.lcSize) === null || _a === void 0 ? void 0 : _a.x, (_b = data.lcSize) === null || _b === void 0 ? void 0 : _b.y]
+                        : [(_c = data.lcSize) === null || _c === void 0 ? void 0 : _c.y, (_d = data.lcSize) === null || _d === void 0 ? void 0 : _d.x];
                 },
                 spacing: (nodeA, nodeB) => {
-                    return nodeA.path(nodeB).length;
+                    //return nodeA.path(nodeB).length;
+                    return 10;
                 },
             });
             /*const groupsArray = [...graphInfo.groupsByPath.values()];
@@ -47,22 +57,27 @@ export class Graph {
             const minX = CE(nodePositions_base.map((pos, i) => pos.x)).Min();
             const minY = CE(nodePositions_base.map((pos, i) => {
                 const group = tree.nodes[i].data;
-                return pos.y - Number(group.innerUIRect.height / 2);
+                return pos.y - Number(group.innerUISize.y / 2);
             })).Min();
             const offset = new Vector2(100 - minX, 100 - minY);
             for (const [i, node] of tree.nodes.entries()) {
                 const group = node.data;
+                if (group.leftColumnEl == null)
+                    continue;
                 const newPos = nodePositions_base[i].Plus(offset);
-                //if (newPos.x != group.assignedPosition.x || newPos.y != group.assignedPosition.y) {
                 group.assignedPosition = newPos;
-                if (group.leftColumnEl) {
+                const newRect = group.LCRect;
+                if (!(newRect === null || newRect === void 0 ? void 0 : newRect.Equals(group.lcRect_atLastRender))) {
                     group.leftColumnEl.style.left = `${group.assignedPosition.x}px`;
                     //group.leftColumnEl.style.left = `calc(${group.assignedPosition.x}px - ${group.innerUIRect!.width / 2}px)`;
                     //group.leftColumnEl.style.top = `${group.assignedPosition.y}px`;
-                    group.leftColumnEl.style.top = `calc(${group.assignedPosition.y}px - ${Number(group.innerUIRect.height / 2)}px)`;
+                    group.leftColumnEl.style.top = `calc(${group.assignedPosition.y}px - ${Number(group.innerUISize.y / 2)}px)`;
+                    console.log(`For ${group.path}, assigned pos: ${group.assignedPosition}`);
+                    group.lcRect_atLastRender = newRect;
+                    group.innerUIRect_atLastRender = group.InnerUIRect;
                 }
-                console.log(`For ${group.path}, assigned pos: ${group.assignedPosition}`);
             }
+            (_b = this.connectorLinesComp) === null || _b === void 0 ? void 0 : _b.forceUpdate();
         };
         Object.assign(this, data);
     }
@@ -100,9 +115,6 @@ export class Graph {
         group.leftColumnEl = el;
         group.leftColumn_connectorOpts = connectorOpts;
         group.leftColumn_alignWithParent = alignWithParent;
-        new Wave(this, group, [
-            new MyLCMounted({ me: group })
-        ]).Down_StartWave();
         setTimeout(this.RunLayout);
         return group;
     }
@@ -110,23 +122,18 @@ export class Graph {
         const { group, alreadyExisted } = this.GetOrCreateGroup(treePath);
         group.childHolderEl = el;
         group.childHolder_belowParent = belowParent;
-        new Wave(this, group, [
-            new MyCHMounted({ me: group })
-        ]).Down_StartWave();
         setTimeout(this.RunLayout);
         return group;
     }
-    NotifyGroupConnectorLinesUIMount(handle, treePath) {
-        const { group, alreadyExisted } = this.GetOrCreateGroup(treePath);
-        group.connectorLinesComp = handle;
+    NotifyGroupConnectorLinesUIMount(handle) {
+        this.connectorLinesComp = handle;
         setTimeout(this.RunLayout);
-        return group;
     }
     NotifyGroupLeftColumnUnmount(group) {
         if (group.IsDestroyed())
             return;
         group.leftColumnEl = null;
-        /*if (group.childHolderEl != null || group.connectorLinesComp != null) {
+        /*if (group.childHolderEl != null) {
             new Wave(this, group, [
                 new MyLCUnmounted({me: group})
             ]).Down_StartWave();
@@ -138,25 +145,15 @@ export class Graph {
         if (group.IsDestroyed())
             return;
         group.childHolderEl = null;
-        if (group.leftColumnEl != null || group.connectorLinesComp != null) {
-            new Wave(this, group, [
-                new MyCHUnmounted({ me: group })
-            ]).Down_StartWave();
+        if (group.leftColumnEl != null) {
         }
         else {
             group.DetachAndDestroy();
         }
         this.RunLayout();
     }
-    NotifyGroupConnectorLinesUIUnmount(group) {
-        if (group.IsDestroyed())
-            return;
-        group.connectorLinesComp = null;
-        if (group.leftColumnEl != null || group.childHolderEl != null) {
-        }
-        else {
-            group.DetachAndDestroy();
-        }
+    NotifyGroupConnectorLinesUIUnmount() {
+        this.connectorLinesComp = null;
         this.RunLayout();
     }
 }

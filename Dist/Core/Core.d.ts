@@ -19,7 +19,7 @@ export declare class FlexTreeLayout {
     receiveTree<Datum>(tree: FlexNode<Datum>): FlexNode<Datum>;
     nodeSize(arg?: NodeSizeFunc): NodeSizeFunc | this;
     spacing(arg?: SpacingFunc): SpacingFunc | this;
-    children(arg?: ChildrenFunc): ChildrenFunc | this;
+    children(arg?: ChildrenFunc): this | ChildrenFunc;
     hierarchy<Datum>(treeData: Datum, children?: any): FlexNode<Datum>;
     dump(tree: FlexNode): string;
 }

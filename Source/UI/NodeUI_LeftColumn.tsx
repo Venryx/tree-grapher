@@ -1,4 +1,4 @@
-import {Assert} from "js-vextensions";
+import {Assert, Vector2} from "js-vextensions";
 import React, {useCallback, useContext, useRef} from "react";
 import ReactDOM from "react-dom";
 import {useCallbackRef} from "use-callback-ref";
@@ -7,7 +7,9 @@ import {NodeGroup} from "../Graph/NodeGroup.js";
 import {GetRectRelative} from "../Utils/General/General.js";
 import {NodeConnectorOpts} from "./ConnectorLinesUI.js";
 
-export function useRef_nodeLeftColumn(treePath: string, connectorLineOpts?: NodeConnectorOpts, alignWithParent?: boolean) {
+export function useRef_nodeLeftColumn(treePath: string, nodeConnectorOpts?: NodeConnectorOpts, alignWithParent?: boolean) {
+	nodeConnectorOpts = Object.assign(new NodeConnectorOpts(), nodeConnectorOpts);
+	
 	const graph = useContext(GraphContext);
 	let ref_group = useRef<NodeGroup | null>(null);
 
@@ -16,7 +18,7 @@ export function useRef_nodeLeftColumn(treePath: string, connectorLineOpts?: Node
 	let ref_leftColumn = useCallbackRef<HTMLElement>(null, el=>{
 	//let ref = useCallback(el=>{
 		if (el) {
-			let group = graph.NotifyGroupLeftColumnMount(el as any as HTMLElement, treePath, connectorLineOpts, alignWithParent);
+			let group = graph.NotifyGroupLeftColumnMount(el as any as HTMLElement, treePath, nodeConnectorOpts!, alignWithParent);
 			ref_group.current = group;
 
 			// set up observer
@@ -34,8 +36,8 @@ export function useRef_nodeLeftColumn(treePath: string, connectorLineOpts?: Node
 				]).Down_StartWave();*/
 
 				//group.UpdateLCRect();
-				group.lcRect = group.leftColumnEl ? GetRectRelative(group.leftColumnEl, group.graph.containerEl) : null;
-				group.innerUIRect = group.leftColumnEl && group.lcRect ? group.lcRect.Clone() : null;
+				group.lcSize = group.leftColumnEl ? GetRectRelative(group.leftColumnEl, group.graph.containerEl).Size : null;
+				group.innerUISize = group.leftColumnEl && group.lcSize ? new Vector2(group.lcSize.x - group.GutterWidth, group.lcSize.y) : null;
 
 				setTimeout(()=>graph.RunLayout());
 			});
@@ -62,11 +64,14 @@ export function useRef_nodeLeftColumn(treePath: string, connectorLineOpts?: Node
 	return {ref_leftColumn, ref_group};
 }
 
-export const NodeUI_LeftColumn = (props: {treePath: string, connectorLineOpts?: NodeConnectorOpts, alignWithParent?: boolean, children})=>{
-	let {treePath, connectorLineOpts, alignWithParent, children} = props;
+export const NodeUI_LeftColumn = (props: {treePath: string, nodeConnectorOpts?: NodeConnectorOpts, alignWithParent?: boolean, children})=>{
+	let {treePath, nodeConnectorOpts, alignWithParent, children} = props;
+	nodeConnectorOpts = Object.assign(new NodeConnectorOpts(), nodeConnectorOpts);
+
 	const graph = useContext(GraphContext);
 	const group = graph.groupsByPath.get(treePath);
-	let {ref_leftColumn} = useRef_nodeLeftColumn(treePath, connectorLineOpts, alignWithParent);
+	const gutterWidth = nodeConnectorOpts.gutterWidth + (nodeConnectorOpts.parentIsAbove ? nodeConnectorOpts.parentGutterWidth : 0); // rather than wait for group, just recalc gutter-width manually
+	let {ref_leftColumn} = useRef_nodeLeftColumn(treePath, nodeConnectorOpts, alignWithParent);
 
 	return (
 		<div
@@ -77,7 +82,13 @@ export const NodeUI_LeftColumn = (props: {treePath: string, connectorLineOpts?: 
 			}, [])}
 			className="innerBoxColumn clickThrough"
 			style={Object.assign(
-				{position: "absolute"},
+				//!nodeConnectorOpts.parentIsAbove && {position: "absolute"} as const,
+				{position: "absolute"} as const,
+				//{marginLeft: nodeConnectorOpts.gutterWidth},
+				//{paddingLeft: nodeConnectorOpts.gutterWidth + (group && nodeConnectorOpts.parentIsAbove ? graph.FindParentGroup(group)?.leftColumn_connectorOpts.gutterWidth ?? 0 : 0)},
+				{paddingLeft: gutterWidth},
+				/*!nodeConnectorOpts.parentIsAbove && {marginLeft: nodeConnectorOpts.gutterWidth},
+				nodeConnectorOpts.parentIsAbove && {paddingLeft: nodeConnectorOpts.gutterWidth},*/
 			)}
 		>
 			{children}

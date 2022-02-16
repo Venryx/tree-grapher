@@ -1,28 +1,27 @@
-import { Fragment, useContext, useMemo, useRef } from "react";
+import { Fragment, useContext, useMemo } from "react";
 import React from "react";
-import { Assert, E, Vector2 } from "js-vextensions";
+import { E, Vector2 } from "js-vextensions";
 import { GraphContext } from "../Graph.js";
 import { useForceUpdate } from "../index.js";
 import { useCallbackRef } from "use-callback-ref";
-export function useRef_connectorLinesUI(treePath, handle) {
+export function useRef_connectorLinesUI(handle) {
     const graph = useContext(GraphContext);
-    let ref_group = useRef(null);
     let ref_connectorLinesUI = useCallbackRef(null, el => {
         if (el) {
             handle.svgEl = el;
-            let group = graph.NotifyGroupConnectorLinesUIMount(handle, treePath);
-            ref_group.current = group;
+            graph.NotifyGroupConnectorLinesUIMount(handle);
         }
         else {
-            const group = ref_group.current;
-            Assert(group, "Cannot call ref_group.current = null twice in a row!");
-            ref_group.current = null;
-            graph.NotifyGroupConnectorLinesUIUnmount(group);
+            graph.NotifyGroupConnectorLinesUIUnmount();
         }
     });
-    return { ref_connectorLinesUI, ref_group };
+    return { ref_connectorLinesUI, graph };
 }
 export class NodeConnectorOpts {
+    constructor() {
+        this.gutterWidth = 30;
+        this.parentGutterWidth = 30; // temp; needed for show-below-parent children (since parent's ui might not be fully attached when child need's parent's gutter-width info)
+    }
 }
 export class ConnectorLinesUI_Handle {
     constructor(data) {
@@ -30,76 +29,43 @@ export class ConnectorLinesUI_Handle {
     }
 }
 export const ConnectorLinesUI = React.memo((props) => {
-    const { treePath, width, linesFromAbove } = props;
     const forceUpdate = useForceUpdate();
     const handle = useMemo(() => new ConnectorLinesUI_Handle({ props: props, svgEl: null, forceUpdate }), []);
-    const { ref_connectorLinesUI, ref_group } = useRef_connectorLinesUI(treePath, handle);
-    const group = ref_group.current;
-    if (group && group.IsDestroyed()) {
-        console.warn("group.IsDestroyed() returned true in resizer-observer; this should not happen. Did you forget to wrap your usage of `ref_leftColumn` in a useCallback hook?");
-        return null;
-    }
-    let linkSpawnPoint = Vector2.zero;
-    let childBoxInfos = [];
-    if (group && group.chRect && group.lineSourcePoint != null) {
-        let guessedInnerUI_marginBottom = 0;
-        if (group.lcRect && group.leftColumnEl) {
-            let guessedInnerUI = group.leftColumnEl ? group.leftColumnEl.childNodes[group.leftColumnEl.childNodes.length - 1] : null;
-            let guessedInnerUI_rectBottom = guessedInnerUI instanceof HTMLElement ? guessedInnerUI.getBoundingClientRect().bottom : 0;
-            guessedInnerUI_marginBottom = group.leftColumnEl.getBoundingClientRect().bottom - guessedInnerUI_rectBottom;
-        }
-        linkSpawnPoint = linesFromAbove
-            ? new Vector2(width - 10, -guessedInnerUI_marginBottom)
-            : new Vector2(0, group.ConvertFromGlobalSpace_YPos(group.lineSourcePoint, group.chRect));
-        // todo: remove this hack/workaround
-        if (!linesFromAbove) {
-            group.ForceUpdateRects(null);
-            if (group.innerUIRect) {
-                linkSpawnPoint = new Vector2(0, group.ConvertFromGlobalSpace_YPos(group.innerUIRect.Center.y, group.chRect));
-            }
-        }
-        childBoxInfos = [...group.childConnectorInfos.values()].filter(a => a.rect != null).map(entry => {
-            // todo: remove this hack/workaround
-            if (true) {
-                entry.group.ForceUpdateRects(null);
-                return {
-                    offset: new Vector2(entry.group.innerUIRect.x, entry.group.innerUIRect.Center.y).Minus(group.chRect.Position),
-                    opts: entry.opts,
-                };
-            }
-            return {
-                offset: new Vector2(entry.rect.x, entry.rect.Center.y).Minus(group.chRect.Position),
-                opts: entry.opts,
-            };
-        });
-    }
-    return (React.createElement("svg", { ref: ref_connectorLinesUI, className: "clickThroughChain", width: `${width}px`, height: "100%", style: {
+    const { ref_connectorLinesUI, graph } = useRef_connectorLinesUI(handle);
+    const nonRootGroups = [...graph.groupsByPath.values()].filter(a => a.path_parts.length > 1);
+    return (React.createElement("svg", { ref: ref_connectorLinesUI, className: "clickThroughChain", width: "100%", height: "100%", style: {
             position: "absolute",
-            //left: 0, right: 0,
-            left: 0, width,
-            //top: 0, bottom: 0,
+            left: 0, right: 0,
+            top: 0, bottom: 0,
             overflow: "visible", zIndex: -1
-        } }, childBoxInfos.map((child, index) => {
+        } }, nonRootGroups.map((group, index) => {
         var _a, _b;
-        if (child.offset == null)
+        if (group.innerUIRect_atLastRender == null)
             return null;
-        const childID = `${treePath}_${index}`;
-        if (linesFromAbove) {
-            const start = linkSpawnPoint;
-            const mid = child.offset.Minus(10, 0);
-            const end = child.offset;
-            return React.createElement("path", { key: `connectorLine_${childID}`, style: { stroke: (_b = (_a = child.opts) === null || _a === void 0 ? void 0 : _a.color) !== null && _b !== void 0 ? _b : "gray", strokeWidth: 3, fill: "none" }, d: `M${start.x},${start.y} L${mid.x},${mid.y} L${end.x},${end.y}` });
+        const lineOpts = group.leftColumn_connectorOpts;
+        if (lineOpts == null)
+            return null;
+        const lineFromAbove = lineOpts.parentIsAbove;
+        const parentGroup = graph.FindParentGroup(group);
+        if ((parentGroup === null || parentGroup === void 0 ? void 0 : parentGroup.innerUIRect_atLastRender) == null)
+            return null;
+        const lineStart = lineFromAbove
+            ? new Vector2(group.innerUIRect_atLastRender.x - (lineOpts.gutterWidth / 2), parentGroup.innerUIRect_atLastRender.Bottom)
+            : new Vector2(parentGroup.innerUIRect_atLastRender.Right, parentGroup.innerUIRect_atLastRender.Center.y);
+        const lineEnd = new Vector2(group.innerUIRect_atLastRender.x, group.innerUIRect_atLastRender.Center.y);
+        const childID = `${group.path}_${index}`;
+        if (lineFromAbove) {
+            const lineMid = lineEnd.Minus(lineOpts.gutterWidth / 2, 0);
+            return React.createElement("path", { key: `connectorLine_${childID}`, style: { stroke: (_b = (_a = group.leftColumn_connectorOpts) === null || _a === void 0 ? void 0 : _a.color) !== null && _b !== void 0 ? _b : "gray", strokeWidth: 3, fill: "none" }, d: `M${lineStart.x},${lineStart.y} L${lineMid.x},${lineMid.y} L${lineEnd.x},${lineEnd.y}` });
         }
-        const start = linkSpawnPoint;
-        let startControl = start.Plus(30, 0);
-        const end = child.offset;
-        let endControl = child.offset.Plus(-30, 0);
-        const middleControl = start.Plus(end).Times(0.5); // average start-and-end to get middle-control
+        let startControl = lineStart.Plus(30, 0);
+        let endControl = lineEnd.Plus(-30, 0);
+        const middleControl = lineStart.Plus(lineEnd).Times(0.5); // average start-and-end to get middle-control
         startControl = startControl.Plus(middleControl).Times(0.5); // average with middle-control
         endControl = endControl.Plus(middleControl).Times(0.5); // average with middle-control
         const curvedLine = style => {
-            var _a, _b;
-            return React.createElement("path", { style: E({ stroke: (_b = (_a = child.opts) === null || _a === void 0 ? void 0 : _a.color) !== null && _b !== void 0 ? _b : "gray", strokeWidth: 3, fill: "none" }, style), d: `M${start.x},${start.y} C${startControl.x},${startControl.y} ${endControl.x},${endControl.y} ${end.x},${end.y}` });
+            var _a;
+            return React.createElement("path", { style: E({ stroke: (_a = lineOpts.color) !== null && _a !== void 0 ? _a : "gray", strokeWidth: 3, fill: "none" }, style), d: `M${lineStart.x},${lineStart.y} C${startControl.x},${startControl.y} ${endControl.x},${endControl.y} ${lineEnd.x},${lineEnd.y}` });
         };
         const addDash = false;
         return React.createElement(Fragment, { key: `connectorLine_${childID}` },

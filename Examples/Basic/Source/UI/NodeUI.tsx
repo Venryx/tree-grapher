@@ -14,11 +14,11 @@ export const NodeUI = observer((props: {node: MapNode, path: string, inBelowGrou
 	//const graph = useContext(GraphContext);
 	//const group = graph.groupsByPath.get(path);
 	const nodeState = mapInfo.GetNodeState(path);
-	
+
 	const childHolder = <NodeChildHolder children={node.children} childrenBelow={node.childrenBelow} {...{path}}/>;
 	return (
 		<>
-			<NodeUI_LeftColumn treePath={path} alignWithParent={node.alignWithParent} connectorLineOpts={{color: path.split("/").length % 2 == 0 ? "green" : "blue"}}>
+			<NodeUI_LeftColumn treePath={path} alignWithParent={node.alignWithParent} nodeConnectorOpts={{gutterWidth: inBelowGroup ? 20 : 30, parentGutterWidth: 30, parentIsAbove: inBelowGroup, color: path.split("/").length % 2 == 0 ? "green" : "blue"}}>
 				<NodeUI_Inner node={node} path={path} inBelowGroup={inBelowGroup}/>
 			</NodeUI_LeftColumn>
 			{nodeState.expanded &&

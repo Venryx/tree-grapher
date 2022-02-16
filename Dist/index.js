@@ -11,6 +11,4 @@ export * from "./UI/ConnectorLinesUI.js";
 export * from "./Utils/General/MobX.js";
 //export * from "./Utils/General/General.js";
 export * from "./Utils/UI.js";
-export * from "./Waves/Wave.js";
-export * from "./Waves/Messages.js";
 export * from "./Core/Core.js";

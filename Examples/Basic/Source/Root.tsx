@@ -3,7 +3,7 @@ import {BaseComponent, GetDOM} from "react-vextensions";
 import {Column, Row} from "react-vcomponents";
 import {NodeUI} from "./UI/NodeUI";
 import {GetAllNodesInTree_ByPath, nodeTree_main} from "./@SharedByExamples/NodeData";
-import {FlexTreeLayout, Graph, GraphColumnsVisualizer, GraphContext, makeObservable_safe} from "tree-grapher";
+import {ConnectorLinesUI, FlexTreeLayout, Graph, GraphColumnsVisualizer, GraphContext, makeObservable_safe} from "tree-grapher";
 import {makeObservable, observable} from "mobx";
 import {FinalizerEntry, FlashComp, FlashOptions, MAX_TIMEOUT_DURATION, SetDebugMode} from "ui-debug-kit";
 import {NodeGroup} from "../../../Dist/Graph/NodeGroup.js";
@@ -120,6 +120,7 @@ export function RootUI() {
 				<MapContext.Provider value={mapInfo}>
 					<GraphContext.Provider value={graphInfo}>
 						<GraphColumnsVisualizer/>
+						<ConnectorLinesUI/>
 						<NodeUI node={nodeTree} path="0"/>
 					</GraphContext.Provider>
 				</MapContext.Provider>}
