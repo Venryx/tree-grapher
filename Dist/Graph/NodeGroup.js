@@ -32,6 +32,8 @@ export class NodeGroup {
         this.columnsPartOf = [];
         //childHolderEl_sizeChangesToIgnore = 0;
         this.childHolder_belowParent = false;
+        // new
+        this.assignedPosition = Vector2.zero;
         // connector-lines system
         // ==========
         this.childConnectorInfos = new Map();

@@ -1,10 +1,11 @@
-import { CE, VRect } from "js-vextensions";
+import { CE, Vector2, VRect } from "js-vextensions";
 import { configure, observable } from "mobx";
 import { createContext } from "react";
 import { TreeColumn } from "./Graph/TreeColumn.js";
 import { makeObservable_safe } from "./Utils/General/MobX.js";
 import { NodeGroup, TreePathAsSortableStr } from "./Graph/NodeGroup.js";
 import { Wave, MyCHMounted, MyCHUnmounted, MyLCMounted } from "./index.js";
+import { FlexTreeLayout } from "./Core/Core.js";
 // maybe temp
 configure({ enforceActions: "never" });
 //const defaultGraph = new Graph({columnWidth: 100});
@@ -15,6 +16,51 @@ export class Graph {
         this.containerEl = document.body; // start out the "container" as the body, just so there aren't null errors prior to container-ref resolving
         this.columns = []; // @O
         this.groupsByPath = new Map();
+        // new
+        // ==========
+        this.RunLayout = (direction = "leftToRight") => {
+            var _a;
+            const layout = new FlexTreeLayout({
+                children: (data) => {
+                    const result = this.FindChildGroups(data);
+                    console.log(`For ${data.path}, found children:`, result);
+                    return result;
+                },
+                nodeSize: node => {
+                    var _a, _b, _c, _d;
+                    const data = node.data;
+                    return direction == "topToBottom"
+                        ? [(_a = data.innerUIRect) === null || _a === void 0 ? void 0 : _a.width, (_b = data.innerUIRect) === null || _b === void 0 ? void 0 : _b.height]
+                        : [(_c = data.innerUIRect) === null || _c === void 0 ? void 0 : _c.height, (_d = data.innerUIRect) === null || _d === void 0 ? void 0 : _d.width];
+                },
+                //spacing: (nodeA, nodeB) => nodeA.path(nodeB).length,
+            });
+            /*const groupsArray = [...graphInfo.groupsByPath.values()];
+            const tree = layout.hierarchy(groupsArray);*/
+            const tree = layout.hierarchy((_a = this.groupsByPath.get("0")) !== null && _a !== void 0 ? _a : {});
+            layout.receiveTree(tree);
+            const nodePositions_base = tree.nodes.map(node => {
+                const newPos = direction == "topToBottom"
+                    ? new Vector2(node.x, node.y)
+                    : new Vector2(node.y, node.x);
+                return newPos;
+            });
+            const minX = CE(nodePositions_base.map(a => a.x)).Min();
+            const minY = CE(nodePositions_base.map(a => a.y)).Min();
+            const offset = new Vector2(100 - minX, 100 - minY);
+            for (const [i, node] of tree.nodes.entries()) {
+                const group = node.data;
+                const newPos = nodePositions_base[i].Plus(offset);
+                if (newPos.x != group.assignedPosition.x || newPos.y != group.assignedPosition.y) {
+                    group.assignedPosition = newPos;
+                    if (group.leftColumnEl) {
+                        group.leftColumnEl.style.left = group.assignedPosition.x + "px";
+                        group.leftColumnEl.style.top = group.assignedPosition.y + "px";
+                    }
+                    console.log(`For ${group.path}, assigned pos: ${group.assignedPosition}`);
+                }
+            }
+        };
         makeObservable_safe(this, {
             columns: observable.shallow,
         });
@@ -88,6 +134,7 @@ export class Graph {
         new Wave(this, group, [
             new MyLCMounted({ me: group })
         ]).Down_StartWave();
+        setTimeout(this.RunLayout);
         return group;
     }
     NotifyGroupChildHolderMount(el, treePath, belowParent) {
@@ -97,11 +144,13 @@ export class Graph {
         new Wave(this, group, [
             new MyCHMounted({ me: group })
         ]).Down_StartWave();
+        setTimeout(this.RunLayout);
         return group;
     }
     NotifyGroupConnectorLinesUIMount(handle, treePath) {
         const { group, alreadyExisted } = this.GetOrCreateGroup(treePath);
         group.connectorLinesComp = handle;
+        setTimeout(this.RunLayout);
         return group;
     }
     NotifyGroupLeftColumnUnmount(group) {
@@ -114,6 +163,7 @@ export class Graph {
             ]).Down_StartWave();
         } else {*/
         group.DetachAndDestroy();
+        this.RunLayout();
     }
     NotifyGroupChildHolderUnmount(group) {
         if (group.IsDestroyed())
@@ -127,6 +177,7 @@ export class Graph {
         else {
             group.DetachAndDestroy();
         }
+        this.RunLayout();
     }
     NotifyGroupConnectorLinesUIUnmount(group) {
         if (group.IsDestroyed())
@@ -137,6 +188,7 @@ export class Graph {
         else {
             group.DetachAndDestroy();
         }
+        this.RunLayout();
     }
 }
 /*export class GraphPassInfo {

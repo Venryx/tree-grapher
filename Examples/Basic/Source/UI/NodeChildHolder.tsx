@@ -18,28 +18,30 @@ export function NodeChildHolder(props: {children: MapNode[], childrenBelow?: boo
 
 	const {css} = cssHelper({constructor: NodeChildHolder} as any);
 	return (
-		<Column
-			ref={useCallback(c=>{
-				ref_childHolder.current = GetDOM(c) as any;
-				//ref(c ? GetDOM(c) as any : null), [ref]);
-			}, [])}
-			className="NodeChildHolder clickThrough"
-			style={css(
-				{
-					position: "relative",
-					paddingLeft: 30,
-					//padding: 10,
-					background: StripesCSS({angle: (path.split("/").length - 1) * 45, stripeColor: "rgba(255,150,0,.5)"}),
-				},
-			)}
-		>
-			<Button text="U" title="Update NodeChildHolder"
-				style={{position: "absolute", left: 0, top: `calc(50% - 15px)`, width: 30, height: 30}}
-				onClick={()=>forceUpdate()}/>
-			<ConnectorLinesUI treePath={path} width={30} linesFromAbove={childrenBelow}/>
+		<>
+			<Column
+				ref={useCallback(c=>{
+					ref_childHolder.current = GetDOM(c) as any;
+					//ref(c ? GetDOM(c) as any : null), [ref]);
+				}, [])}
+				className="NodeChildHolder clickThrough"
+				style={css(
+					{
+						position: "relative",
+						paddingLeft: 30,
+						//padding: 10,
+						background: StripesCSS({angle: (path.split("/").length - 1) * 45, stripeColor: "rgba(255,150,0,.5)"}),
+					},
+				)}
+			>
+				<Button text="U" title="Update NodeChildHolder"
+					style={{position: "absolute", left: 0, top: `calc(50% - 15px)`, width: 30, height: 30}}
+					onClick={()=>forceUpdate()}/>
+				<ConnectorLinesUI treePath={path} width={30} linesFromAbove={childrenBelow}/>
+			</Column>
 			{children.map((child, index)=>{
 				return <NodeUI key={index} node={child} inBelowGroup={childrenBelow} {...{path: `${path}/${index}`}}/>;
 			})}
-		</Column>
+		</>
 	);
 }

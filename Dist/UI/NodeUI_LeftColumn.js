@@ -1,7 +1,6 @@
 import React, { useCallback, useContext, useRef } from "react";
 import { useCallbackRef } from "use-callback-ref";
 import { GraphContext } from "../Graph.js";
-import { Column } from "./@Shared/Basics.js";
 import ReactDOM from "react-dom";
 import { Assert, VRect } from "js-vextensions";
 import { Wave } from "../Waves/Wave.js";
@@ -57,15 +56,14 @@ export const NodeUI_LeftColumn = (props) => {
     const graph = useContext(GraphContext);
     const group = graph.groupsByPath.get(treePath);
     let { ref_leftColumn } = useRef_nodeLeftColumn(treePath, connectorLineOpts, alignWithParent);
-    return (React.createElement(Column
-    //ref={ref}
-    , { 
+    return (React.createElement("div", { 
         //ref={ref}
         ref: useCallback(c => {
             ref_leftColumn.current = ReactDOM.findDOMNode(c);
             //ref(c ? GetDOM(c) as any : null), [ref]);
         }, []), className: "innerBoxColumn clickThrough", style: Object.assign({
-            position: "relative",
+            //position: "relative",
+            position: "absolute",
             /*paddingTop: gapBeforeInnerUI,
             paddingBottom: gapAfterInnerUI,*/
         }) }, children));

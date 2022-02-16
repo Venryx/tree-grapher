@@ -53,6 +53,9 @@ export class NodeGroup {
 	childHolder_belowParent = false;
 	connectorLinesComp: ConnectorLinesUI_Handle|n;
 
+	// new
+	assignedPosition = Vector2.zero;
+
 	// inputs/observed (just storage for "actual rects" observed)
 	lcRect: VRect|n;
 	innerUIRect: VRect|n;

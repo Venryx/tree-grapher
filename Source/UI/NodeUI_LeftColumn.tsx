@@ -71,7 +71,7 @@ export const NodeUI_LeftColumn = (props: {treePath: string, connectorLineOpts?: 
 	let {ref_leftColumn} = useRef_nodeLeftColumn(treePath, connectorLineOpts, alignWithParent);
 
 	return (
-		<Column
+		<div
 			//ref={ref}
 			ref={useCallback(c=>{
 				ref_leftColumn.current = ReactDOM.findDOMNode(c) as any;
@@ -80,13 +80,14 @@ export const NodeUI_LeftColumn = (props: {treePath: string, connectorLineOpts?: 
 			className="innerBoxColumn clickThrough"
 			style={Object.assign(
 				{
-					position: "relative",
+					//position: "relative",
+					position: "absolute",
 					/*paddingTop: gapBeforeInnerUI,
 					paddingBottom: gapAfterInnerUI,*/
 				},
 			)}
 		>
 			{children}
-		</Column>
+		</div>
 	);
 }

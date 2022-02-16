@@ -9,6 +9,7 @@ import {makeObservable_safe} from "./Utils/General/MobX.js";
 import type {FlashComp} from "ui-debug-kit";
 import {NodeGroup, TreePathAsSortableStr} from "./Graph/NodeGroup.js";
 import {NodeConnectorOpts, ConnectorLinesUI_Handle, Wave, MyCHMounted, MyCHUnmounted, MyLCMounted, MyLCUnmounted} from "./index.js";
+import {FlexTreeLayout} from "./Core/Core.js";
 
 // maybe temp
 configure({enforceActions: "never"});
@@ -100,6 +101,8 @@ export class Graph {
 		new Wave(this, group, [
 			new MyLCMounted({me: group})
 		]).Down_StartWave();
+
+		setTimeout(this.RunLayout);
 		return group;
 	}
 	NotifyGroupChildHolderMount(el: HTMLElement, treePath: string, belowParent: boolean) {
@@ -109,11 +112,15 @@ export class Graph {
 		new Wave(this, group, [
 			new MyCHMounted({me: group})
 		]).Down_StartWave();
+
+		setTimeout(this.RunLayout);
 		return group;
 	}
 	NotifyGroupConnectorLinesUIMount(handle: ConnectorLinesUI_Handle, treePath: string) {
 		const {group, alreadyExisted} = this.GetOrCreateGroup(treePath);
 		group.connectorLinesComp = handle;
+
+		setTimeout(this.RunLayout);
 		return group;
 	}
 
@@ -126,6 +133,8 @@ export class Graph {
 			]).Down_StartWave();
 		} else {*/
 		group.DetachAndDestroy();
+
+		this.RunLayout();
 	}
 	NotifyGroupChildHolderUnmount(group: NodeGroup) {
 		if (group.IsDestroyed()) return;
@@ -137,6 +146,8 @@ export class Graph {
 		} else {
 			group.DetachAndDestroy();
 		}
+
+		this.RunLayout();
 	}
 	NotifyGroupConnectorLinesUIUnmount(group: NodeGroup) {
 		if (group.IsDestroyed()) return;
@@ -145,8 +156,59 @@ export class Graph {
 		} else {
 			group.DetachAndDestroy();
 		}
+
+		this.RunLayout();
 	}
+
+	// new
+	// ==========
+
+	RunLayout = (direction = "leftToRight" as LayoutDirection)=>{
+		const layout = new FlexTreeLayout({
+			children: (data: NodeGroup)=>{
+				const result = this.FindChildGroups(data);
+				console.log(`For ${data.path}, found children:`, result);
+				return result;
+			},
+			nodeSize: node=>{
+				const data = node.data as NodeGroup;
+				return direction == "topToBottom"
+					? [data.innerUIRect?.width, data.innerUIRect?.height]
+					: [data.innerUIRect?.height, data.innerUIRect?.width];
+			},
+			//spacing: (nodeA, nodeB) => nodeA.path(nodeB).length,
+		});
+		/*const groupsArray = [...graphInfo.groupsByPath.values()];
+		const tree = layout.hierarchy(groupsArray);*/
+		const tree = layout.hierarchy(this.groupsByPath.get("0") ?? {});
+		layout.receiveTree(tree);
+
+		const nodePositions_base: Vector2[] = tree.nodes.map(node=>{
+			const newPos = direction == "topToBottom"
+				? new Vector2(node.x, node.y)
+				: new Vector2(node.y, node.x);
+			return newPos;
+		});
+		const minX = CE(nodePositions_base.map(a=>a.x)).Min();
+		const minY = CE(nodePositions_base.map(a=>a.y)).Min();
+		const offset = new Vector2(100 - minX, 100 - minY);
+		
+		for (const [i, node] of tree.nodes.entries()) {
+			const group = node.data as NodeGroup;
+			const newPos = nodePositions_base[i].Plus(offset);
+
+			if (newPos.x != group.assignedPosition.x || newPos.y != group.assignedPosition.y) {
+				group.assignedPosition = newPos;
+				if (group.leftColumnEl) {
+					group.leftColumnEl.style.left = group.assignedPosition.x + "px";
+					group.leftColumnEl.style.top = group.assignedPosition.y + "px";
+				}
+				console.log(`For ${group.path}, assigned pos: ${group.assignedPosition}`);
+			}
+		}
+	};
 }
+export type LayoutDirection = "topToBottom" | "leftToRight";
 
 /*export class GraphPassInfo {
 	treePath: string;

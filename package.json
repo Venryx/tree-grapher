@@ -43,6 +43,8 @@
     "webpack-dev-server": "^4.7.4"
   },
   "dependencies": {
+    "@types/d3-hierarchy": "^3.0.2",
+    "d3-hierarchy": "^3.1.1",
     "js-vextensions": "^1.0.69",
     "mobx": "^6.3.13",
     "mobx-react": "^7.2.1",

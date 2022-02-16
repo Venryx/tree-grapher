@@ -3,9 +3,11 @@ import {BaseComponent, GetDOM} from "react-vextensions";
 import {Column, Row} from "react-vcomponents";
 import {NodeUI} from "./UI/NodeUI";
 import {GetAllNodesInTree_ByPath, nodeTree_main} from "./@SharedByExamples/NodeData";
-import {Graph, GraphColumnsVisualizer, GraphContext, makeObservable_safe} from "tree-grapher";
+import {FlexTreeLayout, Graph, GraphColumnsVisualizer, GraphContext, makeObservable_safe} from "tree-grapher";
 import {makeObservable, observable} from "mobx";
 import {FinalizerEntry, FlashComp, FlashOptions, MAX_TIMEOUT_DURATION, SetDebugMode} from "ui-debug-kit";
+import {NodeGroup} from "../../../Dist/Graph/NodeGroup.js";
+import {Vector2} from "js-vextensions";
 
 // make some stuff global, for easy debugging
 Object.assign(globalThis, {
@@ -41,9 +43,9 @@ export const MapContext = createContext<MapInfo>(undefined as any);
 FlashOptions.defaults.waitForPriorFlashes = false;
 FlashOptions.defaults.background = "rgba(0,0,0,.1)";
 // debug mode
-SetDebugMode(true);
+/*SetDebugMode(true);
 /*FlashOptions.defaults.duration = -1;
-FlashOptions.defaults.fadeDuration = -1;*/
+FlashOptions.defaults.fadeDuration = -1;*#/
 FlashOptions.finalizers.push(new FinalizerEntry({
 	func: opts=>{
 		opts.recordStackTrace = true;
@@ -71,7 +73,7 @@ FlashOptions.finalizers.push(new FinalizerEntry({
 			};
 		}
 	},
-}))
+}));*/
 
 export function RootUI() {
 	const nodeTree = nodeTree_main;
@@ -84,7 +86,7 @@ export function RootUI() {
 		return result;
 	}, []);
 	//const containerRef = useRef<HTMLDivElement | null>(null);
-	const context = useMemo(()=>{
+	const graphInfo = useMemo(()=>{
 		let graph = new Graph({
 			columnWidth: 100,
 			uiDebugKit: {FlashComp},
@@ -104,24 +106,24 @@ export function RootUI() {
 			}}>
 				Toolbar
 			</Row>
-			<Row
+			<div
 				ref={useCallback(c=>{
 					/*containerRef.current = GetDOM(c) as any;
 					context.containerEl = containerRef.current!;*/
-					context.containerEl = GetDOM(c) as any;
-					if (context.containerEl != null) setContainerElResolved(true);
+					graphInfo.containerEl = GetDOM(c) as any;
+					if (graphInfo.containerEl != null) setContainerElResolved(true);
 					//console.log("Set1:", context.containerEl);
 				}, [])}
 				style={{position: "relative", height: "calc(100% - 30px)", padding: 100}}
 			>
 				{containerElResolved &&
 				<MapContext.Provider value={mapInfo}>
-					<GraphContext.Provider value={context}>
+					<GraphContext.Provider value={graphInfo}>
 						<GraphColumnsVisualizer/>
 						<NodeUI node={nodeTree} path="0"/>
 					</GraphContext.Provider>
 				</MapContext.Provider>}
-			</Row>
+			</div>
 		</Column>
 	);
 }

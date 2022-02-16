@@ -29,7 +29,11 @@ Library for calculating where to draw tree nodes, while avoiding overlap.
 ## Tasks
 
 Short term:
-* n/a
+* The connector-lines are not displayed.
+* There is no padding between nodes.
+* There are some hard-coded things (like the map-wide padding) that need to be un-hard-coded.
+* There are lots of missing types in Core.ts (which need to have proper types, for easy usage of the library).
+* There's still lots of stuff from the old implementation that's not useful anymore and needs to be removed.
 
 Long term:
 * Add system that uses dynamic x-ranges for the columns, based on the encountered node-group rects. This enables the system to avoid spurious "collisions", creating more compact graphs, while not giving up (most of) the "easier to reason about" qualities of distinct column entries. (the column entries are at dynamic positions/sizes, but the visualizer makes these rects clear, so still keeps the reasoning/debugging process straightforward)

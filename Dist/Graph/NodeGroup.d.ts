@@ -1,4 +1,4 @@
-import { VRect } from "js-vextensions";
+import { Vector2, VRect } from "js-vextensions";
 import { Graph } from "../Graph.js";
 import { n, RequiredBy } from "../Utils/@Internal/Types.js";
 import { TreeColumn } from "./TreeColumn.js";
@@ -29,6 +29,7 @@ export declare class NodeGroup {
     childHolderEl: HTMLElement | n;
     childHolder_belowParent: boolean;
     connectorLinesComp: ConnectorLinesUI_Handle | n;
+    assignedPosition: Vector2;
     lcRect: VRect | n;
     innerUIRect: VRect | n;
     lineSourcePoint: number | n;

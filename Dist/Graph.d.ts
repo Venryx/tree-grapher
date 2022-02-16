@@ -29,4 +29,6 @@ export declare class Graph {
     NotifyGroupLeftColumnUnmount(group: NodeGroup): void;
     NotifyGroupChildHolderUnmount(group: NodeGroup): void;
     NotifyGroupConnectorLinesUIUnmount(group: NodeGroup): void;
+    RunLayout: (direction?: LayoutDirection) => void;
 }
+export declare type LayoutDirection = "topToBottom" | "leftToRight";
