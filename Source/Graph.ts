@@ -176,7 +176,7 @@ export class Graph {
 					? [data.innerUIRect?.width, data.innerUIRect?.height]
 					: [data.innerUIRect?.height, data.innerUIRect?.width];
 			},
-			//spacing: (nodeA, nodeB) => nodeA.path(nodeB).length,
+			spacing: (nodeA, nodeB) => nodeA.path(nodeB).length,
 		});
 		/*const groupsArray = [...graphInfo.groupsByPath.values()];
 		const tree = layout.hierarchy(groupsArray);*/
@@ -197,14 +197,15 @@ export class Graph {
 			const group = node.data as NodeGroup;
 			const newPos = nodePositions_base[i].Plus(offset);
 
-			if (newPos.x != group.assignedPosition.x || newPos.y != group.assignedPosition.y) {
-				group.assignedPosition = newPos;
-				if (group.leftColumnEl) {
-					group.leftColumnEl.style.left = group.assignedPosition.x + "px";
-					group.leftColumnEl.style.top = group.assignedPosition.y + "px";
-				}
-				console.log(`For ${group.path}, assigned pos: ${group.assignedPosition}`);
+			//if (newPos.x != group.assignedPosition.x || newPos.y != group.assignedPosition.y) {
+			group.assignedPosition = newPos;
+			if (group.leftColumnEl) {
+				group.leftColumnEl.style.left = `${group.assignedPosition.x}px`;
+				//group.leftColumnEl.style.left = `calc(${group.assignedPosition.x}px - ${group.innerUIRect!.width / 2}px)`;
+				//group.leftColumnEl.style.top = `${group.assignedPosition.y}px`;
+				group.leftColumnEl.style.top = `calc(${group.assignedPosition.y}px - ${Number(group.innerUIRect!.height / 2)}px)`;
 			}
+			console.log(`For ${group.path}, assigned pos: ${group.assignedPosition}`);
 		}
 	};
 }

@@ -33,7 +33,7 @@ export class Graph {
                         ? [(_a = data.innerUIRect) === null || _a === void 0 ? void 0 : _a.width, (_b = data.innerUIRect) === null || _b === void 0 ? void 0 : _b.height]
                         : [(_c = data.innerUIRect) === null || _c === void 0 ? void 0 : _c.height, (_d = data.innerUIRect) === null || _d === void 0 ? void 0 : _d.width];
                 },
-                //spacing: (nodeA, nodeB) => nodeA.path(nodeB).length,
+                spacing: (nodeA, nodeB) => nodeA.path(nodeB).length,
             });
             /*const groupsArray = [...graphInfo.groupsByPath.values()];
             const tree = layout.hierarchy(groupsArray);*/
@@ -51,14 +51,15 @@ export class Graph {
             for (const [i, node] of tree.nodes.entries()) {
                 const group = node.data;
                 const newPos = nodePositions_base[i].Plus(offset);
-                if (newPos.x != group.assignedPosition.x || newPos.y != group.assignedPosition.y) {
-                    group.assignedPosition = newPos;
-                    if (group.leftColumnEl) {
-                        group.leftColumnEl.style.left = group.assignedPosition.x + "px";
-                        group.leftColumnEl.style.top = group.assignedPosition.y + "px";
-                    }
-                    console.log(`For ${group.path}, assigned pos: ${group.assignedPosition}`);
+                //if (newPos.x != group.assignedPosition.x || newPos.y != group.assignedPosition.y) {
+                group.assignedPosition = newPos;
+                if (group.leftColumnEl) {
+                    group.leftColumnEl.style.left = `${group.assignedPosition.x}px`;
+                    //group.leftColumnEl.style.left = `calc(${group.assignedPosition.x}px - ${group.innerUIRect!.width / 2}px)`;
+                    //group.leftColumnEl.style.top = `${group.assignedPosition.y}px`;
+                    group.leftColumnEl.style.top = `calc(${group.assignedPosition.y}px - ${Number(group.innerUIRect.height / 2)}px)`;
                 }
+                console.log(`For ${group.path}, assigned pos: ${group.assignedPosition}`);
             }
         };
         makeObservable_safe(this, {

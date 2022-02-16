@@ -7,7 +7,7 @@ import {Column, Row} from "./@Shared/Basics.js";
 import ReactDOM from "react-dom";
 import {Assert, VRect} from "js-vextensions";
 import {NodeConnectorOpts} from "./ConnectorLinesUI.js";
-import {ROSizeArrToStr} from "../Utils/General/General.js";
+import {GetRectRelative, ROSizeArrToStr} from "../Utils/General/General.js";
 import {Wave} from "../Waves/Wave.js";
 import {MyLCResized} from "../Waves/Messages.js";
 
@@ -37,9 +37,15 @@ export function useRef_nodeLeftColumn(treePath: string, connectorLineOpts?: Node
 				}*/
 
 				//group.graph.uiDebugKit?.FlashComp(group.leftColumnEl, {text: `LC_ResizeObs change. @bboxSize:${ROSizeArrToStr(entry.borderBoxSize)} @cboxSize:${ROSizeArrToStr(entry.contentBoxSize)} @rect:${JSON.stringify(entry.contentRect)}`});
-				new Wave(graph, group, [
+				/*new Wave(graph, group, [
 					new MyLCResized({me: group, sender_extra: "LCResizeObs", newSize: VRect.FromLTWH(entry.contentRect).Size}),
-				]).Down_StartWave();
+				]).Down_StartWave();*/
+
+				//group.UpdateLCRect();
+				group.lcRect = group.leftColumnEl ? GetRectRelative(group.leftColumnEl, group.graph.containerEl) : null;
+				group.innerUIRect = group.leftColumnEl && group.lcRect ? group.lcRect.Clone() : null;
+
+				setTimeout(()=>graph.RunLayout());
 			});
 			ref_resizeObserver.current = resizeObserver;
 			resizeObserver.observe(el);
