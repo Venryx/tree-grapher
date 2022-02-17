@@ -34,7 +34,7 @@
     "@types/react": "^17.0.9",
     "concurrently": "^6.1.0",
     "eslint": "^7.0.0",
-		"eslint-config-vbase": "1.0.11",
+    "eslint-config-vbase": "1.0.11",
     "react-vcomponents": "1.0.39",
     "react-vextensions": "1.0.15",
     "tree-grapher": "file:.",
@@ -52,6 +52,7 @@
     "mobx-react": "^7.2.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "use-callback-ref": "^1.2.5"
+    "use-callback-ref": "^1.2.5",
+    "use-state-with-deps": "^1.1.1"
   }
 }

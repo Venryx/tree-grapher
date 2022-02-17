@@ -93,6 +93,16 @@ export function RootUI() {
 			layoutOpts: {
 				//containerPadding: {left: 100, top: 100, right: 100, bottom: 100},
 				nodeSpacing: ()=>10,
+				styleSetter_layoutPending: style=>{
+					//style.right = "100%"; // alternative (not quite as "reliable", since sometimes user code might depend on knowing the correct ui position right away)
+					style.opacity = "0";
+					style.pointerEvents = "none";
+				},
+				styleSetter_layoutDone: style=>{
+					//style.right = "";
+					style.opacity = "";
+					style.pointerEvents = "";
+				},
 			},
 		});
 		globalThis.graph = graph;
