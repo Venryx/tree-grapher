@@ -88,8 +88,12 @@ export function RootUI() {
 	//const containerRef = useRef<HTMLDivElement | null>(null);
 	const graphInfo = useMemo(()=>{
 		let graph = new Graph({
-			columnWidth: 100,
+			//columnWidth: 100,
 			uiDebugKit: {FlashComp},
+			layoutOpts: {
+				//containerPadding: {left: 100, top: 100, right: 100, bottom: 100},
+				nodeSpacing: ()=>10,
+			},
 		});
 		globalThis.graph = graph;
 		return graph;
@@ -106,24 +110,26 @@ export function RootUI() {
 			}}>
 				Toolbar
 			</Row>
-			<div
-				ref={useCallback(c=>{
-					/*containerRef.current = GetDOM(c) as any;
-					context.containerEl = containerRef.current!;*/
-					graphInfo.containerEl = GetDOM(c) as any;
-					if (graphInfo.containerEl != null) setContainerElResolved(true);
-					//console.log("Set1:", context.containerEl);
-				}, [])}
-				style={{position: "relative", height: "calc(100% - 30px)", padding: 100}}
-			>
-				{containerElResolved &&
-				<MapContext.Provider value={mapInfo}>
-					<GraphContext.Provider value={graphInfo}>
-						<GraphColumnsVisualizer/>
-						<ConnectorLinesUI/>
-						<NodeUI node={nodeTree} path="0"/>
-					</GraphContext.Provider>
-				</MapContext.Provider>}
+			<div style={{position: "relative", height: "calc(100% - 30px)", overflow: "auto"}}>
+				<div
+					ref={useCallback(c=>{
+						/*containerRef.current = GetDOM(c) as any;
+						context.containerEl = containerRef.current!;*/
+						graphInfo.containerEl = GetDOM(c) as any;
+						if (graphInfo.containerEl != null) setContainerElResolved(true);
+						//console.log("Set1:", context.containerEl);
+					}, [])}
+					style={{padding: 100}}
+				>
+					{containerElResolved &&
+					<MapContext.Provider value={mapInfo}>
+						<GraphContext.Provider value={graphInfo}>
+							<GraphColumnsVisualizer/>
+							<ConnectorLinesUI/>
+							<NodeUI node={nodeTree} path="0"/>
+						</GraphContext.Provider>
+					</MapContext.Provider>}
+				</div>
 			</div>
 		</Column>
 	);

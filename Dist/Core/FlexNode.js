@@ -7,11 +7,12 @@ export class FlexNode extends hierarchy.prototype.constructor {
         this.func_spacing = spacing;
     }
     copy() {
-        const self = this;
-        // [Is this actually correct? Seems that `this.data` should be passed instead of `this`...] 
-        const c = wrapFlexNode(this.constructor, this, node => node.children, this.func_nodeSize, this.func_spacing);
-        c.each(node => node.data = node.data.data);
-        return c;
+        /*const self = this;
+        // [Is this actually correct? Seems that `this.data` should be passed instead of `this`...]
+        const c = wrapFlexNode<FlexNode_Wrapper<typeof self>, typeof self>(this.constructor as any, this, node=>node.children, this.func_nodeSize, this.func_spacing);
+        c.each(node=>node.data = (node.data as any).data);
+        return c;*/
+        return new FlexNode(this.data, this.func_nodeSize, this.func_spacing);
     }
     get size() { return this.func_nodeSize(this); }
     spacing(oNode) { return this.func_spacing(this, oNode); }

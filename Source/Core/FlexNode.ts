@@ -3,13 +3,13 @@ import {NodeSizeFunc, SpacingFunc} from "./Core.js";
 import {layoutChildren, resolveX} from "./Utils.js";
 
 export class FlexNode<Datum = any> extends (hierarchy.prototype.constructor as new(..._)=>HierarchyPointNode<any>) {
-	constructor(data: Datum, nodeSize: (self: FlexNode)=>any, spacing: (self: FlexNode, oNode: FlexNode)=>any) {
+	constructor(data: Datum, nodeSize: NodeSizeFunc<Datum>, spacing: SpacingFunc<Datum>) {
 		super(data);
 		this.func_nodeSize = nodeSize;
 		this.func_spacing = spacing;
 	}
-	func_nodeSize: NodeSizeFunc;
-	func_spacing: SpacingFunc;
+	func_nodeSize: NodeSizeFunc<Datum>;
+	func_spacing: SpacingFunc<Datum>;
 
 	// redeclare "data" field as having type Datum (type-param "Datum" can't be passed to the base-class above, since it's an expression; see: https://github.com/microsoft/TypeScript/issues/26542)
 	declare data: Datum;
@@ -17,11 +17,13 @@ export class FlexNode<Datum = any> extends (hierarchy.prototype.constructor as n
 	length: number;
 
 	copy() {
-		const self = this;
+		/*const self = this;
 		// [Is this actually correct? Seems that `this.data` should be passed instead of `this`...] 
 		const c = wrapFlexNode<FlexNode_Wrapper<typeof self>, typeof self>(this.constructor as any, this, node=>node.children, this.func_nodeSize, this.func_spacing);
 		c.each(node=>node.data = (node.data as any).data);
-		return c;
+		return c;*/
+
+		return new FlexNode<Datum>(this.data, this.func_nodeSize, this.func_spacing) as this;
 	}
 	get size() { return this.func_nodeSize(this); }
 	spacing(oNode) { return this.func_spacing(this, oNode); }
@@ -70,7 +72,7 @@ export class FlexNode<Datum = any> extends (hierarchy.prototype.constructor as n
 	}
 };
 
-export function wrapFlexNode<T extends FlexNode, Datum = any>(FlexClass: new(..._)=>T, treeData: Datum, children, nodeSize: NodeSizeFunc, spacing: SpacingFunc): T {
+export function wrapFlexNode<T extends FlexNode, Datum = any>(FlexClass: new(..._)=>T, treeData: Datum, children, nodeSize: NodeSizeFunc<Datum>, spacing: SpacingFunc<Datum>): T {
 	const _wrap = (data, parent) => {
 		const node = new FlexClass(data, nodeSize, spacing);
 		Object.assign(node, {

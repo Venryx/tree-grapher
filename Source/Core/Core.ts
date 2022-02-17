@@ -3,9 +3,9 @@
 import {FlexNode, FlexNode_Wrapper, wrapFlexNode} from './FlexNode.js';
 
 export type ChildrenFunc = (data: any)=>any;
-export type NodeSizeFunc = (self: FlexNode)=>any;
-export type SpacingFunc = (nodeA: FlexNode, nodeB: FlexNode)=>any;
-export class FlexTreeOptions {
+export type NodeSizeFunc<Datum> = (self: FlexNode<Datum>)=>any;
+export type SpacingFunc<Datum> = (nodeA: FlexNode<Datum>, nodeB: FlexNode<Datum>)=>any;
+export class FlexTreeOptions<Datum> {
 	static defaults = Object.freeze({
 		children: data => data.children,
 		nodeSize: node => node.data.size,
@@ -13,17 +13,17 @@ export class FlexTreeOptions {
 	});
 
 	children: ChildrenFunc;
-	nodeSize: NodeSizeFunc;
-	spacing: SpacingFunc;
+	nodeSize: NodeSizeFunc<Datum>;
+	spacing: SpacingFunc<Datum>;
 }
 
 // Create a layout function with customizable options. Per D3-style, the options can be set at any time using setter methods.
 // The layout function will compute the tree node positions based on the options in effect at the time it is called.
-export class FlexTreeLayout {
-	constructor(options?: Partial<FlexTreeOptions>) {
+export class FlexTreeLayout<Datum> {
+	constructor(options?: Partial<FlexTreeOptions<Datum>>) {
 		this.opts = Object.assign({}, FlexTreeOptions.defaults, options);
 	}
-	opts: FlexTreeOptions;
+	opts: FlexTreeOptions<Datum>;
 
 	accessor(name: string) {
 		const opt = this.opts[name];
@@ -36,10 +36,10 @@ export class FlexTreeLayout {
 		return wtree.data;
 	}
 	
-	nodeSize(arg?: NodeSizeFunc) {
+	nodeSize(arg?: NodeSizeFunc<Datum>) {
 		return arguments.length ? (this.opts.nodeSize = arg!, this) : this.opts.nodeSize;
 	}
-	spacing(arg?: SpacingFunc) {
+	spacing(arg?: SpacingFunc<Datum>) {
 		return arguments.length ? (this.opts.spacing = arg!, this) : this.opts.spacing;
 	}
 	children(arg?: ChildrenFunc) {

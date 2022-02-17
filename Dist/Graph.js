@@ -1,8 +1,9 @@
-import { CE, Vector2 } from "js-vextensions";
+import { Assert, CE, Vector2 } from "js-vextensions";
 import { configure } from "mobx";
 import { createContext } from "react";
 import { FlexTreeLayout } from "./Core/Core.js";
 import { NodeGroup, TreePathAsSortableStr } from "./Graph/NodeGroup.js";
+import { CSSScalarToPixels } from "./Utils/General/General.js";
 // maybe temp
 configure({ enforceActions: "never" });
 //const defaultGraph = new Graph({columnWidth: 100});
@@ -16,6 +17,8 @@ export class Graph {
         // ==========
         this.RunLayout = (direction = "leftToRight") => {
             var _a, _b;
+            Assert(this.containerEl != null, "Container-element not found. Did you forget to set graph.containerEl?");
+            const containerPadding = this.ContainerPadding;
             const layout = new FlexTreeLayout({
                 children: (data) => {
                     const children = this.FindChildGroups(data);
@@ -40,8 +43,9 @@ export class Graph {
                         : [(_c = data.lcSize) === null || _c === void 0 ? void 0 : _c.y, (_d = data.lcSize) === null || _d === void 0 ? void 0 : _d.x];
                 },
                 spacing: (nodeA, nodeB) => {
+                    var _a;
                     //return nodeA.path(nodeB).length;
-                    return 10;
+                    return (_a = this.layoutOpts.nodeSpacing(nodeA, nodeB)) !== null && _a !== void 0 ? _a : 10;
                 },
             });
             /*const groupsArray = [...graphInfo.groupsByPath.values()];
@@ -59,7 +63,7 @@ export class Graph {
                 const group = tree.nodes[i].data;
                 return pos.y - Number(group.innerUISize.y / 2);
             })).Min();
-            const offset = new Vector2(100 - minX, 100 - minY);
+            const offset = new Vector2(containerPadding.left - minX, containerPadding.top - minY);
             for (const [i, node] of tree.nodes.entries()) {
                 const group = node.data;
                 if (group.leftColumnEl == null)
@@ -80,6 +84,12 @@ export class Graph {
             (_b = this.connectorLinesComp) === null || _b === void 0 ? void 0 : _b.forceUpdate();
         };
         Object.assign(this, data);
+    }
+    get ContainerPadding() {
+        return {
+            left: CSSScalarToPixels(this.containerEl.style.paddingLeft), right: CSSScalarToPixels(this.containerEl.style.paddingRight),
+            top: CSSScalarToPixels(this.containerEl.style.paddingTop), bottom: CSSScalarToPixels(this.containerEl.style.paddingBottom),
+        };
     }
     FindParentGroup(childGroup) {
         return this.groupsByPath.get(childGroup.path_parts.slice(0, -1).join("/"));

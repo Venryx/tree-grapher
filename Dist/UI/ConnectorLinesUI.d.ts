@@ -15,4 +15,6 @@ export declare class ConnectorLinesUI_Handle {
     svgEl: SVGSVGElement;
     forceUpdate: () => void;
 }
-export declare const ConnectorLinesUI: React.MemoExoticComponent<(props: {}) => JSX.Element>;
+export declare const ConnectorLinesUI: React.MemoExoticComponent<(props: {
+    takeSpace?: boolean;
+}) => JSX.Element>;

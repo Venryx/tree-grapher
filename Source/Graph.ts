@@ -1,12 +1,13 @@
-import {CE, Vector2} from "js-vextensions";
+import {Assert, CE, TreeNode, Vector2} from "js-vextensions";
 import {configure} from "mobx";
 import {createContext} from "react";
 import type {FlashComp} from "ui-debug-kit";
-import {FlexTreeLayout} from "./Core/Core.js";
+import {FlexTreeLayout, SpacingFunc} from "./Core/Core.js";
 import {FlexNode} from "./Core/FlexNode.js";
 import {NodeGroup, TreePathAsSortableStr} from "./Graph/NodeGroup.js";
 import {ConnectorLinesUI_Handle, NodeConnectorOpts} from "./index.js";
 import {n, RequiredBy} from "./Utils/@Internal/Types.js";
+import {CSSScalarToPixels} from "./Utils/General/General.js";
 
 // maybe temp
 configure({enforceActions: "never"});
@@ -16,12 +17,20 @@ const defaultGraph = undefined as any as Graph; // we want an error if someone f
 export const GraphContext = createContext<Graph>(defaultGraph);
 
 export class Graph {
-	constructor(data: RequiredBy<Partial<Graph>, "columnWidth">) {
+	constructor(data: RequiredBy<Partial<Graph>, "layoutOpts">) {
 		Object.assign(this, data);
 	}
 	containerEl = document.body; // start out the "container" as the body, just so there aren't null errors prior to container-ref resolving
+	get ContainerPadding() {
+		return {
+			left: CSSScalarToPixels(this.containerEl.style.paddingLeft), right: CSSScalarToPixels(this.containerEl.style.paddingRight),
+			top: CSSScalarToPixels(this.containerEl.style.paddingTop), bottom: CSSScalarToPixels(this.containerEl.style.paddingBottom),
+		};
+	}
 	connectorLinesComp: ConnectorLinesUI_Handle|n;
-	columnWidth: number;
+	layoutOpts: {
+		nodeSpacing: SpacingFunc<NodeGroup>;
+	};
 	uiDebugKit?: {FlashComp: typeof FlashComp};
 
 	groupsByPath = new Map<string, NodeGroup>();
@@ -111,7 +120,9 @@ export class Graph {
 	// ==========
 
 	RunLayout = (direction = "leftToRight" as LayoutDirection)=>{
-		const layout = new FlexTreeLayout({
+		Assert(this.containerEl != null, "Container-element not found. Did you forget to set graph.containerEl?");
+		const containerPadding = this.ContainerPadding;
+		const layout = new FlexTreeLayout<NodeGroup>({
 			children: (data: NodeGroup)=>{
 				const children = this.FindChildGroups(data);
 				const children_noSelfSideBoxes = children.filter(a=>!a.leftColumn_connectorOpts.parentIsAbove);
@@ -136,7 +147,7 @@ export class Graph {
 			},
 			spacing: (nodeA, nodeB)=>{
 				//return nodeA.path(nodeB).length;
-				return 10;
+				return this.layoutOpts.nodeSpacing(nodeA, nodeB) ?? 10;
 			},
 		});
 		/*const groupsArray = [...graphInfo.groupsByPath.values()];
@@ -155,7 +166,7 @@ export class Graph {
 			const group = tree.nodes[i].data;
 			return pos.y - Number(group.innerUISize!.y / 2);
 		})).Min();
-		const offset = new Vector2(100 - minX, 100 - minY);
+		const offset = new Vector2(containerPadding.left - minX, containerPadding.top - minY);
 		
 		for (const [i, node] of tree.nodes.entries()) {
 			const group = node.data;

@@ -1,14 +1,23 @@
 /// <reference types="react" />
 import type { FlashComp } from "ui-debug-kit";
+import { SpacingFunc } from "./Core/Core.js";
 import { NodeGroup } from "./Graph/NodeGroup.js";
 import { ConnectorLinesUI_Handle, NodeConnectorOpts } from "./index.js";
 import { n, RequiredBy } from "./Utils/@Internal/Types.js";
 export declare const GraphContext: import("react").Context<Graph>;
 export declare class Graph {
-    constructor(data: RequiredBy<Partial<Graph>, "columnWidth">);
+    constructor(data: RequiredBy<Partial<Graph>, "layoutOpts">);
     containerEl: HTMLElement;
+    get ContainerPadding(): {
+        left: number;
+        right: number;
+        top: number;
+        bottom: number;
+    };
     connectorLinesComp: ConnectorLinesUI_Handle | n;
-    columnWidth: number;
+    layoutOpts: {
+        nodeSpacing: SpacingFunc<NodeGroup>;
+    };
     uiDebugKit?: {
         FlashComp: typeof FlashComp;
     };

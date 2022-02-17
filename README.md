@@ -19,7 +19,6 @@ Library for calculating where to draw tree nodes, while avoiding overlap.
 ## Tasks
 
 Short term:
-* There are some hard-coded things (like the padding for map-ui, and vertical-spacing between nodes) that need to be un-hard-coded.
 * MS the "align with parent" option works again.
 * There's still lots of stuff from the old implementation that's not useful anymore and needs to be removed.
 
