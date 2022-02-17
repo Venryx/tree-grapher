@@ -1,10 +1,13 @@
 import { Assert, Vector2 } from "js-vextensions";
-import React, { useCallback, useContext, useRef } from "react";
+import React, { useCallback, useContext, useMemo, useRef } from "react";
 import { GraphContext } from "../Graph.js";
 import { GetRectRelative } from "../Utils/General/General.js";
 import { NodeConnectorOpts } from "./ConnectorLinesUI.js";
 export function useRef_nodeLeftColumn(treePath, nodeConnectorOpts, alignWithParent) {
-    nodeConnectorOpts = Object.assign(new NodeConnectorOpts(), nodeConnectorOpts);
+    nodeConnectorOpts = useMemo(() => Object.assign(new NodeConnectorOpts(), nodeConnectorOpts), 
+    //[nodeConnectorOpts],
+    // memoize based on json-representation of node-connector-opts; this way, layout system is robust to caller failing to memoize the options-object it passes in
+    [JSON.stringify(nodeConnectorOpts)]);
     const graph = useContext(GraphContext);
     const ref_group = useRef(null);
     const ref_resizeObserver = useRef(null);
@@ -42,7 +45,7 @@ export function useRef_nodeLeftColumn(treePath, nodeConnectorOpts, alignWithPare
                 ]).Down_StartWave();*/
                 //group.UpdateLCRect();
                 updateGroupRects();
-                setTimeout(() => graph.RunLayout());
+                graph.RunLayout_InAMoment();
             });
             ref_resizeObserver.current = resizeObserver;
             resizeObserver.observe(el);

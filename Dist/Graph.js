@@ -15,6 +15,17 @@ export class Graph {
         this.groupsByPath = new Map();
         // new
         // ==========
+        this.runLayout_scheduled = false;
+        this.RunLayout_InAMoment = () => {
+            if (this.runLayout_scheduled)
+                return;
+            this.runLayout_scheduled = true;
+            //setTimeout(this.RunLayout);
+            requestAnimationFrame(() => {
+                this.RunLayout();
+                this.runLayout_scheduled = false;
+            });
+        };
         this.RunLayout = (direction = "leftToRight") => {
             var _a, _b, _c;
             //Assert(this.containerEl != null, "Container-element not found. Did you forget to set graph.containerEl, or wrap the ref-callback in a useCallback hook?");
@@ -26,7 +37,7 @@ export class Graph {
                     const children = this.FindChildGroups(group).filter(a => a.leftColumnEl != null && a.lcSize != null); // ignore children that don't have their basic info loaded yet
                     const children_noSelfSideBoxes = children.filter(a => !a.leftColumn_connectorOpts.parentIsAbove);
                     const children_noSelfSideBoxes_addChildSideBoxes = CE(children_noSelfSideBoxes).SelectMany(child => {
-                        let result = [child];
+                        const result = [child];
                         for (const grandChild of this.FindChildGroups(child)) {
                             if (grandChild.leftColumn_connectorOpts.parentIsAbove) {
                                 result.push(grandChild);
@@ -74,14 +85,14 @@ export class Graph {
                 group.assignedPosition = newPos;
                 const newRect = group.LCRect;
                 if (!(newRect === null || newRect === void 0 ? void 0 : newRect.Equals(group.lcRect_atLastRender))) {
-                    // if this is our first render/layout, clear the style that had put the node off-screen
-                    if (group.leftColumnEl_layoutCount == 0)
-                        (_b = (_a = this.layoutOpts).styleSetter_layoutDone) === null || _b === void 0 ? void 0 : _b.call(_a, group.leftColumnEl.style);
                     group.leftColumnEl.style.left = `${group.assignedPosition.x}px`;
                     //group.leftColumnEl.style.left = `calc(${group.assignedPosition.x}px - ${group.innerUIRect!.width / 2}px)`;
                     //group.leftColumnEl.style.top = `${group.assignedPosition.y}px`;
                     group.leftColumnEl.style.top = `calc(${group.assignedPosition.y}px - ${Number(group.innerUISize.y / 2)}px)`;
                     console.log(`For ${group.path}, assigned pos: ${group.assignedPosition}`);
+                    // if this is our first render/layout, clear the style that had made our node invisible
+                    if (group.leftColumnEl_layoutCount == 0)
+                        (_b = (_a = this.layoutOpts).styleSetter_layoutDone) === null || _b === void 0 ? void 0 : _b.call(_a, group.leftColumnEl.style);
                     group.leftColumnEl_layoutCount++;
                     group.lcRect_atLastRender = newRect;
                     group.innerUIRect_atLastRender = group.InnerUIRect;
@@ -101,13 +112,13 @@ export class Graph {
         return this.groupsByPath.get(childGroup.path_parts.slice(0, -1).join("/"));
     }
     FindChildGroups(parentGroup) {
-        const prefix = parentGroup.path + "/";
+        const prefix = `${parentGroup.path}/`;
         let result = [...this.groupsByPath.values()].filter(a => a.path.startsWith(prefix) && a.path_parts.length == parentGroup.path_parts.length + 1);
         result = CE(result).OrderBy(a => TreePathAsSortableStr(a.path));
         return result;
     }
     FindDescendantGroups(parentGroup) {
-        const prefix = parentGroup.path + "/";
+        const prefix = `${parentGroup.path}/`;
         let result = [...this.groupsByPath.values()].filter(a => a.path.startsWith(prefix));
         result = CE(result).OrderBy(a => TreePathAsSortableStr(a.path));
         return result;
@@ -131,19 +142,19 @@ export class Graph {
         group.leftColumnEl = el;
         group.leftColumn_connectorOpts = connectorOpts;
         group.leftColumn_alignWithParent = alignWithParent;
-        setTimeout(this.RunLayout);
+        this.RunLayout_InAMoment();
         return group;
     }
     NotifyGroupChildHolderMount(el, treePath, belowParent) {
         const { group, alreadyExisted } = this.GetOrCreateGroup(treePath);
         group.childHolderEl = el;
         group.childHolder_belowParent = belowParent;
-        setTimeout(this.RunLayout);
+        this.RunLayout_InAMoment();
         return group;
     }
     NotifyGroupConnectorLinesUIMount(handle) {
         this.connectorLinesComp = handle;
-        setTimeout(this.RunLayout);
+        this.RunLayout_InAMoment();
     }
     NotifyGroupLeftColumnUnmount(group) {
         if (group.IsDestroyed())
@@ -155,7 +166,8 @@ export class Graph {
             ]).Down_StartWave();
         } else {*/
         group.DetachAndDestroy();
-        this.RunLayout();
+        //this.RunLayout();
+        this.RunLayout_InAMoment();
     }
     NotifyGroupChildHolderUnmount(group) {
         if (group.IsDestroyed())
@@ -166,11 +178,13 @@ export class Graph {
         else {
             group.DetachAndDestroy();
         }
-        this.RunLayout();
+        //this.RunLayout();
+        this.RunLayout_InAMoment();
     }
     NotifyGroupConnectorLinesUIUnmount() {
         this.connectorLinesComp = null;
-        this.RunLayout();
+        //this.RunLayout();
+        this.RunLayout_InAMoment();
     }
 }
 /*export class GraphPassInfo {
