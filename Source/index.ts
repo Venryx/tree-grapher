@@ -7,7 +7,6 @@ export * from "./Graph.js"; // main
 // ==========
 
 export * from "./UI/@Testing/GraphColumnsVisualizer.js";
-export * from "./UI/NodeChildHolder_Hooks.js";
 export * from "./UI/NodeUI_LeftColumn.js";
 //export * from "./UI/NodeUI_RightColumn.js";
 export * from "./UI/ConnectorLinesUI.js";

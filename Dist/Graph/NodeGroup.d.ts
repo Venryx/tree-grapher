@@ -29,12 +29,11 @@ export declare class NodeGroup {
     lcSize: Vector2 | n;
     innerUISize: Vector2 | n;
     lineSourcePoint: number | n;
-    chSize: Vector2 | n;
+    leftColumnEl_layoutCount: number;
     lcRect_atLastRender: VRect | n;
     innerUIRect_atLastRender: VRect | n;
     get LCRect(): VRect | null;
     get InnerUIRect(): VRect | null;
-    get CHRect(): VRect | null;
     DetachAndDestroy(): void;
     Detach(): void;
     IsDestroyed(): boolean;

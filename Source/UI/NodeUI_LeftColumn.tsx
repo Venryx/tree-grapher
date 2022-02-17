@@ -9,22 +9,39 @@ import {NodeConnectorOpts} from "./ConnectorLinesUI.js";
 
 export function useRef_nodeLeftColumn(treePath: string, nodeConnectorOpts?: NodeConnectorOpts, alignWithParent?: boolean) {
 	nodeConnectorOpts = Object.assign(new NodeConnectorOpts(), nodeConnectorOpts);
-	
+
 	const graph = useContext(GraphContext);
-	let ref_group = useRef<NodeGroup | null>(null);
+	const ref_group = useRef<NodeGroup | null>(null);
 
-	let ref_resizeObserver = useRef<ResizeObserver | null>(null);
+	const ref_resizeObserver = useRef<ResizeObserver | null>(null);
 
-	let ref_leftColumn = useCallbackRef<HTMLElement>(null, el=>{
-	//let ref = useCallback(el=>{
+	const ref_leftColumn_storage = useRef<HTMLElement>();
+	const ref_leftColumn = useCallback(el=>{
+		ref_leftColumn_storage.current = el;
 		if (el) {
-			let group = graph.NotifyGroupLeftColumnMount(el as any as HTMLElement, treePath, nodeConnectorOpts!, alignWithParent);
+			const group = graph.NotifyGroupLeftColumnMount(el as any as HTMLElement, treePath, nodeConnectorOpts!, alignWithParent);
 			ref_group.current = group;
+
+			const updateGroupRects = ()=>{
+				group.lcSize = group.leftColumnEl ? GetRectRelative(group.leftColumnEl, group.graph.containerEl).Size : null;
+				group.innerUISize = group.leftColumnEl && group.lcSize ? new Vector2(group.lcSize.x - group.GutterWidth, group.lcSize.y) : null;
+			};
+			// call once at start (atm needed to avoid rare case where element is attached, but rects aren't, and filter in children-func fails fsr)
+			updateGroupRects();
+
+			// until layout is run, set a style that makes the element non-visible
+			graph.layoutOpts.styleSetter_layoutPending?.(el.style);
+
+			// clear these things, since we have a new left-column
+			group.leftColumnEl_layoutCount = 0;
+			// todo: maybe have these cleared
+			/*group.lcRect_atLastRender = null;
+			group.innerUIRect_atLastRender = null;*/
 
 			// set up observer
 			// NOTE: ResizeObserver watches only for content-rect changes, *not* margin/padding changes (see: https://web.dev/resize-observer)
 			const resizeObserver = new ResizeObserver(entries=>{
-				let entry = entries[0];
+				const entry = entries[0];
 				if (group.IsDestroyed()) {
 					console.warn("group.IsDestroyed() returned true in left-column resizer-observer; this should not happen. Did you forget to wrap your usage of `ref_leftColumn` in a useCallback hook?");
 					return;
@@ -36,8 +53,7 @@ export function useRef_nodeLeftColumn(treePath: string, nodeConnectorOpts?: Node
 				]).Down_StartWave();*/
 
 				//group.UpdateLCRect();
-				group.lcSize = group.leftColumnEl ? GetRectRelative(group.leftColumnEl, group.graph.containerEl).Size : null;
-				group.innerUISize = group.leftColumnEl && group.lcSize ? new Vector2(group.lcSize.x - group.GutterWidth, group.lcSize.y) : null;
+				updateGroupRects();
 
 				setTimeout(()=>graph.RunLayout());
 			});
@@ -53,15 +69,14 @@ export function useRef_nodeLeftColumn(treePath: string, nodeConnectorOpts?: Node
 			ref_resizeObserver.current = null;
 			graph.NotifyGroupLeftColumnUnmount(group);
 		}
-	});
-	//}, []);
+	}, [alignWithParent, graph, nodeConnectorOpts, treePath]);
 
 	// also re-attach this element as the left-column every time it renders (group may have been deleted then recreated, from collapsing then expanding the node)
 	/*useEffect(()=>{
 		groupInfo.current = graph.NotifyGroupLeftColumnMountOrRender(ref.current as any as HTMLElement, treePath);
 	});*/
 
-	return {ref_leftColumn, ref_group};
+	return {ref_leftColumn_storage, ref_leftColumn, ref_group};
 }
 
 export const NodeUI_LeftColumn = (props: {treePath: string, nodeConnectorOpts?: NodeConnectorOpts, alignWithParent?: boolean, children})=>{
@@ -71,15 +86,10 @@ export const NodeUI_LeftColumn = (props: {treePath: string, nodeConnectorOpts?: 
 	const graph = useContext(GraphContext);
 	const group = graph.groupsByPath.get(treePath);
 	const gutterWidth = nodeConnectorOpts.gutterWidth + (nodeConnectorOpts.parentIsAbove ? nodeConnectorOpts.parentGutterWidth : 0); // rather than wait for group, just recalc gutter-width manually
-	let {ref_leftColumn} = useRef_nodeLeftColumn(treePath, nodeConnectorOpts, alignWithParent);
+	const {ref_leftColumn} = useRef_nodeLeftColumn(treePath, nodeConnectorOpts, alignWithParent);
 
 	return (
-		<div
-			//ref={ref}
-			ref={useCallback(c=>{
-				ref_leftColumn.current = ReactDOM.findDOMNode(c) as any;
-				//ref(c ? GetDOM(c) as any : null), [ref]);
-			}, [])}
+		<div ref={ref_leftColumn}
 			className="innerBoxColumn clickThrough"
 			style={Object.assign(
 				//!nodeConnectorOpts.parentIsAbove && {position: "absolute"} as const,
@@ -94,4 +104,4 @@ export const NodeUI_LeftColumn = (props: {treePath: string, nodeConnectorOpts?: 
 			{children}
 		</div>
 	);
-}
+};

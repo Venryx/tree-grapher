@@ -95,9 +95,17 @@ export class FlexNode_Wrapper extends FlexNode {
     get size() { return this.func_nodeSize(this.data); }
     spacing(oNode) { return this.func_spacing(this.data, oNode.data); }
     get x() { return this.data.x; }
-    set x(v) { this.data.x = v; }
+    set x(v) {
+        if (isNaN(v))
+            throw new Error("Encountered NaN when setting FlexNode_Wrapper.x!");
+        this.data.x = v;
+    }
     get y() { return this.data.y; }
-    set y(v) { this.data.y = v; }
+    set y(v) {
+        if (isNaN(v))
+            throw new Error("Encountered NaN when setting FlexNode_Wrapper.y!");
+        this.data.y = v;
+    }
     update() {
         layoutChildren(this);
         resolveX(this);

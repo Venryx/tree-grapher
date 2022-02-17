@@ -1,4 +1,4 @@
-import {Component, Fragment, Ref, RefObject, useContext, useMemo, useRef} from "react";
+import {Component, Fragment, Ref, RefObject, useCallback, useContext, useMemo, useRef} from "react";
 import React from "react";
 import {Assert, E, Vector2, VRect} from "js-vextensions";
 import {GraphContext} from "../Graph.js";
@@ -98,7 +98,7 @@ export const ConnectorLinesUI = React.memo((props: {takeSpace?: boolean})=>{
 	});
 	
 	return (
-		<svg ref={ref_connectorLinesUI} className="clickThroughChain"
+		<svg ref={useCallback(c=>ref_connectorLinesUI.current = c, [ref_connectorLinesUI])} className="clickThroughChain"
 			width={`calc(100% + ${containerPadding.right}px)`}
 			height={`calc(100% + ${containerPadding.bottom}px)`}
 			style={Object.assign(

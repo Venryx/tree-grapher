@@ -17,6 +17,8 @@ export declare class Graph {
     connectorLinesComp: ConnectorLinesUI_Handle | n;
     layoutOpts: {
         nodeSpacing: SpacingFunc<NodeGroup>;
+        styleSetter_layoutPending?: (style: CSSStyleDeclaration) => any;
+        styleSetter_layoutDone?: (style: CSSStyleDeclaration) => any;
     };
     uiDebugKit?: {
         FlashComp: typeof FlashComp;

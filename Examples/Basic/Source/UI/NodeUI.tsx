@@ -1,34 +1,40 @@
-import React, {Component, useContext} from "react";
-import {Column, Row} from "react-vcomponents";
-import {BaseComponent, cssHelper, UseCallback} from "react-vextensions";
-import {MapNode} from "../@SharedByExamples/MapNode";
-import {NodeChildHolder} from "./NodeChildHolder";
-import {NodeUI_Inner} from "./NodeUI_Inner";
-import {GraphContext, NodeUI_LeftColumn} from "tree-grapher";
 import {observer} from "mobx-react";
+import React, {useCallback, useContext, useState} from "react";
+import {Column} from "react-vcomponents";
+import {NodeUI_LeftColumn} from "tree-grapher";
+import {MapNode} from "../@SharedByExamples/MapNode";
 import {MapContext} from "../Root";
+import {ChangePeersOrderFunc, NodeUI_Inner} from "./NodeUI_Inner";
 
-export const NodeUI = observer((props: {node: MapNode, path: string, inBelowGroup?: boolean})=>{
-	let {node, path, inBelowGroup} = props;
+export const NodeUI = observer((props: {node: MapNode, path: string, inBelowGroup?: boolean, changePeersOrder?: ChangePeersOrderFunc})=>{
+	const {node, path, inBelowGroup, changePeersOrder} = props;
 	const mapInfo = useContext(MapContext);
 	//const graph = useContext(GraphContext);
 	//const group = graph.groupsByPath.get(path);
 	const nodeState = mapInfo.GetNodeState(path);
 
-	const childHolder = <NodeChildHolder children={node.children} childrenBelow={node.childrenBelow} {...{path}}/>;
+	//const forceUpdate = useForceUpdate();
+	const [children, setChildren] = useState(node.children);
+
+	const changePeersOrder_forChildren = useCallback(peerChangerFunc=>{
+		const newChildren = peerChangerFunc(children);
+		setChildren(newChildren);
+	}, [children]);
 	return (
 		<>
 			<NodeUI_LeftColumn treePath={path} alignWithParent={node.alignWithParent} nodeConnectorOpts={{gutterWidth: inBelowGroup ? 20 : 30, parentGutterWidth: 30, parentIsAbove: inBelowGroup, color: path.split("/").length % 2 == 0 ? "green" : "blue"}}>
-				<NodeUI_Inner node={node} path={path} inBelowGroup={inBelowGroup}/>
+				<NodeUI_Inner node={node} path={path} inBelowGroup={inBelowGroup} changePeersOrder={changePeersOrder}/>
 			</NodeUI_LeftColumn>
 			{nodeState.expanded &&
-				childHolder}
+			children.map((child, index)=>{
+				return <NodeUI key={index} node={child} inBelowGroup={node.childrenBelow} path={`${path}/${index}`} changePeersOrder={changePeersOrder_forChildren}/>;
+			})}
 		</>
 	);
 });
 
 export function NodeUI_RightColumn(props: {treePath: string, children}) {
-	let {children} = props;
+	const {children} = props;
 	return (
 		<Column className="rightColumn clickThrough"
 			style={{

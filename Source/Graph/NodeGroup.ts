@@ -60,9 +60,9 @@ export class NodeGroup {
 		return this.innerUISize.Plus(this.leftColumn_connectorOpts.gutterWidth, 0);
 	}*/
 	lineSourcePoint: number|n;
-	chSize: Vector2|n;
 
 	// pos+size
+	leftColumnEl_layoutCount = 0;
 	lcRect_atLastRender: VRect|n;
 	innerUIRect_atLastRender: VRect|n;
 	get LCRect() {
@@ -72,10 +72,6 @@ export class NodeGroup {
 	get InnerUIRect() {
 		if (this.innerUISize == null) return null;
 		return new VRect(this.assignedPosition.NewX(x=>x + this.GutterWidth).NewY(y=>y - (this.innerUISize!.y / 2)), this.innerUISize);
-	}
-	get CHRect() {
-		if (this.chSize == null) return null;
-		return new VRect(this.assignedPosition.NewY(y=>y - (this.chSize!.y / 2)), this.chSize);
 	}
 	
 	DetachAndDestroy() {

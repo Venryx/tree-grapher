@@ -29,6 +29,8 @@ export class NodeGroup {
         this.childHolder_belowParent = false;
         // pos
         this.assignedPosition = Vector2.zero;
+        // pos+size
+        this.leftColumnEl_layoutCount = 0;
         Object.assign(this, data);
         this.path_parts = this.path.split("/");
         this.path_sortable = TreePathAsSortableStr(this.path);
@@ -45,11 +47,6 @@ export class NodeGroup {
         if (this.innerUISize == null)
             return null;
         return new VRect(this.assignedPosition.NewX(x => x + this.GutterWidth).NewY(y => y - (this.innerUISize.y / 2)), this.innerUISize);
-    }
-    get CHRect() {
-        if (this.chSize == null)
-            return null;
-        return new VRect(this.assignedPosition.NewY(y => y - (this.chSize.y / 2)), this.chSize);
     }
     DetachAndDestroy() {
         this.Detach();

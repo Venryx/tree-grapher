@@ -1,4 +1,4 @@
-import { Fragment, useContext, useMemo } from "react";
+import { Fragment, useCallback, useContext, useMemo } from "react";
 import React from "react";
 import { E, Vector2, VRect } from "js-vextensions";
 import { GraphContext } from "../Graph.js";
@@ -76,7 +76,7 @@ export const ConnectorLinesUI = React.memo((props) => {
             curvedLine(addDash && { strokeDasharray: "10 5" }),
             addDash && curvedLine({ strokeDasharray: "5 10", strokeDashoffset: 5, stroke: `hsla(0,0%,100%,.1)` }));
     });
-    return (React.createElement("svg", { ref: ref_connectorLinesUI, className: "clickThroughChain", width: `calc(100% + ${containerPadding.right}px)`, height: `calc(100% + ${containerPadding.bottom}px)`, style: Object.assign({ overflow: "visible", zIndex: -1 }, takeSpace && {
+    return (React.createElement("svg", { ref: useCallback(c => ref_connectorLinesUI.current = c, [ref_connectorLinesUI]), className: "clickThroughChain", width: `calc(100% + ${containerPadding.right}px)`, height: `calc(100% + ${containerPadding.bottom}px)`, style: Object.assign({ overflow: "visible", zIndex: -1 }, takeSpace && {
             position: "relative",
             width: rectForAllNodes.width, height: rectForAllNodes.height,
             /*width: rectForAllNodes.width + containerPadding.right,

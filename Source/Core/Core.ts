@@ -2,7 +2,7 @@
 
 import {FlexNode, FlexNode_Wrapper, wrapFlexNode} from './FlexNode.js';
 
-export type ChildrenFunc = (data: any)=>any;
+export type ChildrenFunc<Datum> = (data: Datum)=>any;
 export type NodeSizeFunc<Datum> = (self: FlexNode<Datum>)=>any;
 export type SpacingFunc<Datum> = (nodeA: FlexNode<Datum>, nodeB: FlexNode<Datum>)=>any;
 export class FlexTreeOptions<Datum> {
@@ -12,7 +12,7 @@ export class FlexTreeOptions<Datum> {
 		spacing: 0,
 	});
 
-	children: ChildrenFunc;
+	children: ChildrenFunc<Datum>;
 	nodeSize: NodeSizeFunc<Datum>;
 	spacing: SpacingFunc<Datum>;
 }
@@ -30,7 +30,7 @@ export class FlexTreeLayout<Datum> {
 		return typeof opt === 'function' ? opt : () => opt;
 	}
 
-	receiveTree<Datum>(tree: FlexNode<Datum>) {
+	receiveTree(tree: FlexNode<Datum>) {
 		const wtree = wrapFlexNode<FlexNode_Wrapper<FlexNode<Datum>>, FlexNode<Datum>>(FlexNode_Wrapper, tree, node=>node.children, this.accessor('nodeSize'), this.accessor('spacing'));
 		wtree.update();
 		return wtree.data;
@@ -42,10 +42,10 @@ export class FlexTreeLayout<Datum> {
 	spacing(arg?: SpacingFunc<Datum>) {
 		return arguments.length ? (this.opts.spacing = arg!, this) : this.opts.spacing;
 	}
-	children(arg?: ChildrenFunc) {
+	children(arg?: ChildrenFunc<Datum>) {
 		return arguments.length ? (this.opts.children = arg!, this) : this.opts.children;
 	}
-	hierarchy<Datum>(treeData: Datum, children?) {
+	hierarchy(treeData: Datum, children?: ChildrenFunc<Datum>) {
 		const kids = typeof children === 'undefined' ? this.opts.children : children;
 		return wrapFlexNode<FlexNode<Datum>, Datum>(FlexNode, treeData, kids, this.accessor('nodeSize'), this.accessor('spacing'));
 	}

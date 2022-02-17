@@ -38,7 +38,7 @@ export const nodeTree_main = NewNode({id: "0", expanded: true,
 						NewNode({id: "0.1.0.0", expanded: true,
 							children: [
 								NewNode({id: "0.1.0.0.1", expanded: true}),
-							]
+							],
 						}),
 						NewNode({id: "0.1.0.1", expanded: true}),
 					],
@@ -50,7 +50,7 @@ export const nodeTree_main = NewNode({id: "0", expanded: true,
 });
 
 export function GetAllNodesInTree(nodeTree: MapNodeWithExpandState) {
-	let result = [] as MapNodeWithExpandState[];
+	const result = [] as MapNodeWithExpandState[];
 	result.push(nodeTree);
 	for (const child of nodeTree.children) {
 		result.push(...GetAllNodesInTree(child));
@@ -58,10 +58,10 @@ export function GetAllNodesInTree(nodeTree: MapNodeWithExpandState) {
 	return result;
 }
 export function GetAllNodesInTree_ByPath<T extends MapNodeWithExpandState>(nodeTree: T, path = "0") {
-	let result = new Map<string, MapNodeWithExpandState>();
+	const result = new Map<string, MapNodeWithExpandState>();
 	result.set(path, nodeTree);
 	for (const [i, child] of nodeTree.children.entries()) {
-		for (const [descendantPath, descendant] of GetAllNodesInTree_ByPath(child, path + "/" + i)) {
+		for (const [descendantPath, descendant] of GetAllNodesInTree_ByPath(child, `${path}/${i}`)) {
 			result.set(descendantPath, descendant);
 		}
 	}

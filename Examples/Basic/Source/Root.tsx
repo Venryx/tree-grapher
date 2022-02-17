@@ -1,13 +1,13 @@
 import React, {createContext, useCallback, useMemo, useRef, useState} from "react";
 import {BaseComponent, GetDOM} from "react-vextensions";
 import {Column, Row} from "react-vcomponents";
-import {NodeUI} from "./UI/NodeUI";
-import {GetAllNodesInTree_ByPath, nodeTree_main} from "./@SharedByExamples/NodeData";
 import {ConnectorLinesUI, FlexTreeLayout, Graph, GraphColumnsVisualizer, GraphContext, makeObservable_safe} from "tree-grapher";
 import {makeObservable, observable} from "mobx";
 import {FinalizerEntry, FlashComp, FlashOptions, MAX_TIMEOUT_DURATION, SetDebugMode} from "ui-debug-kit";
-import {NodeGroup} from "../../../Dist/Graph/NodeGroup.js";
 import {Vector2} from "js-vextensions";
+import {NodeGroup} from "../../../Dist/Graph/NodeGroup.js";
+import {GetAllNodesInTree_ByPath, nodeTree_main} from "./@SharedByExamples/NodeData";
+import {NodeUI} from "./UI/NodeUI";
 
 // make some stuff global, for easy debugging
 Object.assign(globalThis, {
@@ -78,7 +78,7 @@ FlashOptions.finalizers.push(new FinalizerEntry({
 export function RootUI() {
 	const nodeTree = nodeTree_main;
 	const mapInfo = useMemo(()=>{
-		let result = new MapInfo();
+		const result = new MapInfo();
 		// for demo
 		for (const [path, node] of GetAllNodesInTree_ByPath(nodeTree)) {
 			result.GetNodeState(path).expanded = node.expanded ?? false;
@@ -87,7 +87,7 @@ export function RootUI() {
 	}, []);
 	//const containerRef = useRef<HTMLDivElement | null>(null);
 	const graphInfo = useMemo(()=>{
-		let graph = new Graph({
+		const graph = new Graph({
 			//columnWidth: 100,
 			uiDebugKit: {FlashComp},
 			layoutOpts: {
@@ -98,8 +98,8 @@ export function RootUI() {
 		globalThis.graph = graph;
 		return graph;
 	}, []);
-	
-	let [containerElResolved, setContainerElResolved] = useState(false);
+
+	const [containerElResolved, setContainerElResolved] = useState(false);
 
 	return (
 		<Column style={{height: "100%"}}>
@@ -118,7 +118,7 @@ export function RootUI() {
 						graphInfo.containerEl = GetDOM(c) as any;
 						if (graphInfo.containerEl != null) setContainerElResolved(true);
 						//console.log("Set1:", context.containerEl);
-					}, [])}
+					}, [graphInfo])}
 					style={{padding: 100}}
 				>
 					{containerElResolved &&

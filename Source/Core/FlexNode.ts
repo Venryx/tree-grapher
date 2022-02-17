@@ -1,5 +1,5 @@
 import {hierarchy, HierarchyNode, HierarchyPointNode} from "d3-hierarchy";
-import {NodeSizeFunc, SpacingFunc} from "./Core.js";
+import {ChildrenFunc, NodeSizeFunc, SpacingFunc} from "./Core.js";
 import {layoutChildren, resolveX} from "./Utils.js";
 
 export class FlexNode<Datum = any> extends (hierarchy.prototype.constructor as new(..._)=>HierarchyPointNode<any>) {
@@ -72,7 +72,7 @@ export class FlexNode<Datum = any> extends (hierarchy.prototype.constructor as n
 	}
 };
 
-export function wrapFlexNode<T extends FlexNode, Datum = any>(FlexClass: new(..._)=>T, treeData: Datum, children, nodeSize: NodeSizeFunc<Datum>, spacing: SpacingFunc<Datum>): T {
+export function wrapFlexNode<T extends FlexNode, Datum = any>(FlexClass: new(..._)=>T, treeData: Datum, children: ChildrenFunc<Datum>, nodeSize: NodeSizeFunc<Datum>, spacing: SpacingFunc<Datum>): T {
 	const _wrap = (data, parent) => {
 		const node = new FlexClass(data, nodeSize, spacing);
 		Object.assign(node, {
@@ -114,9 +114,15 @@ export class FlexNode_Wrapper<Datum extends FlexNode = FlexNode<any>> extends Fl
 	get size() { return this.func_nodeSize(this.data); }
 	spacing(oNode: FlexNode) { return this.func_spacing(this.data, oNode.data); }
 	get x() { return this.data.x; }
-	set x(v) { this.data.x = v; }
+	set x(v) {
+		if (isNaN(v)) throw new Error("Encountered NaN when setting FlexNode_Wrapper.x!");
+		this.data.x = v;
+	}
 	get y() { return this.data.y; }
-	set y(v) { this.data.y = v; }
+	set y(v) {
+		if (isNaN(v)) throw new Error("Encountered NaN when setting FlexNode_Wrapper.y!");
+		this.data.y = v;
+	}
 
 	// wrapper-added fields
 	relX: number;

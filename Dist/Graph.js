@@ -16,12 +16,14 @@ export class Graph {
         // new
         // ==========
         this.RunLayout = (direction = "leftToRight") => {
-            var _a, _b;
-            Assert(this.containerEl != null, "Container-element not found. Did you forget to set graph.containerEl?");
+            var _a, _b, _c;
+            //Assert(this.containerEl != null, "Container-element not found. Did you forget to set graph.containerEl, or wrap the ref-callback in a useCallback hook?");
+            if (this.containerEl == null || this.groupsByPath.get("0") == null)
+                return;
             const containerPadding = this.ContainerPadding;
             const layout = new FlexTreeLayout({
-                children: (data) => {
-                    const children = this.FindChildGroups(data);
+                children: group => {
+                    const children = this.FindChildGroups(group).filter(a => a.leftColumnEl != null && a.lcSize != null); // ignore children that don't have their basic info loaded yet
                     const children_noSelfSideBoxes = children.filter(a => !a.leftColumn_connectorOpts.parentIsAbove);
                     const children_noSelfSideBoxes_addChildSideBoxes = CE(children_noSelfSideBoxes).SelectMany(child => {
                         let result = [child];
@@ -32,15 +34,15 @@ export class Graph {
                         }
                         return result;
                     });
-                    console.log(`For ${data.path}, found children:`, children_noSelfSideBoxes_addChildSideBoxes);
+                    console.log(`For ${group.path}, found children:`, children_noSelfSideBoxes_addChildSideBoxes);
                     return children_noSelfSideBoxes_addChildSideBoxes;
                 },
                 nodeSize: node => {
-                    var _a, _b, _c, _d;
                     const data = node.data;
+                    Assert(data.lcSize != null, "layout.nodeSize encountered null lcSize!");
                     return direction == "topToBottom"
-                        ? [(_a = data.lcSize) === null || _a === void 0 ? void 0 : _a.x, (_b = data.lcSize) === null || _b === void 0 ? void 0 : _b.y]
-                        : [(_c = data.lcSize) === null || _c === void 0 ? void 0 : _c.y, (_d = data.lcSize) === null || _d === void 0 ? void 0 : _d.x];
+                        ? [data.lcSize.x, data.lcSize.y]
+                        : [data.lcSize.y, data.lcSize.x];
                 },
                 spacing: (nodeA, nodeB) => {
                     var _a;
@@ -50,7 +52,7 @@ export class Graph {
             });
             /*const groupsArray = [...graphInfo.groupsByPath.values()];
             const tree = layout.hierarchy(groupsArray);*/
-            const tree = layout.hierarchy((_a = this.groupsByPath.get("0")) !== null && _a !== void 0 ? _a : {});
+            const tree = layout.hierarchy(this.groupsByPath.get("0"));
             layout.receiveTree(tree);
             const nodePositions_base = tree.nodes.map(node => {
                 const newPos = direction == "topToBottom"
@@ -72,16 +74,20 @@ export class Graph {
                 group.assignedPosition = newPos;
                 const newRect = group.LCRect;
                 if (!(newRect === null || newRect === void 0 ? void 0 : newRect.Equals(group.lcRect_atLastRender))) {
+                    // if this is our first render/layout, clear the style that had put the node off-screen
+                    if (group.leftColumnEl_layoutCount == 0)
+                        (_b = (_a = this.layoutOpts).styleSetter_layoutDone) === null || _b === void 0 ? void 0 : _b.call(_a, group.leftColumnEl.style);
                     group.leftColumnEl.style.left = `${group.assignedPosition.x}px`;
                     //group.leftColumnEl.style.left = `calc(${group.assignedPosition.x}px - ${group.innerUIRect!.width / 2}px)`;
                     //group.leftColumnEl.style.top = `${group.assignedPosition.y}px`;
                     group.leftColumnEl.style.top = `calc(${group.assignedPosition.y}px - ${Number(group.innerUISize.y / 2)}px)`;
                     console.log(`For ${group.path}, assigned pos: ${group.assignedPosition}`);
+                    group.leftColumnEl_layoutCount++;
                     group.lcRect_atLastRender = newRect;
                     group.innerUIRect_atLastRender = group.InnerUIRect;
                 }
             }
-            (_b = this.connectorLinesComp) === null || _b === void 0 ? void 0 : _b.forceUpdate();
+            (_c = this.connectorLinesComp) === null || _c === void 0 ? void 0 : _c.forceUpdate();
         };
         Object.assign(this, data);
     }

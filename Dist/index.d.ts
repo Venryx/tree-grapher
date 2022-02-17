@@ -1,6 +1,5 @@
 export * from "./Graph.js";
 export * from "./UI/@Testing/GraphColumnsVisualizer.js";
-export * from "./UI/NodeChildHolder_Hooks.js";
 export * from "./UI/NodeUI_LeftColumn.js";
 export * from "./UI/ConnectorLinesUI.js";
 export * from "./Utils/General/MobX.js";

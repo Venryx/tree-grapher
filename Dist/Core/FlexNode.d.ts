@@ -1,5 +1,5 @@
 import { HierarchyPointNode } from "d3-hierarchy";
-import { NodeSizeFunc, SpacingFunc } from "./Core.js";
+import { ChildrenFunc, NodeSizeFunc, SpacingFunc } from "./Core.js";
 declare const FlexNode_base: new (..._: any[]) => HierarchyPointNode<any>;
 export declare class FlexNode<Datum = any> extends FlexNode_base {
     constructor(data: Datum, nodeSize: NodeSizeFunc<Datum>, spacing: SpacingFunc<Datum>);
@@ -43,7 +43,7 @@ export declare class FlexNode<Datum = any> extends FlexNode_base {
         right: number;
     };
 }
-export declare function wrapFlexNode<T extends FlexNode, Datum = any>(FlexClass: new (..._: any[]) => T, treeData: Datum, children: any, nodeSize: NodeSizeFunc<Datum>, spacing: SpacingFunc<Datum>): T;
+export declare function wrapFlexNode<T extends FlexNode, Datum = any>(FlexClass: new (..._: any[]) => T, treeData: Datum, children: ChildrenFunc<Datum>, nodeSize: NodeSizeFunc<Datum>, spacing: SpacingFunc<Datum>): T;
 export declare class FlexNode_Wrapper<Datum extends FlexNode = FlexNode<any>> extends FlexNode<Datum> {
     constructor(data: any, nodeSize: (self: FlexNode) => any, spacing: (self: FlexNode, oNode: FlexNode) => any);
     get size(): any;
