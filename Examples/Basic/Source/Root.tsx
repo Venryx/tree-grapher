@@ -1,11 +1,9 @@
-import React, {createContext, useCallback, useMemo, useRef, useState} from "react";
-import {BaseComponent, GetDOM} from "react-vextensions";
+import {observable} from "mobx";
+import React, {createContext, useCallback, useMemo, useState} from "react";
 import {Column, Row} from "react-vcomponents";
-import {ConnectorLinesUI, FlexTreeLayout, Graph, GraphColumnsVisualizer, GraphContext, makeObservable_safe} from "tree-grapher";
-import {makeObservable, observable} from "mobx";
-import {FinalizerEntry, FlashComp, FlashOptions, MAX_TIMEOUT_DURATION, SetDebugMode} from "ui-debug-kit";
-import {Vector2} from "js-vextensions";
-import {NodeGroup} from "../../../Dist/Graph/NodeGroup.js";
+import {GetDOM} from "react-vextensions";
+import {ConnectorLinesUI, Graph, GraphColumnsVisualizer, GraphContext, makeObservable_safe} from "tree-grapher";
+import {FlashComp, FlashOptions} from "ui-debug-kit";
 import {GetAllNodesInTree_ByPath, nodeTree_main} from "./@SharedByExamples/NodeData";
 import {NodeUI} from "./UI/NodeUI";
 
@@ -84,7 +82,7 @@ export function RootUI() {
 			result.GetNodeState(path).expanded = node.expanded ?? false;
 		}
 		return result;
-	}, []);
+	}, [nodeTree]);
 	//const containerRef = useRef<HTMLDivElement | null>(null);
 	const graphInfo = useMemo(()=>{
 		const graph = new Graph({

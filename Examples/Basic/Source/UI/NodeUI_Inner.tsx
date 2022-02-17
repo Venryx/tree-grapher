@@ -2,7 +2,6 @@ import {CE} from "js-vextensions";
 import {observer} from "mobx-react";
 import React, {useContext} from "react";
 import {Button, Column, Row, Text} from "react-vcomponents";
-import {BaseComponent, cssHelper, UseCallback} from "react-vextensions";
 import {useForceUpdate} from "tree-grapher";
 import {MapNode} from "../@SharedByExamples/MapNode";
 import {MapContext} from "../Root";
