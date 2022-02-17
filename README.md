@@ -20,8 +20,7 @@ Library for calculating where to draw tree nodes, while avoiding overlap.
 
 Short term:
 * MS the "align with parent" option works again.
-* There's still lots of stuff from the old implementation that's not useful anymore and needs to be removed.
+* There's still some code from the old implementation that's not useful anymore and needs to be removed.
 
 Long term:
-* Add system that uses dynamic x-ranges for the columns, based on the encountered node-group rects. This enables the system to avoid spurious "collisions", creating more compact graphs, while not giving up (most of) the "easier to reason about" qualities of distinct column entries. (the column entries are at dynamic positions/sizes, but the visualizer makes these rects clear, so still keeps the reasoning/debugging process straightforward)
-* Fix glitch where if a node-ui-inner shrinks horizontally such that it also changes the height (due to browser layout system), it can cause the connector-lines to target the wrong (diff from border is -X rather than +X) positions. You can see this in the demo, by enabling x3 on the "0.0" node, then increasing its width, then decreasing its width. [not terribly high priority, since such resizing is expected to be rare in actual programs]
+* n/a
