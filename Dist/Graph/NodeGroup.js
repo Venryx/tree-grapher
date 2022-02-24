@@ -60,7 +60,7 @@ export class NodeGroup {
         return this.path == "[this object has been destroyed; seeing this indicates a bug]";
     }
     Destroy() {
-        console.log("Destroying node-group:", this);
+        //console.log("Destroying node-group:", this);
         /*this.leftColumnEl?.remove();
         this.connectorLinesComp?.remove();
         this.childHolderEl?.remove();*/

@@ -36,7 +36,7 @@ export class NodeGroup {
 	path: string;
 	path_parts: string[];
 	path_sortable: string;
-	
+
 	leftColumnEl: HTMLElement|n;
 	leftColumn_connectorOpts: NodeConnectorOpts;
 	leftColumn_alignWithParent?: boolean;
@@ -73,10 +73,10 @@ export class NodeGroup {
 		if (this.innerUISize == null) return null;
 		return new VRect(this.assignedPosition.NewX(x=>x + this.GutterWidth).NewY(y=>y - (this.innerUISize!.y / 2)), this.innerUISize);
 	}
-	
+
 	DetachAndDestroy() {
 		this.Detach();
-		
+
 		// we want to make sure nothing tries to use this group after this point, so destroy it (ie. mangle its fields) so we detect bugs
 		this.Destroy();
 	}
@@ -87,7 +87,7 @@ export class NodeGroup {
 		return this.path == "[this object has been destroyed; seeing this indicates a bug]";
 	}
 	Destroy() {
-		console.log("Destroying node-group:", this);
+		//console.log("Destroying node-group:", this);
 		/*this.leftColumnEl?.remove();
 		this.connectorLinesComp?.remove();
 		this.childHolderEl?.remove();*/
@@ -97,7 +97,7 @@ export class NodeGroup {
 	}
 }
 
-const compsWithForceUpdateScheduled = new Set<{forceUpdate: ()=>any}>();
+const compsWithForceUpdateScheduled = new Set<{forceUpdate:()=>any}>();
 function RunForceUpdateForScheduledComps() {
 	for (const comp of compsWithForceUpdateScheduled) {
 		comp.forceUpdate();

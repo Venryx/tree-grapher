@@ -45,7 +45,7 @@ export class Graph {
                         }
                         return result;
                     });
-                    console.log(`For ${group.path}, found children:`, children_noSelfSideBoxes_addChildSideBoxes);
+                    //console.log(`For ${group.path}, found children:`, children_noSelfSideBoxes_addChildSideBoxes);
                     return children_noSelfSideBoxes_addChildSideBoxes;
                 },
                 nodeSize: node => {
@@ -89,7 +89,7 @@ export class Graph {
                     //group.leftColumnEl.style.left = `calc(${group.assignedPosition.x}px - ${group.innerUIRect!.width / 2}px)`;
                     //group.leftColumnEl.style.top = `${group.assignedPosition.y}px`;
                     group.leftColumnEl.style.top = `calc(${group.assignedPosition.y}px - ${Number(group.innerUISize.y / 2)}px)`;
-                    console.log(`For ${group.path}, assigned pos: ${group.assignedPosition}`);
+                    //console.log(`For ${group.path}, assigned pos: ${group.assignedPosition}`);
                     // if this is our first render/layout, clear the style that had made our node invisible
                     if (group.leftColumnEl_layoutCount == 0)
                         (_b = (_a = this.layoutOpts).styleSetter_layoutDone) === null || _b === void 0 ? void 0 : _b.call(_a, group.leftColumnEl.style);
