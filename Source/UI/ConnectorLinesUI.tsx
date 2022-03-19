@@ -1,17 +1,17 @@
-import {Component, Fragment, Ref, RefObject, useCallback, useContext, useMemo, useRef} from "react";
-import React from "react";
+import React, {Component, Fragment, Ref, RefObject, useCallback, useContext, useMemo, useRef} from "react";
 import {Assert, E, Vector2, VRect} from "js-vextensions";
+import {useCallbackRef} from "use-callback-ref";
+import useResizeObserver from "use-resize-observer";
 import {GraphContext} from "../Graph.js";
 import {NodeGroup} from "../Graph/NodeGroup.js";
 import {useForceUpdate} from "../index.js";
-import {useCallbackRef} from "use-callback-ref";
 import {CSSScalarToPixels, GetPaddingTopFromStyle} from "../Utils/General/General.js";
 import {n} from "../Utils/@Internal/Types.js";
 
 export function useRef_connectorLinesUI(handle: ConnectorLinesUI_Handle) {
 	const graph = useContext(GraphContext);
 
-	let ref_connectorLinesUI = useCallbackRef<SVGSVGElement>(null, el=>{
+	const ref_connectorLinesUI = useCallbackRef<SVGSVGElement>(null, el=>{
 		if (el) {
 			handle.svgEl = el;
 			graph.NotifyGroupConnectorLinesUIMount(handle);
@@ -61,7 +61,7 @@ export const ConnectorLinesUI = React.memo((props: {takeSpace?: boolean})=>{
 		const lineFromAbove = lineOpts.parentIsAbove;
 		const parentGroup = graph.FindParentGroup(group);
 		if (parentGroup?.innerUIRect_atLastRender == null) return null;
-		
+
 		const lineStart = lineFromAbove
 			? new Vector2(group.innerUIRect_atLastRender.x - (lineOpts.gutterWidth / 2), parentGroup.innerUIRect_atLastRender.Bottom)
 			: new Vector2(parentGroup.innerUIRect_atLastRender.Right, parentGroup.innerUIRect_atLastRender.Center.y);
@@ -96,9 +96,20 @@ export const ConnectorLinesUI = React.memo((props: {takeSpace?: boolean})=>{
 			{addDash && curvedLine({strokeDasharray: "5 10", strokeDashoffset: 5, stroke: `hsla(0,0%,100%,.1)`})}
 		</Fragment>;
 	});
-	
+
+	// when container resizes, rerun the layout system (I forget the exact conditions where this is required; might only be when a padding-change occurs)
+	const {ref: resizeObserver_ref} = useResizeObserver<any>({
+		onResize: ({width, height})=>{
+			graph.RunLayout_InAMoment();
+		},
+	});
+
+	//const ref_resizeObserver = useRef<ResizeObserver | null>(null);
 	return (
-		<svg ref={useCallback(c=>ref_connectorLinesUI.current = c, [ref_connectorLinesUI])} className="clickThroughChain"
+		<>
+		{/* Created an extra div-element, with an expand-to-container style, so the resize-observer triggers on container size changes. */}
+		<div ref={resizeObserver_ref} style={{position: "absolute", left: 0, right: 0, top: 0, bottom: 0, pointerEvents: "none"}}/>
+		<svg ref={useCallback(el=>ref_connectorLinesUI.current = el, [ref_connectorLinesUI])} className="clickThroughChain"
 			width={`calc(100% + ${containerPadding.right}px)`}
 			height={`calc(100% + ${containerPadding.bottom}px)`}
 			style={Object.assign(
@@ -119,9 +130,9 @@ export const ConnectorLinesUI = React.memo((props: {takeSpace?: boolean})=>{
 		>
 			{connectorLineUIs}
 		</svg>
+		</>
 	);
 });
-
 
 /*export class Squiggle extends BaseComponent<{start: Vector2, startControl_offset: Vector2, end: Vector2, endControl_offset: Vector2, color: chroma.Color, usePercents?: boolean, style?}, {}> {
 	render() {

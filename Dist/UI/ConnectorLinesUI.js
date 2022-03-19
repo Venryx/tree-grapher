@@ -1,12 +1,12 @@
-import { Fragment, useCallback, useContext, useMemo } from "react";
-import React from "react";
+import React, { Fragment, useCallback, useContext, useMemo } from "react";
 import { E, Vector2, VRect } from "js-vextensions";
+import { useCallbackRef } from "use-callback-ref";
+import useResizeObserver from "use-resize-observer";
 import { GraphContext } from "../Graph.js";
 import { useForceUpdate } from "../index.js";
-import { useCallbackRef } from "use-callback-ref";
 export function useRef_connectorLinesUI(handle) {
     const graph = useContext(GraphContext);
-    let ref_connectorLinesUI = useCallbackRef(null, el => {
+    const ref_connectorLinesUI = useCallbackRef(null, el => {
         if (el) {
             handle.svgEl = el;
             graph.NotifyGroupConnectorLinesUIMount(handle);
@@ -76,17 +76,26 @@ export const ConnectorLinesUI = React.memo((props) => {
             curvedLine(addDash && { strokeDasharray: "10 5" }),
             addDash && curvedLine({ strokeDasharray: "5 10", strokeDashoffset: 5, stroke: `hsla(0,0%,100%,.1)` }));
     });
-    return (React.createElement("svg", { ref: useCallback(c => ref_connectorLinesUI.current = c, [ref_connectorLinesUI]), className: "clickThroughChain", width: `calc(100% + ${containerPadding.right}px)`, height: `calc(100% + ${containerPadding.bottom}px)`, style: Object.assign({ overflow: "visible", zIndex: -1 }, takeSpace && {
-            position: "relative",
-            width: rectForAllNodes.width, height: rectForAllNodes.height,
-            /*width: rectForAllNodes.width + containerPadding.right,
-            height: rectForAllNodes.height + containerPadding.bottom,
-            marginLeft: -containerPadding.left, //marginRight: containerPadding.left + containerPadding.right,
-            marginTop: -containerPadding.top, //marginBottom: containerPadding.top + containerPadding.bottom,*/
-        }, !takeSpace && {
-            position: "absolute",
-            ...containerPadding,
-        }) }, connectorLineUIs));
+    // when container resizes, rerun the layout system (I forget the exact conditions where this is required; might only be when a padding-change occurs)
+    const { ref: resizeObserver_ref } = useResizeObserver({
+        onResize: ({ width, height }) => {
+            graph.RunLayout_InAMoment();
+        },
+    });
+    //const ref_resizeObserver = useRef<ResizeObserver | null>(null);
+    return (React.createElement(React.Fragment, null,
+        React.createElement("div", { ref: resizeObserver_ref, style: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, pointerEvents: "none" } }),
+        React.createElement("svg", { ref: useCallback(el => ref_connectorLinesUI.current = el, [ref_connectorLinesUI]), className: "clickThroughChain", width: `calc(100% + ${containerPadding.right}px)`, height: `calc(100% + ${containerPadding.bottom}px)`, style: Object.assign({ overflow: "visible", zIndex: -1 }, takeSpace && {
+                position: "relative",
+                width: rectForAllNodes.width, height: rectForAllNodes.height,
+                /*width: rectForAllNodes.width + containerPadding.right,
+                height: rectForAllNodes.height + containerPadding.bottom,
+                marginLeft: -containerPadding.left, //marginRight: containerPadding.left + containerPadding.right,
+                marginTop: -containerPadding.top, //marginBottom: containerPadding.top + containerPadding.bottom,*/
+            }, !takeSpace && {
+                position: "absolute",
+                ...containerPadding,
+            }) }, connectorLineUIs)));
 });
 /*export class Squiggle extends BaseComponent<{start: Vector2, startControl_offset: Vector2, end: Vector2, endControl_offset: Vector2, color: chroma.Color, usePercents?: boolean, style?}, {}> {
     render() {
