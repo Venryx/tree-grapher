@@ -11,6 +11,7 @@ export function GetPageRect(el) {
 /** Get bounding-rect of element-x relative to element-y. */
 export function GetRectRelative(x, y) {
     Assert(x instanceof Element && x.getBoundingClientRect != null, "X is not an Element!");
+    Assert(y instanceof Element && y.getBoundingClientRect != null, "Y is not an Element!");
     var xRect = VRect.FromLTWH(x.getBoundingClientRect());
     var yRect = VRect.FromLTWH(y.getBoundingClientRect());
     return xRect.NewPosition(pos => pos.Minus(yRect.Position));
@@ -30,22 +31,21 @@ export function GetPaddingTopFromStyle(style) {
 }
 // for debugging-related logs and/or flash-kit entries
 export function StrForChange(oldVal, newVal) {
-    const oldStr = "" + oldVal;
-    const newStr = "" + newVal;
+    const oldStr = `${oldVal}`;
+    const newStr = `${newVal}`;
     const rightStr = newStr == oldStr ? "[same]" : newStr;
     return `${oldStr}->${rightStr}`;
 }
 export function Args(requiredData, optionalData) {
-    return Object.assign({}, requiredData, optionalData);
+    return { ...requiredData, ...optionalData };
 }
 export function UnwrapArgs(args, defaultArgs) {
-    return Object.assign({}, defaultArgs, args);
+    return { ...defaultArgs, ...args };
 }
-export function Method(defaultArgs_required, defaultArgs_optional, funcGetter // to return this "method itself"
-) {
+export function Method(defaultArgs_required, defaultArgs_optional, funcGetter) {
     const defaultArgs = Args(defaultArgs_required, defaultArgs_optional);
     const FinalArgs = (args) => {
-        return Object.assign({}, defaultArgs, args);
+        return ({ ...defaultArgs, ...args });
     };
     const func = funcGetter(FinalArgs);
     return func;

@@ -11,7 +11,6 @@ const defaultGraph = undefined; // we want an error if someone forgets to add th
 export const GraphContext = createContext(defaultGraph);
 export class Graph {
     constructor(data) {
-        this.containerEl = document.body; // start out the "container" as the body, just so there aren't null errors prior to container-ref resolving
         this.groupsByPath = new Map();
         // new
         // ==========
@@ -103,9 +102,10 @@ export class Graph {
         Object.assign(this, data);
     }
     get ContainerPadding() {
+        var _a, _b, _c, _d, _e, _f, _g, _h;
         return {
-            left: CSSScalarToPixels(this.containerEl.style.paddingLeft), right: CSSScalarToPixels(this.containerEl.style.paddingRight),
-            top: CSSScalarToPixels(this.containerEl.style.paddingTop), bottom: CSSScalarToPixels(this.containerEl.style.paddingBottom),
+            left: CSSScalarToPixels((_b = (_a = this.containerEl) === null || _a === void 0 ? void 0 : _a.style.paddingLeft) !== null && _b !== void 0 ? _b : ""), right: CSSScalarToPixels((_d = (_c = this.containerEl) === null || _c === void 0 ? void 0 : _c.style.paddingRight) !== null && _d !== void 0 ? _d : ""),
+            top: CSSScalarToPixels((_f = (_e = this.containerEl) === null || _e === void 0 ? void 0 : _e.style.paddingTop) !== null && _f !== void 0 ? _f : ""), bottom: CSSScalarToPixels((_h = (_g = this.containerEl) === null || _g === void 0 ? void 0 : _g.style.paddingBottom) !== null && _h !== void 0 ? _h : ""),
         };
     }
     FindParentGroup(childGroup) {

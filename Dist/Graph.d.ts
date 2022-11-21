@@ -7,7 +7,7 @@ import { n, RequiredBy } from "./Utils/@Internal/Types.js";
 export declare const GraphContext: import("react").Context<Graph>;
 export declare class Graph {
     constructor(data: RequiredBy<Partial<Graph>, "layoutOpts">);
-    containerEl: HTMLElement;
+    containerEl?: HTMLElement;
     get ContainerPadding(): {
         left: number;
         right: number;

@@ -19,7 +19,7 @@ export function useRef_nodeLeftColumn(treePath, nodeConnectorOpts, alignWithPare
             const group = graph.NotifyGroupLeftColumnMount(el, treePath, nodeConnectorOpts, alignWithParent);
             ref_group.current = group;
             const updateGroupRects = () => {
-                group.lcSize = group.leftColumnEl ? GetRectRelative(group.leftColumnEl, group.graph.containerEl).Size : null;
+                group.lcSize = group.leftColumnEl && group.graph.containerEl ? GetRectRelative(group.leftColumnEl, group.graph.containerEl).Size : null;
                 group.innerUISize = group.leftColumnEl && group.lcSize ? new Vector2(group.lcSize.x - group.GutterWidth, group.lcSize.y) : null;
             };
             // call once at start (atm needed to avoid rare case where element is attached, but rects aren't, and filter in children-func fails fsr)
