@@ -68,10 +68,11 @@ export class Graph {
 		};
 	}
 
-	NotifyGroupLeftColumnMount(el: HTMLElement, treePath: string, connectorOpts: NodeConnectorOpts, alignWithParent?: boolean) {
+	NotifyGroupLeftColumnMount(el: HTMLElement, treePath: string, connectorOpts: NodeConnectorOpts, userData: Object, alignWithParent?: boolean) {
 		const {group} = this.GetOrCreateGroup(treePath);
 		group.leftColumnEl = el;
 		group.leftColumn_connectorOpts = connectorOpts;
+		group.leftColumn_userData = userData;
 		group.leftColumn_alignWithParent = alignWithParent;
 
 		this.RunLayout_InAMoment();

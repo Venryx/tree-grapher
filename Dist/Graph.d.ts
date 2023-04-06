@@ -31,7 +31,7 @@ export declare class Graph {
         group: NodeGroup;
         alreadyExisted: boolean;
     };
-    NotifyGroupLeftColumnMount(el: HTMLElement, treePath: string, connectorOpts: NodeConnectorOpts, alignWithParent?: boolean): NodeGroup;
+    NotifyGroupLeftColumnMount(el: HTMLElement, treePath: string, connectorOpts: NodeConnectorOpts, userData: Object, alignWithParent?: boolean): NodeGroup;
     NotifyGroupChildHolderMount(el: HTMLElement, treePath: string, belowParent: boolean): NodeGroup;
     NotifyGroupConnectorLinesUIMount(handle: ConnectorLinesUI_Handle): void;
     NotifyGroupLeftColumnUnmount(group: NodeGroup): void;

@@ -3,11 +3,14 @@ import React, { useCallback, useContext, useMemo, useRef } from "react";
 import { GraphContext } from "../Graph.js";
 import { GetRectRelative } from "../Utils/General/General.js";
 import { NodeConnectorOpts } from "./ConnectorLinesUI.js";
-export function useRef_nodeLeftColumn(treePath, nodeConnectorOpts, alignWithParent) {
+export function useRef_nodeLeftColumn(treePath, nodeConnectorOpts, userData = {}, alignWithParent) {
     nodeConnectorOpts = useMemo(() => Object.assign(new NodeConnectorOpts(), nodeConnectorOpts), 
     //[nodeConnectorOpts],
-    // memoize based on json-representation of node-connector-opts; this way, layout system is robust to caller failing to memoize the options-object it passes in
+    // memoize based on json-representation of node-connector-opts; this way, layout system is robust to caller failing to memoize the object it passes in
     [JSON.stringify(nodeConnectorOpts)]);
+    userData = useMemo(() => ({ ...userData }), 
+    // memoize based on json-representation of user-data; this way, layout system is robust to caller failing to memoize the object it passes in
+    [JSON.stringify(userData)]);
     const graph = useContext(GraphContext);
     const ref_group = useRef(null);
     const ref_resizeObserver = useRef(null);
@@ -16,7 +19,7 @@ export function useRef_nodeLeftColumn(treePath, nodeConnectorOpts, alignWithPare
         var _a, _b;
         ref_leftColumn_storage.current = el;
         if (el) {
-            const group = graph.NotifyGroupLeftColumnMount(el, treePath, nodeConnectorOpts, alignWithParent);
+            const group = graph.NotifyGroupLeftColumnMount(el, treePath, nodeConnectorOpts, userData, alignWithParent);
             ref_group.current = group;
             const updateGroupRects = () => {
                 group.lcSize = group.leftColumnEl && group.graph.containerEl ? GetRectRelative(group.leftColumnEl, group.graph.containerEl).Size : null;
@@ -59,20 +62,21 @@ export function useRef_nodeLeftColumn(treePath, nodeConnectorOpts, alignWithPare
             ref_resizeObserver.current = null;
             graph.NotifyGroupLeftColumnUnmount(group);
         }
-    }, [alignWithParent, graph, nodeConnectorOpts, treePath]);
+    }, [alignWithParent, graph, nodeConnectorOpts, userData, treePath]);
     // also re-attach this element as the left-column every time it renders (group may have been deleted then recreated, from collapsing then expanding the node)
     /*useEffect(()=>{
         groupInfo.current = graph.NotifyGroupLeftColumnMountOrRender(ref.current as any as HTMLElement, treePath);
     });*/
     return { ref_leftColumn_storage, ref_leftColumn, ref_group };
 }
+/** Note: Generally, it's recommended to use the "useRef_nodeLeftColumn" hook rather than this alternative. */
 export const NodeUI_LeftColumn = (props) => {
-    let { treePath, nodeConnectorOpts, alignWithParent, children } = props;
+    let { treePath, nodeConnectorOpts, userData, alignWithParent, children } = props;
     nodeConnectorOpts = Object.assign(new NodeConnectorOpts(), nodeConnectorOpts);
     const graph = useContext(GraphContext);
     const group = graph.groupsByPath.get(treePath);
     const gutterWidth = nodeConnectorOpts.gutterWidth + (nodeConnectorOpts.parentIsAbove ? nodeConnectorOpts.parentGutterWidth : 0); // rather than wait for group, just recalc gutter-width manually
-    const { ref_leftColumn } = useRef_nodeLeftColumn(treePath, nodeConnectorOpts, alignWithParent);
+    const { ref_leftColumn } = useRef_nodeLeftColumn(treePath, nodeConnectorOpts, userData, alignWithParent);
     return (React.createElement("div", { ref: ref_leftColumn, className: "innerBoxColumn clickThrough", style: Object.assign(
         //!nodeConnectorOpts.parentIsAbove && {position: "absolute"} as const,
         { position: "absolute" }, 

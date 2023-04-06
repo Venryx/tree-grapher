@@ -39,6 +39,7 @@ export class NodeGroup {
 
 	leftColumnEl: HTMLElement|n;
 	leftColumn_connectorOpts: NodeConnectorOpts;
+	leftColumn_userData: Object;
 	leftColumn_alignWithParent?: boolean;
 	//leftColumnEl_sizeChangesToIgnore = 0;
 	childHolderEl: HTMLElement|n;

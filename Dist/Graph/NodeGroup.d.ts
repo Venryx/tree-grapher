@@ -21,6 +21,7 @@ export declare class NodeGroup {
     path_sortable: string;
     leftColumnEl: HTMLElement | n;
     leftColumn_connectorOpts: NodeConnectorOpts;
+    leftColumn_userData: Object;
     leftColumn_alignWithParent?: boolean;
     childHolderEl: HTMLElement | n;
     childHolder_belowParent: boolean;
