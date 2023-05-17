@@ -40,15 +40,16 @@ export class ConnectorLinesUI_Handle {
 }
 
 export const ConnectorLinesUI = React.memo((props: {takeSpace?: boolean})=>{
-	const {takeSpace = true} = props;
 	const forceUpdate = useForceUpdate();
 
-	const handle = useMemo(()=>new ConnectorLinesUI_Handle({props: props as any, svgEl: null as any, forceUpdate}), []);
+	const handle = useMemo(()=>new ConnectorLinesUI_Handle({props: props as any, svgEl: null as any, forceUpdate}), []); // todo: confirm this is correct (don't we need to pass props, or props-stringified, into dep-array?)
 	const {ref_connectorLinesUI, graph} = useRef_connectorLinesUI(handle);
 	const groups = [...graph.groupsByPath.values()];
-	const containerPadding = graph.ContainerPadding;
-	const offset = takeSpace ? new Vector2(-containerPadding.left, -containerPadding.top) : Vector2.zero;
-	const p = (pos: Vector2)=>pos.Plus(offset);
+	const containerPadding = graph.containerPadding;
+
+	/*const offset = takeSpace ? new Vector2(-containerPadding.left, -containerPadding.top) : Vector2.zero;
+	const p = (pos: Vector2)=>pos.Plus(offset);*/
+	const p = (pos: Vector2)=>pos; // todo: remove this, once confirmed not needed
 
 	const rectForAllNodes = groups.find(a=>a.lcRect_atLastRender != null)?.lcRect_atLastRender ?? new VRect(0, 0, 0, 0);
 	const connectorLineUIs = groups.map((group, index)=>{
@@ -107,29 +108,45 @@ export const ConnectorLinesUI = React.memo((props: {takeSpace?: boolean})=>{
 	//const ref_resizeObserver = useRef<ResizeObserver | null>(null);
 	return (
 		<>
-		{/* Created an extra div-element, with an expand-to-container style, so the resize-observer triggers on container size changes. */}
-		<div ref={resizeObserver_ref} style={{position: "absolute", left: 0, right: 0, top: 0, bottom: 0, pointerEvents: "none"}}/>
-		<svg ref={useCallback(el=>ref_connectorLinesUI.current = el, [ref_connectorLinesUI])} className="clickThroughChain"
-			width={`calc(100% + ${containerPadding.right}px)`}
-			height={`calc(100% + ${containerPadding.bottom}px)`}
-			style={Object.assign(
-				{overflow: "visible", zIndex: -1} as const,
-				takeSpace && {
-					position: "relative",
-					width: rectForAllNodes.width, height: rectForAllNodes.height,
-					/*width: rectForAllNodes.width + containerPadding.right,
-					height: rectForAllNodes.height + containerPadding.bottom,
-					marginLeft: -containerPadding.left, //marginRight: containerPadding.left + containerPadding.right,
-					marginTop: -containerPadding.top, //marginBottom: containerPadding.top + containerPadding.bottom,*/
-				} as const,
-				!takeSpace && {
-					position: "absolute",
-					...containerPadding,
-				} as const,
-			)}
-		>
-			{connectorLineUIs}
-		</svg>
+			{/* Create an extra div-element, to take up relative space; this is needed in scroll-containers, so it knows how far to allow scrolling. */}
+			{/*takeSpace && <div style={{
+				position: "relative", pointerEvents: "none",
+				width: (rectForAllNodes.width + containerPadding.right) * graph.contentScaling,
+				height: (rectForAllNodes.height + containerPadding.bottom) * graph.contentScaling,
+			}}/>*/}
+			{/* Create an extra div-element, with an expand-to-container style, so the resize-observer triggers on container size changes. */}
+			<div ref={resizeObserver_ref} style={{position: "absolute", left: 0, right: 0, top: 0, bottom: 0, pointerEvents: "none"}}/>
+			<svg ref={useCallback(el=>ref_connectorLinesUI.current = el, [ref_connectorLinesUI])} className="clickThroughChain"
+				/*width={`calc(100% + ${containerPadding.right}px)`}
+				height={`calc(100% + ${containerPadding.bottom}px)`}*/
+				style={Object.assign(
+					{overflow: "visible", zIndex: -1} as const,
+					/*takeSpace && {
+						position: "relative",
+						/*paddingLeft: containerPadding.left, paddingRight: containerPadding.right,
+						paddingTop: containerPadding.top, paddingBottom: containerPadding.bottom,*#/
+						width: (rectForAllNodes.width + containerPadding.left + containerPadding.right) * graph.contentScaling,
+						height: (rectForAllNodes.height + containerPadding.top + containerPadding.bottom) * graph.contentScaling,
+						/*width: rectForAllNodes.width + containerPadding.right,
+						height: rectForAllNodes.height + containerPadding.bottom,
+						marginLeft: -containerPadding.left, //marginRight: containerPadding.left + containerPadding.right,
+						marginTop: -containerPadding.top, //marginBottom: containerPadding.top + containerPadding.bottom,*#/
+					} as const,
+					!takeSpace && {
+						position: "absolute",
+						...containerPadding,
+					} as const,*/
+					{
+						position: "absolute",
+						left: 0, top: 0,
+						//width: rectForAllNodes.width + containerPadding.left + containerPadding.right,
+						//height: rectForAllNodes.height + containerPadding.top + containerPadding.bottom,
+						right: 0, bottom: 0,
+					} as const,
+				)}
+			>
+				{connectorLineUIs}
+			</svg>
 		</>
 	);
 });

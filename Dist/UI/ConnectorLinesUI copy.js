@@ -30,14 +30,15 @@ export class ConnectorLinesUI_Handle {
 }
 export const ConnectorLinesUI = React.memo((props) => {
     var _a, _b;
+    const { takeSpace = true } = props;
     const forceUpdate = useForceUpdate();
-    const handle = useMemo(() => new ConnectorLinesUI_Handle({ props: props, svgEl: null, forceUpdate }), []); // todo: confirm this is correct (don't we need to pass props, or props-stringified, into dep-array?)
+    const handle = useMemo(() => new ConnectorLinesUI_Handle({ props: props, svgEl: null, forceUpdate }), []);
     const { ref_connectorLinesUI, graph } = useRef_connectorLinesUI(handle);
     const groups = [...graph.groupsByPath.values()];
     const containerPadding = graph.containerPadding;
-    /*const offset = takeSpace ? new Vector2(-containerPadding.left, -containerPadding.top) : Vector2.zero;
-    const p = (pos: Vector2)=>pos.Plus(offset);*/
-    const p = (pos) => pos; // todo: remove this, once confirmed not needed
+    //const offset = takeSpace ? new Vector2(-containerPadding.left, -containerPadding.top) : Vector2.zero;
+    const offset = Vector2.zero;
+    const p = (pos) => pos.Plus(offset);
     const rectForAllNodes = (_b = (_a = groups.find(a => a.lcRect_atLastRender != null)) === null || _a === void 0 ? void 0 : _a.lcRect_atLastRender) !== null && _b !== void 0 ? _b : new VRect(0, 0, 0, 0);
     const connectorLineUIs = groups.map((group, index) => {
         var _a, _b;
@@ -84,6 +85,11 @@ export const ConnectorLinesUI = React.memo((props) => {
     });
     //const ref_resizeObserver = useRef<ResizeObserver | null>(null);
     return (React.createElement(React.Fragment, null,
+        takeSpace && React.createElement("div", { style: {
+                position: "relative", pointerEvents: "none",
+                width: (rectForAllNodes.width + containerPadding.left + containerPadding.right) * graph.contentScaling,
+                height: (rectForAllNodes.height + containerPadding.top + containerPadding.bottom) * graph.contentScaling,
+            } }),
         React.createElement("div", { ref: resizeObserver_ref, style: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, pointerEvents: "none" } }),
         React.createElement("svg", { ref: useCallback(el => ref_connectorLinesUI.current = el, [ref_connectorLinesUI]), className: "clickThroughChain", 
             /*width={`calc(100% + ${containerPadding.right}px)`}

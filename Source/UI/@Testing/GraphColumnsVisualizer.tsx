@@ -1,7 +1,6 @@
 import {CE, Range, Timer, Vector2} from "js-vextensions";
 import {observer} from "mobx-react";
-import React, {useEffect, useRef, useState} from "react";
-import {useContext} from "react";
+import React, {useEffect, useRef, useState, useContext} from "react";
 import {Button, Column, Row} from "react-vcomponents";
 import {GraphContext} from "../../Graph.js";
 import {n} from "../../Utils/@Internal/Types.js";
@@ -20,18 +19,18 @@ export const GraphColumnsVisualizer = observer((props: {levelsToScrollContainer?
 
 	const ref = useRef<HTMLDivElement>(null);
 
-	useEffect(()=>{	
-		let mouseMoveListener = (e: MouseEvent)=>{
+	useEffect(()=>{
+		const mouseMoveListener = (e: MouseEvent)=>{
 			if (ref.current == null) return;
-			setMousePos(new Vector2(e.clientX - ref.current.getBoundingClientRect().x, e.clientY  - ref.current.getBoundingClientRect().y));
+			setMousePos(new Vector2(e.clientX - ref.current.getBoundingClientRect().x, e.clientY - ref.current.getBoundingClientRect().y));
 		};
 		document.addEventListener("mousemove", mouseMoveListener);
 		return ()=>document.removeEventListener("mousemove", mouseMoveListener);
 	});
 
-	let [marginTopNeededToBeVisible, setMarginTopNeededToBeVisible] = useState(0);
+	const [marginTopNeededToBeVisible, setMarginTopNeededToBeVisible] = useState(0);
 	useEffect(()=>{
-		let timer = new Timer(100, ()=>{
+		const timer = new Timer(100, ()=>{
 			if (ref.current == null) return;
 
 			const rectTop_preMargin = ref.current.getBoundingClientRect().top;
@@ -48,7 +47,7 @@ export const GraphColumnsVisualizer = observer((props: {levelsToScrollContainer?
 				}
 			}
 
-			let newMarginTopToBeVisible_inBothViewports = Math.max(newMarginTopToBeVisible_inPageViewport, newMarginTopToBeVisible_inScrollContainerViewport);
+			const newMarginTopToBeVisible_inBothViewports = Math.max(newMarginTopToBeVisible_inPageViewport, newMarginTopToBeVisible_inScrollContainerViewport);
 			if (newMarginTopToBeVisible_inBothViewports != marginTopNeededToBeVisible) {
 				setMarginTopNeededToBeVisible(newMarginTopToBeVisible_inBothViewports);
 			}
@@ -62,7 +61,7 @@ export const GraphColumnsVisualizer = observer((props: {levelsToScrollContainer?
 			}
 		}).Start();
 		return ()=>timer.Stop();
-	})
+	});
 
 	const columnOffsets = Range(0, CE(width).CeilingTo(100), 100, false);
 	const rowOffsets = Range(0, CE(height).CeilingTo(100), 100, false);

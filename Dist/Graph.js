@@ -1,9 +1,8 @@
-import { Assert, CE, Vector2 } from "js-vextensions";
+import { Assert, CE, Vector2, VRect } from "js-vextensions";
 import { configure } from "mobx";
 import { createContext } from "react";
 import { FlexTreeLayout } from "./Core/Core.js";
 import { NodeGroup, TreePathAsSortableStr } from "./Graph/NodeGroup.js";
-import { CSSScalarToPixels } from "./Utils/General/General.js";
 // maybe temp
 configure({ enforceActions: "never" });
 //const defaultGraph = new Graph({columnWidth: 100});
@@ -26,11 +25,11 @@ export class Graph {
             });
         };
         this.RunLayout = (direction = "leftToRight") => {
-            var _a, _b, _c;
+            var _a, _b, _c, _d;
             //Assert(this.containerEl != null, "Container-element not found. Did you forget to set graph.containerEl, or wrap the ref-callback in a useCallback hook?");
             if (this.containerEl == null || this.groupsByPath.get("0") == null)
                 return;
-            const containerPadding = this.ContainerPadding;
+            const containerPadding = this.containerPadding;
             const layout = new FlexTreeLayout({
                 children: group => {
                     const children = this.FindChildGroups(group).filter(a => a.leftColumnEl != null && a.lcSize != null); // ignore children that don't have their basic info loaded yet
@@ -64,23 +63,26 @@ export class Graph {
             const tree = layout.hierarchy(groupsArray);*/
             const tree = layout.hierarchy(this.groupsByPath.get("0"));
             layout.receiveTree(tree);
-            const nodePositions_base = tree.nodes.map(node => {
+            const nodeRects_base = tree.nodes.map(node => {
                 const newPos = direction == "topToBottom"
-                    ? new Vector2(node.x, node.y)
-                    : new Vector2(node.y, node.x);
+                    ? new VRect(node.x, node.y, node.xSize, node.ySize)
+                    : new VRect(node.y, node.x, node.ySize, node.xSize);
                 return newPos;
             });
-            const minX = CE(nodePositions_base.map((pos, i) => pos.x)).Min();
-            const minY = CE(nodePositions_base.map((pos, i) => {
+            const minX = CE(nodeRects_base.map((rect, i) => rect.x)).Min();
+            const maxX = CE(nodeRects_base.map((rect, i) => rect.Right)).Min();
+            //const minY = CE(nodeRects_base.map((rect, i)=>rect.y)).Min();
+            const minY = CE(nodeRects_base.map((rect, i) => {
                 const group = tree.nodes[i].data;
-                return pos.y - Number(group.innerUISize.y / 2);
+                return rect.y - Number(group.innerUISize.y / 2);
             })).Min();
+            const maxY = CE(nodeRects_base.map((rect, i) => rect.Bottom)).Max();
             const offset = new Vector2(containerPadding.left - minX, containerPadding.top - minY);
             for (const [i, node] of tree.nodes.entries()) {
                 const group = node.data;
                 if (group.leftColumnEl == null)
                     continue;
-                const newPos = nodePositions_base[i].Plus(offset);
+                const newPos = nodeRects_base[i].Position.Plus(offset);
                 group.assignedPosition = newPos;
                 const newRect = group.LCRect;
                 if (!(newRect === null || newRect === void 0 ? void 0 : newRect.Equals(group.lcRect_atLastRender))) {
@@ -97,16 +99,10 @@ export class Graph {
                     group.innerUIRect_atLastRender = group.InnerUIRect;
                 }
             }
-            (_c = this.connectorLinesComp) === null || _c === void 0 ? void 0 : _c.forceUpdate();
+            (_c = this.spaceTakerComp) === null || _c === void 0 ? void 0 : _c.forceUpdate();
+            (_d = this.connectorLinesComp) === null || _d === void 0 ? void 0 : _d.forceUpdate();
         };
         Object.assign(this, data);
-    }
-    get ContainerPadding() {
-        var _a, _b, _c, _d, _e, _f, _g, _h;
-        return {
-            left: CSSScalarToPixels((_b = (_a = this.containerEl) === null || _a === void 0 ? void 0 : _a.style.paddingLeft) !== null && _b !== void 0 ? _b : ""), right: CSSScalarToPixels((_d = (_c = this.containerEl) === null || _c === void 0 ? void 0 : _c.style.paddingRight) !== null && _d !== void 0 ? _d : ""),
-            top: CSSScalarToPixels((_f = (_e = this.containerEl) === null || _e === void 0 ? void 0 : _e.style.paddingTop) !== null && _f !== void 0 ? _f : ""), bottom: CSSScalarToPixels((_h = (_g = this.containerEl) === null || _g === void 0 ? void 0 : _g.style.paddingBottom) !== null && _h !== void 0 ? _h : ""),
-        };
     }
     FindParentGroup(childGroup) {
         return this.groupsByPath.get(childGroup.path_parts.slice(0, -1).join("/"));
@@ -153,6 +149,10 @@ export class Graph {
         this.RunLayout_InAMoment();
         return group;
     }
+    NotifySpaceTakerUIMount(handle) {
+        this.spaceTakerComp = handle;
+        //this.RunLayout_InAMoment(); // no need to run layout; space-taker comp is only needed for an ancestor scroll-container, not for any of our calcs
+    }
     NotifyGroupConnectorLinesUIMount(handle) {
         this.connectorLinesComp = handle;
         this.RunLayout_InAMoment();
@@ -181,6 +181,10 @@ export class Graph {
         }
         //this.RunLayout();
         this.RunLayout_InAMoment();
+    }
+    NotifySpaceTakerUIUnmount() {
+        this.spaceTakerComp = null;
+        //this.RunLayout_InAMoment(); // no need to run layout; space-taker comp is only needed for an ancestor scroll-container, not for any of our calcs
     }
     NotifyGroupConnectorLinesUIUnmount() {
         this.connectorLinesComp = null;

@@ -1,4 +1,4 @@
-import {Assert, Vector2} from "js-vextensions";
+import {Assert, CE, ToNumber, Vector2} from "js-vextensions";
 import React, {useCallback, useContext, useMemo, useRef} from "react";
 import ReactDOM from "react-dom";
 import {useCallbackRef} from "use-callback-ref";
@@ -33,7 +33,16 @@ export function useRef_nodeLeftColumn(treePath: string, nodeConnectorOpts?: Node
 			ref_group.current = group;
 
 			const updateGroupRects = ()=>{
-				group.lcSize = group.leftColumnEl && group.graph.containerEl ? GetRectRelative(group.leftColumnEl, group.graph.containerEl).Size : null;
+				if (group.leftColumnEl && group.graph.containerEl) {
+					group.lcSize = GetRectRelative(group.leftColumnEl, group.graph.containerEl).Size;
+					// undo any map-level scaling; we want to operate on the "unscaled" size (since whatever tree-grapher outputs will be scaled back up "at the end" using the css-transform)
+					const scaleMatch = group.graph.containerEl.style.transform.match(/scale\((.*?)\)/);
+					if (scaleMatch != null) {
+						group.lcSize = group.lcSize.DividedBy(ToNumber(scaleMatch[1]));
+					}
+				} else {
+					group.lcSize = null;
+				}
 				group.innerUISize = group.leftColumnEl && group.lcSize ? new Vector2(group.lcSize.x - group.GutterWidth, group.lcSize.y) : null;
 			};
 			// call once at start (atm needed to avoid rare case where element is attached, but rects aren't, and filter in children-func fails fsr)

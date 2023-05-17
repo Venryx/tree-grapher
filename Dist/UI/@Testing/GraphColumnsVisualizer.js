@@ -1,7 +1,6 @@
 import { CE, Range, Timer, Vector2 } from "js-vextensions";
 import { observer } from "mobx-react";
-import React, { useEffect, useRef, useState } from "react";
-import { useContext } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
 import { Column, Row } from "react-vcomponents";
 import { GraphContext } from "../../Graph.js";
 import { useForceUpdate } from "../../Utils/UI.js";
@@ -15,7 +14,7 @@ export const GraphColumnsVisualizer = observer((props) => {
     const [height, setHeight] = useState(0);
     const ref = useRef(null);
     useEffect(() => {
-        let mouseMoveListener = (e) => {
+        const mouseMoveListener = (e) => {
             if (ref.current == null)
                 return;
             setMousePos(new Vector2(e.clientX - ref.current.getBoundingClientRect().x, e.clientY - ref.current.getBoundingClientRect().y));
@@ -23,9 +22,9 @@ export const GraphColumnsVisualizer = observer((props) => {
         document.addEventListener("mousemove", mouseMoveListener);
         return () => document.removeEventListener("mousemove", mouseMoveListener);
     });
-    let [marginTopNeededToBeVisible, setMarginTopNeededToBeVisible] = useState(0);
+    const [marginTopNeededToBeVisible, setMarginTopNeededToBeVisible] = useState(0);
     useEffect(() => {
-        let timer = new Timer(100, () => {
+        const timer = new Timer(100, () => {
             if (ref.current == null)
                 return;
             const rectTop_preMargin = ref.current.getBoundingClientRect().top;
@@ -40,7 +39,7 @@ export const GraphColumnsVisualizer = observer((props) => {
                     newMarginTopToBeVisible_inScrollContainerViewport = nextUp.getBoundingClientRect().top - rectTop_preMargin;
                 }
             }
-            let newMarginTopToBeVisible_inBothViewports = Math.max(newMarginTopToBeVisible_inPageViewport, newMarginTopToBeVisible_inScrollContainerViewport);
+            const newMarginTopToBeVisible_inBothViewports = Math.max(newMarginTopToBeVisible_inPageViewport, newMarginTopToBeVisible_inScrollContainerViewport);
             if (newMarginTopToBeVisible_inBothViewports != marginTopNeededToBeVisible) {
                 setMarginTopNeededToBeVisible(newMarginTopToBeVisible_inBothViewports);
             }

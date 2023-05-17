@@ -1,4 +1,4 @@
-import {Assert, CE, TreeNode, Vector2} from "js-vextensions";
+import {Assert, CE, TreeNode, Vector2, VRect} from "js-vextensions";
 import {configure} from "mobx";
 import {createContext} from "react";
 import type {FlashComp} from "ui-debug-kit";
@@ -6,6 +6,7 @@ import {FlexTreeLayout, SpacingFunc} from "./Core/Core.js";
 import {FlexNode} from "./Core/FlexNode.js";
 import {NodeGroup, TreePathAsSortableStr} from "./Graph/NodeGroup.js";
 import {ConnectorLinesUI_Handle, NodeConnectorOpts} from "./index.js";
+import {SpaceTakerUI_Handle} from "./UI/SpaceTakerUI.js";
 import {n, RequiredBy} from "./Utils/@Internal/Types.js";
 import {CSSScalarToPixels} from "./Utils/General/General.js";
 
@@ -22,12 +23,24 @@ export class Graph {
 	}
 	//containerEl = document.body; // start out the "container" as the body, just so there aren't null errors prior to container-ref resolving
 	containerEl?: HTMLElement;
-	get ContainerPadding() {
+
+	/*get ContainerPadding() {
 		return {
 			left: CSSScalarToPixels(this.containerEl?.style.paddingLeft ?? ""), right: CSSScalarToPixels(this.containerEl?.style.paddingRight ?? ""),
 			top: CSSScalarToPixels(this.containerEl?.style.paddingTop ?? ""), bottom: CSSScalarToPixels(this.containerEl?.style.paddingBottom ?? ""),
 		};
-	}
+	}*/
+	containerPadding: {left: number, right: number, top: number, bottom: number};
+	/*contentScaling = 1;
+	SetContentScaling(value: number) {
+		const oldVal = this.contentScaling;
+		this.contentScaling = value;
+		if (value != oldVal) {
+			setTimeout(()=>this.connectorLinesComp?.forceUpdate());
+		}
+	}*/
+
+	spaceTakerComp: SpaceTakerUI_Handle|n;
 	connectorLinesComp: ConnectorLinesUI_Handle|n;
 	layoutOpts: {
 		nodeSpacing: SpacingFunc<NodeGroup>;
@@ -86,6 +99,11 @@ export class Graph {
 		this.RunLayout_InAMoment();
 		return group;
 	}
+	NotifySpaceTakerUIMount(handle: SpaceTakerUI_Handle) {
+		this.spaceTakerComp = handle;
+
+		//this.RunLayout_InAMoment(); // no need to run layout; space-taker comp is only needed for an ancestor scroll-container, not for any of our calcs
+	}
 	NotifyGroupConnectorLinesUIMount(handle: ConnectorLinesUI_Handle) {
 		this.connectorLinesComp = handle;
 
@@ -116,6 +134,11 @@ export class Graph {
 		//this.RunLayout();
 		this.RunLayout_InAMoment();
 	}
+	NotifySpaceTakerUIUnmount() {
+		this.spaceTakerComp = null;
+
+		//this.RunLayout_InAMoment(); // no need to run layout; space-taker comp is only needed for an ancestor scroll-container, not for any of our calcs
+	}
 	NotifyGroupConnectorLinesUIUnmount() {
 		this.connectorLinesComp = null;
 
@@ -140,7 +163,7 @@ export class Graph {
 		//Assert(this.containerEl != null, "Container-element not found. Did you forget to set graph.containerEl, or wrap the ref-callback in a useCallback hook?");
 		if (this.containerEl == null || this.groupsByPath.get("0") == null) return;
 
-		const containerPadding = this.ContainerPadding;
+		const containerPadding = this.containerPadding;
 		const layout = new FlexTreeLayout<NodeGroup>({
 			children: group=>{
 				const children = this.FindChildGroups(group).filter(a=>a.leftColumnEl != null && a.lcSize != null); // ignore children that don't have their basic info loaded yet
@@ -175,23 +198,26 @@ export class Graph {
 		const tree = layout.hierarchy(this.groupsByPath.get("0")!);
 		layout.receiveTree(tree);
 
-		const nodePositions_base: Vector2[] = tree.nodes.map(node=>{
+		const nodeRects_base: VRect[] = tree.nodes.map(node=>{
 			const newPos = direction == "topToBottom"
-				? new Vector2(node.x, node.y)
-				: new Vector2(node.y, node.x);
+				? new VRect(node.x, node.y, node.xSize, node.ySize)
+				: new VRect(node.y, node.x, node.ySize, node.xSize);
 			return newPos;
 		});
-		const minX = CE(nodePositions_base.map((pos, i)=>pos.x)).Min();
-		const minY = CE(nodePositions_base.map((pos, i)=>{
+		const minX = CE(nodeRects_base.map((rect, i)=>rect.x)).Min();
+		const maxX = CE(nodeRects_base.map((rect, i)=>rect.Right)).Min();
+		//const minY = CE(nodeRects_base.map((rect, i)=>rect.y)).Min();
+		const minY = CE(nodeRects_base.map((rect, i)=>{
 			const group = tree.nodes[i].data;
-			return pos.y - Number(group.innerUISize!.y / 2);
+			return rect.y - Number(group.innerUISize!.y / 2);
 		})).Min();
+		const maxY = CE(nodeRects_base.map((rect, i)=>rect.Bottom)).Max();
 		const offset = new Vector2(containerPadding.left - minX, containerPadding.top - minY);
 
 		for (const [i, node] of tree.nodes.entries()) {
 			const group = node.data;
 			if (group.leftColumnEl == null) continue;
-			const newPos = nodePositions_base[i].Plus(offset);
+			const newPos = nodeRects_base[i].Position.Plus(offset);
 			group.assignedPosition = newPos;
 
 			const newRect = group.LCRect;
@@ -211,6 +237,7 @@ export class Graph {
 			}
 		}
 
+		this.spaceTakerComp?.forceUpdate();
 		this.connectorLinesComp?.forceUpdate();
 	};
 }

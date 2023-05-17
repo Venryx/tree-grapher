@@ -9,6 +9,7 @@ export * from "./Graph.js"; // main
 export * from "./UI/@Testing/GraphColumnsVisualizer.js";
 export * from "./UI/NodeUI_LeftColumn.js";
 //export * from "./UI/NodeUI_RightColumn.js";
+export * from "./UI/SpaceTakerUI.js";
 export * from "./UI/ConnectorLinesUI.js";
 export * from "./Utils/General/MobX.js";
 //export * from "./Utils/General/General.js";
