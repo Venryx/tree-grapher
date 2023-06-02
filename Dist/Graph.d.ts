@@ -26,6 +26,7 @@ export declare class Graph {
         FlashComp: typeof FlashComp;
     };
     groupsByPath: Map<string, NodeGroup>;
+    groupsByParentPath: Map<string, Map<string, NodeGroup>>;
     FindParentGroup(childGroup: NodeGroup): NodeGroup | undefined;
     FindChildGroups(parentGroup: NodeGroup): NodeGroup[];
     FindDescendantGroups(parentGroup: NodeGroup): NodeGroup[];

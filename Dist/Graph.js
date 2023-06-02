@@ -11,6 +11,7 @@ export const GraphContext = createContext(defaultGraph);
 export class Graph {
     constructor(data) {
         this.groupsByPath = new Map();
+        this.groupsByParentPath = new Map(); // optimization; makes finding children for an entry much faster (which gets called frequently, during layout)
         // new
         // ==========
         this.runLayout_scheduled = false;
@@ -63,7 +64,8 @@ export class Graph {
             const tree = layout.hierarchy(groupsArray);*/
             const tree = layout.hierarchy(this.groupsByPath.get("0"));
             layout.receiveTree(tree);
-            const nodeRects_base = tree.nodes.map(node => {
+            const treeNodes = tree.nodes; // This is a getter, and pretty expensive (at scale)! So cache its value here.
+            const nodeRects_base = treeNodes.map(node => {
                 const newPos = direction == "topToBottom"
                     ? new VRect(node.x, node.y, node.xSize, node.ySize)
                     : new VRect(node.y, node.x, node.ySize, node.xSize);
@@ -73,12 +75,12 @@ export class Graph {
             const maxX = CE(nodeRects_base.map((rect, i) => rect.Right)).Min();
             //const minY = CE(nodeRects_base.map((rect, i)=>rect.y)).Min();
             const minY = CE(nodeRects_base.map((rect, i) => {
-                const group = tree.nodes[i].data;
+                const group = treeNodes[i].data;
                 return rect.y - Number(group.innerUISize.y / 2);
             })).Min();
             const maxY = CE(nodeRects_base.map((rect, i) => rect.Bottom)).Max();
             const offset = new Vector2(containerPadding.left - minX, containerPadding.top - minY);
-            for (const [i, node] of tree.nodes.entries()) {
+            for (const [i, node] of treeNodes.entries()) {
                 const group = node.data;
                 if (group.leftColumnEl == null)
                     continue;
@@ -108,8 +110,12 @@ export class Graph {
         return this.groupsByPath.get(childGroup.path_parts.slice(0, -1).join("/"));
     }
     FindChildGroups(parentGroup) {
-        const prefix = `${parentGroup.path}/`;
-        let result = [...this.groupsByPath.values()].filter(a => a.path.startsWith(prefix) && a.path_parts.length == parentGroup.path_parts.length + 1);
+        //const prefix = `${parentGroup.path}/`;
+        //let result = [...this.groupsByPath.values()].filter(a=>a.path.startsWith(prefix) && a.path_parts.length == parentGroup.path_parts.length + 1);
+        const groupsUnderParent = this.groupsByParentPath.get(parentGroup.path);
+        if (groupsUnderParent == null)
+            return [];
+        let result = [...groupsUnderParent.values()];
         result = CE(result).OrderBy(a => TreePathAsSortableStr(a.path));
         return result;
     }
@@ -127,6 +133,14 @@ export class Graph {
                 path: treePath,
             });
             this.groupsByPath.set(treePath, group);
+            // for groupsByParentPath optimization
+            const parentPath = treePath.split("/").slice(0, -1).join("/");
+            if (parentPath.length) {
+                if (!this.groupsByParentPath.has(parentPath)) {
+                    this.groupsByParentPath.set(parentPath, new Map());
+                }
+                this.groupsByParentPath.get(parentPath).set(treePath, group);
+            }
         }
         return {
             group: this.groupsByPath.get(treePath),

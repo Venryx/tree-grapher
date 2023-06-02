@@ -1,4 +1,4 @@
-import { Vector2, VRect } from "js-vextensions";
+import { Assert, Vector2, VRect } from "js-vextensions";
 /** Converts, eg. "0.0.10.0" into "00.00.10.00", such that comparisons like XXX("0.0.10.0") > XXX("0.0.9.0") succeed. */
 export function TreePathAsSortableStr(treePath) {
     const parts = treePath.split("/");
@@ -55,6 +55,19 @@ export class NodeGroup {
     }
     Detach() {
         this.graph.groupsByPath.delete(this.path);
+        // for groupsByParentPath optimization
+        const parentPath = this.path.split("/").slice(0, -1).join("/");
+        if (parentPath.length) {
+            const groupsUnderParent = this.graph.groupsByParentPath.get(parentPath);
+            if (globalThis.DEV) {
+                Assert(groupsUnderParent != null, "List of children-groups for parent-group is missing!");
+                Assert(groupsUnderParent.has(this.path), "List of children-groups for parent-group does not contain the node currently being detached!");
+            }
+            groupsUnderParent.delete(this.path);
+            if ((groupsUnderParent === null || groupsUnderParent === void 0 ? void 0 : groupsUnderParent.size) == 0) {
+                this.graph.groupsByParentPath.delete(parentPath);
+            }
+        }
     }
     IsDestroyed() {
         return this.path == "[this object has been destroyed; seeing this indicates a bug]";
