@@ -1,10 +1,12 @@
 import {observable} from "mobx";
+import {observer} from "mobx-react";
 import React, {createContext, useCallback, useMemo, useState} from "react";
-import {Column, Row} from "react-vcomponents";
+import {Button, Column, Text, Row, Spinner, TimeSpanInput} from "react-vcomponents";
 import {GetDOM} from "react-vextensions";
 import {ConnectorLinesUI, Graph, GraphColumnsVisualizer, GraphContext, makeObservable_safe} from "tree-grapher";
 import {FlashComp, FlashOptions} from "ui-debug-kit";
 import {GetAllNodesInTree_ByPath, nodeTree_main} from "./@SharedByExamples/NodeData";
+import {store} from "./Store";
 import {NodeUI} from "./UI/NodeUI";
 
 // make some stuff global, for easy debugging
@@ -75,9 +77,14 @@ FlashOptions.finalizers.push(new FinalizerEntry({
 
 export function GetURLOptions() {
 	const urlParams = new URLSearchParams(window.location.search);
-	const nodeSpacing = Number(urlParams.get("nodeSpacing") ?? 10);
-	return {nodeSpacing};
+	const anim = urlParams.get("anim") == "1";
+	const nodeSpacing = urlParams.get("nodeSpacing") ? Number(urlParams.get("nodeSpacing")) : anim ? 100 : 10;
+	return {
+		anim,
+		nodeSpacing,
+	};
 }
+export const urlOpts = GetURLOptions();
 
 export function RootUI() {
 	const nodeTree = nodeTree_main;
@@ -120,13 +127,7 @@ export function RootUI() {
 
 	return (
 		<Column style={{height: "100%"}}>
-			<Row style={{
-				height: 30,
-				background: "rgba(0,0,0,.3)",
-				border: "solid black", borderWidth: "0 0 1px 0",
-			}}>
-				Toolbar
-			</Row>
+			<Toolbar/>
 			<div style={{position: "relative", height: "calc(100% - 30px)", overflow: "auto"}}>
 				<div
 					ref={useCallback(c=>{
@@ -151,3 +152,28 @@ export function RootUI() {
 		</Column>
 	);
 }
+
+const Toolbar = observer(()=>{
+	return (
+		<Row style={{
+			height: 30,
+			background: "rgba(0,0,0,.3)",
+			border: "solid black", borderWidth: "0 0 1px 0",
+		}}>
+			<Button text="Base" onClick={()=>window.location.href = "http://localhost:8080"}/>
+			<Button ml={5} text="Anim" onClick={()=>window.location.href = "http://localhost:8080/?anim=1"}/>
+
+			{urlOpts.anim &&
+			<Row ml={10}>
+				<Button text={store.playing ? "⏸" : "▶"} onClick={()=>store.playing = !store.playing}/>
+				<Spinner style={{width: 45}} instant={true} min={0} max={10} step={.1} value={store.speed} onChange={val=>store.speed = val}/>
+				<TimeSpanInput largeUnit="minute" smallUnit="second" style={{width: 60}} value={store.targetTime ?? 0} onChange={val=>store.SetTargetTime(val)}/>
+				<Text ml={3} title="With mouse over button, mouse scroll-wheel moves forward/backward by X frames.">Seek:</Text>
+				<Button text="±1" ml={3} p={5} onClick={()=>store.AdjustTargetTimeByFrames(1)} onWheel={e=>store.AdjustTargetTimeByFrames(Math.sign(e.deltaY) * 1)}/>
+				<Button text="±5" ml={3} p={5} onClick={()=>store.AdjustTargetTimeByFrames(5)} onWheel={e=>store.AdjustTargetTimeByFrames(Math.sign(e.deltaY) * 5)}/>
+				<Button text="±20" ml={3} p={5} onClick={()=>store.AdjustTargetTimeByFrames(20)} onWheel={e=>store.AdjustTargetTimeByFrames(Math.sign(e.deltaY) * 20)}/>
+				<Button text="±60" ml={3} p={5} onClick={()=>store.AdjustTargetTimeByFrames(60)} onWheel={e=>store.AdjustTargetTimeByFrames(Math.sign(e.deltaY) * 60)}/>
+			</Row>}
+		</Row>
+	);
+});
