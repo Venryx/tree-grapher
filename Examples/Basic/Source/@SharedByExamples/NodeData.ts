@@ -1,5 +1,5 @@
 import {CE, Clone} from "js-vextensions";
-import {NodeState} from "../Root";
+import {MapInfo, NodeState} from "../Root";
 import {store} from "../Store";
 import {MapNode} from "./MapNode";
 import {RequiredBy} from "./Utils/General";
@@ -79,6 +79,15 @@ export function GetNodeStateFromKeyframes(nodeID: string) {
 		if (action.setFocused != null) result.focused = action.setFocused;
 	}
 	return result;
+}
+export function GetFocusNodePaths(mapInfo: MapInfo) {
+	//const nodeIDs = [...mapInfo.nodeStates.keys()].map(path=>GetNodeIDFromNodePath(path));
+	//const nodes = GetAllNodesInTree(nodeTree_main);
+	//const nodesByID = CE(nodes).ToMapObj(a=>a.id, a=>a);
+	//const nodeStates = nodes.map(node=>mapInfo.GetNodeState(node.id));
+	//return nodePaths.filter(([path, state])=>state.focused).map(([path])=>nodesByID[GetNodeIDFromNodePath(path)]).filter(a=>a != null);
+	const nodePaths = [...mapInfo.nodeStates.keys()];
+	return nodePaths.filter(path=>mapInfo.GetNodeState(path).focused);
 }
 
 /*export function UpdateNodeTreeUsingKeyframes() {

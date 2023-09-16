@@ -19,7 +19,6 @@ Library for calculating where to draw tree nodes, while avoiding overlap.
 ## Tasks
 
 Short term:
-* MS scrolling to focus-nodes works.
 * MS zooming (just enough to show all focus-nodes) works.
 * MS scroll-and-zoom system works "smoothly", by knowing past/future state.
 * MS the "align with parent" option works again.

@@ -1,12 +1,13 @@
-import {Assert, CE} from "js-vextensions";
+import {Assert, CE, Vector2, VRect} from "js-vextensions";
 import {observable} from "mobx";
 import {observer} from "mobx-react";
-import React, {createContext, useCallback, useMemo, useState} from "react";
+import React, {createContext, useCallback, useContext, useMemo, useState} from "react";
 import {Button, Column, Text, Row, Spinner, TimeSpanInput} from "react-vcomponents";
+import {n} from "react-vcomponents/Dist/@Types.js";
 import {GetDOM} from "react-vextensions";
 import {ConnectorLinesUI, Graph, GraphColumnsVisualizer, GraphContext, makeObservable_safe, SpaceTakerUI} from "tree-grapher";
 import {FlashComp, FlashOptions} from "ui-debug-kit";
-import {GetAllNodesInTree_ByNodePath, GetNodeIDFromNodePath, GetNodeStateFromKeyframes, nodeTree_main} from "./@SharedByExamples/NodeData";
+import {GetAllNodesInTree_ByNodePath, GetFocusNodePaths, GetNodeIDFromNodePath, GetNodeStateFromKeyframes, nodeTree_main} from "./@SharedByExamples/NodeData";
 import {store} from "./Store";
 import {NodeUI} from "./UI/NodeUI";
 
@@ -159,6 +160,7 @@ export function RootUI() {
 							<GraphColumnsVisualizer/>
 							<ConnectorLinesUI/>
 							<NodeUI node={nodeTree} nodePath={nodeTree.id} treePath="0"/>
+							<MapScroller graph={graphInfo}/>
 						</GraphContext.Provider>
 					</MapContext.Provider>}
 				</div>
@@ -191,3 +193,43 @@ const Toolbar = observer(()=>{
 		</Row>
 	);
 });
+
+const MapScroller = observer(function MapScroller(props: {graph: Graph}) {
+	const {graph} = props;
+	if (graph.containerEl == null) return null;
+
+	const mapInfo = useContext(MapContext);
+	const focusNodePaths = GetFocusNodePaths(mapInfo);
+
+	let focusNodeRectsMerged: VRect|n;
+	for (const group of graph.groupsByPath.values()) {
+		const groupNodePath = group.leftColumn_userData?.["nodePath"] as string;
+		if (focusNodePaths.includes(groupNodePath) && group.InnerUIRect) {
+			focusNodeRectsMerged = focusNodeRectsMerged ? focusNodeRectsMerged.Encapsulating(group.InnerUIRect) : group.InnerUIRect;
+		}
+	}
+	if (focusNodeRectsMerged == null) return null;
+
+	const scrollEl = graph.getScrollElFromContainerEl(graph.containerEl);
+	if (scrollEl == null) return null;
+	ScrollToPosition_Center(scrollEl, focusNodeRectsMerged.Center);
+
+	return <></>;
+});
+
+function ScrollToPosition_Center(scrollEl: HTMLElement, posInContainer: Vector2) {
+	const scrollContainerViewportSize = new Vector2(scrollEl.getBoundingClientRect().width, scrollEl.getBoundingClientRect().height);
+	//const topBarsHeight = window.innerHeight - scrollContainerViewportSize.y;
+
+	//const oldScroll = GetScroll(scrollEl);
+	const newScroll = new Vector2(
+		posInContainer.x - (scrollContainerViewportSize.x / 2),
+		posInContainer.y - (scrollContainerViewportSize.y / 2),
+		// scroll down a bit extra, such that node is center of window, not center of scroll-view container/viewport (I've tried both, and this way is more centered "perceptually")
+		//(posInContainer.y - (scrollContainerViewportSize.y / 2)) + (topBarsHeight / 2),
+	);
+	console.log("Loading scroll:", newScroll.toString());
+	SetScroll(scrollEl, newScroll);
+}
+export const GetScroll = (scrollEl: HTMLElement)=>new Vector2(scrollEl.scrollLeft, scrollEl.scrollTop);
+export const SetScroll = (scrollEl: HTMLElement, scroll: Vector2)=>{ scrollEl.scrollLeft = scroll.x; scrollEl.scrollTop = scroll.y; };

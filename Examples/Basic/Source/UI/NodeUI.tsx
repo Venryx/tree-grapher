@@ -25,7 +25,7 @@ export const NodeUI = observer(function NodeUI(props: {node: MapNode, nodePath: 
 	}, [children, setChildren]);
 	return (
 		<>
-			<NodeUI_LeftColumn treePath={treePath} alignWithParent={node.alignWithParent} nodeConnectorOpts={{
+			<NodeUI_LeftColumn treePath={treePath} alignWithParent={node.alignWithParent} userData={{nodePath}} nodeConnectorOpts={{
 				gutterWidth: inBelowGroup ? 20 : 30, parentGutterWidth: 30, parentIsAbove: inBelowGroup, color: treePath.split("/").length % 2 == 0 ? "green" : "blue",
 			}}>
 				<NodeUI_Inner node={node} nodePath={nodePath} treePath={treePath} inBelowGroup={inBelowGroup} changePeersOrder={changePeersOrder}/>

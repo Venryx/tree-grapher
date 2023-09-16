@@ -10,6 +10,7 @@ const defaultGraph = undefined; // we want an error if someone forgets to add th
 export const GraphContext = createContext(defaultGraph);
 export class Graph {
     constructor(data) {
+        this.getScrollElFromContainerEl = (containerEl) => containerEl.parentElement;
         this.groupsByPath = new Map();
         this.groupsByParentPath = new Map(); // optimization; makes finding children for an entry much faster (which gets called frequently, during layout)
         // new

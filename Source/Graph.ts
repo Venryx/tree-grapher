@@ -23,6 +23,7 @@ export class Graph {
 	}
 	//containerEl = document.body; // start out the "container" as the body, just so there aren't null errors prior to container-ref resolving
 	containerEl?: HTMLElement;
+	getScrollElFromContainerEl = (containerEl: HTMLElement)=>containerEl.parentElement;
 
 	/*get ContainerPadding() {
 		return {

@@ -9,6 +9,7 @@ export declare const GraphContext: import("react").Context<Graph>;
 export declare class Graph {
     constructor(data: RequiredBy<Partial<Graph>, "layoutOpts">);
     containerEl?: HTMLElement;
+    getScrollElFromContainerEl: (containerEl: HTMLElement) => HTMLElement | null;
     containerPadding: {
         left: number;
         right: number;
