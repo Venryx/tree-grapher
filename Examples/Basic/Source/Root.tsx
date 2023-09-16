@@ -73,6 +73,12 @@ FlashOptions.finalizers.push(new FinalizerEntry({
 	},
 }));*/
 
+export function GetURLOptions() {
+	const urlParams = new URLSearchParams(window.location.search);
+	const nodeSpacing = Number(urlParams.get("nodeSpacing") ?? 10);
+	return {nodeSpacing};
+}
+
 export function RootUI() {
 	const nodeTree = nodeTree_main;
 	const mapInfo = useMemo(()=>{
@@ -90,7 +96,7 @@ export function RootUI() {
 			uiDebugKit: {FlashComp},
 			layoutOpts: {
 				//containerPadding: {left: 100, top: 100, right: 100, bottom: 100},
-				nodeSpacing: ()=>10,
+				nodeSpacing: ()=>GetURLOptions().nodeSpacing,
 				styleSetter_layoutPending: style=>{
 					//style.right = "100%"; // alternative (not quite as "reliable", since sometimes user code might depend on knowing the correct ui position right away)
 					style.opacity = "0";

@@ -1,5 +1,4 @@
-import path from "path";
-import {dirname} from "path";
+import path, {dirname} from "path";
 import {fileURLToPath} from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -15,13 +14,13 @@ export default {
 
 	entry: "./Source/index.tsx",
 	resolve: {
-		extensions: [".ts", ".tsx", ".js"]
+		extensions: [".ts", ".tsx", ".js"],
 	},
 	module: {
 		rules: [
 			// all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`
-			{test: /\.tsx?$/, loader: "ts-loader"}
-		]
+			{test: /\.tsx?$/, loader: "ts-loader"},
+		],
 	},
 
 	devServer: {
@@ -38,5 +37,12 @@ export default {
 
 		//compress: true,
 		//port: 9000,
+
+		//https: true, // this solves the disconnect problem, but causes annoying "safety" screen
+		port: 8080,
+		//public: "0.0.0.0:8080",
+		//publicPath: "0.0.0.0:8080",
+		//allowedHosts: ["all"],
+		//host: "localhost:8080",
 	},
 };
