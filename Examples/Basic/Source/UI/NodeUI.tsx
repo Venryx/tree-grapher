@@ -4,7 +4,8 @@ import {Column} from "react-vcomponents";
 import {NodeUI_LeftColumn} from "tree-grapher";
 import {useStateWithDeps} from "use-state-with-deps";
 import {MapNode} from "../@SharedByExamples/MapNode";
-import {MapContext} from "../Root";
+import {GetNodeIDFromTreePath, GetNodeStateFromKeyframes} from "../@SharedByExamples/NodeData.js";
+import {MapContext, urlOpts} from "../Root";
 import {ChangePeersOrderFunc, NodeUI_Inner} from "./NodeUI_Inner";
 
 // eslint-disable-next-line prefer-arrow-callback

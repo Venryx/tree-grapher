@@ -1,4 +1,4 @@
-import {CE} from "js-vextensions";
+import {CE, E} from "js-vextensions";
 import {observer} from "mobx-react";
 import React, {useContext} from "react";
 import {Button, Column, Row, Text} from "react-vcomponents";
@@ -19,14 +19,17 @@ export const NodeUI_Inner = observer(function NodeUI_Inner(props: {node: MapNode
 	const textIsRepeated = node.text.includes(textRepeatSplitter);
 
 	return (
-		<Row style={{
-			background: "rgba(100,100,100,.7)",
-			border: "1px solid black",
-			borderRadius: 10,
-			width: node.width + (inBelowGroup ? -20 : 0), // if in below group, reduce width by 20, to make space for bar at left of group
-			//margin: "5px 0",
-			padding: 5,
-		}}>
+		<Row style={E(
+			{
+				background: "rgba(100,100,100,.7)",
+				border: "1px solid black",
+				borderRadius: 10,
+				width: node.width + (inBelowGroup ? -20 : 0), // if in below group, reduce width by 20, to make space for bar at left of group
+				//margin: "5px 0",
+				padding: 5,
+			},
+			nodeState.focused && {background: "rgba(255,255,0,.7)"},
+		)}>
 			<Text>{node.text}</Text>
 			<Row ml="auto">
 				<Column>

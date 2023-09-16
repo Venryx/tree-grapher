@@ -1,3 +1,4 @@
+import {Assert, CE} from "js-vextensions";
 import {observable} from "mobx";
 import {observer} from "mobx-react";
 import React, {createContext, useCallback, useMemo, useState} from "react";
@@ -5,7 +6,7 @@ import {Button, Column, Text, Row, Spinner, TimeSpanInput} from "react-vcomponen
 import {GetDOM} from "react-vextensions";
 import {ConnectorLinesUI, Graph, GraphColumnsVisualizer, GraphContext, makeObservable_safe} from "tree-grapher";
 import {FlashComp, FlashOptions} from "ui-debug-kit";
-import {GetAllNodesInTree_ByPath, nodeTree_main} from "./@SharedByExamples/NodeData";
+import {GetAllNodesInTree_ByPath, GetNodeIDFromTreePath, GetNodeStateFromKeyframes, nodeTree_main} from "./@SharedByExamples/NodeData";
 import {store} from "./Store";
 import {NodeUI} from "./UI/NodeUI";
 
@@ -21,20 +22,31 @@ export class MapInfo {
 		});
 	}
 	nodeStates = new Map<string, NodeState>(); // @O
-	GetNodeState(path: string) {
+	GetNodeState(path: string, allowKeyframeOverride = true) {
 		if (!this.nodeStates.has(path)) {
 			this.nodeStates.set(path, new NodeState());
 		}
-		return this.nodeStates.get(path)!;
+		let result = this.nodeStates.get(path)!;
+
+		if (allowKeyframeOverride && urlOpts.anim) {
+			//const nodeID = CE(path.split("/")).Last();
+			const nodeID = GetNodeIDFromTreePath(path);
+			Assert(nodeID, "NodeID could not be found from tree-path!");
+			result = GetNodeStateFromKeyframes(nodeID);
+		}
+
+		return result;
 	}
 }
 export class NodeState {
 	constructor() {
 		makeObservable_safe(this, {
 			expanded: observable,
+			focused: observable,
 		});
 	}
 	expanded = false; // @O
+	focused = false; // @O
 }
 
 export const MapContext = createContext<MapInfo>(undefined as any);
@@ -93,6 +105,7 @@ export function RootUI() {
 		// for demo
 		for (const [path, node] of GetAllNodesInTree_ByPath(nodeTree)) {
 			result.GetNodeState(path).expanded = node.expanded ?? false;
+			result.GetNodeState(path).focused = node.focused ?? false;
 		}
 		return result;
 	}, [nodeTree]);

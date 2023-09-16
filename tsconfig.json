@@ -17,6 +17,8 @@
 		//"useDefineForClassFields": true, // needed for mobx @observable
 		"lib": ["es6", "dom", "esnext"], // fixes AsyncIterator type-missing issue
 
+		"composite": true,
+
 		//"strict": true, // enables all of the below (other than noImplicitReturns)
 		//"noImplicitAny": true,
 		//"noImplicitThis": true,

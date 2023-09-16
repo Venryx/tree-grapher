@@ -1,64 +1,110 @@
+import {Clone} from "js-vextensions";
+import {NodeState} from "../Root";
+import {store} from "../Store";
 import {MapNode} from "./MapNode";
-import {RequiredBy} from "./Utils/General.js";
+import {RequiredBy} from "./Utils/General";
 
-export type MapNodeWithExpandState = Omit<MapNode, "children"> & {children: MapNodeWithExpandState[], expanded?: boolean};
-function NewNode(data: RequiredBy<Partial<MapNodeWithExpandState>, "id">) {
-	return new MapNode(data) as MapNodeWithExpandState;
+export type MapNodeWithState = Omit<MapNode, "children"> & {children: MapNodeWithState[], expanded?: boolean, focused?: boolean};
+function NewNode(data: RequiredBy<Partial<MapNodeWithState>, "id">) {
+	return new MapNode(data) as MapNodeWithState;
 }
 
-export const nodeTree_main = NewNode({id: "0", expanded: true,
-	children: [
-		NewNode({id: "0.0", expanded: true,
-			children: [
-				NewNode({id: "0.0.0", expanded: true}),
-				NewNode({id: "0.0.1", expanded: true,
-					children: [
-						NewNode({id: "0.0.1.0", expanded: true}),
-						NewNode({id: "0.0.1.1", expanded: true,
-							children: [
-								NewNode({id: "0.0.1.1.0", expanded: true}),
-								NewNode({id: "0.0.1.1.1 [align with parent]", expanded: true, alignWithParent: true}),
-							],
-						}),
-						NewNode({id: "0.0.1.2", expanded: true,
-							children: [
-								NewNode({id: "0.0.1.2.0", expanded: true}),
-								NewNode({id: "0.0.1.2.1 [align with parent]", expanded: true, alignWithParent: true}),
-							],
-						}),
-					],
-				}),
-			],
-		}),
-		NewNode({id: "0.1", expanded: true,
-			children: [
-				NewNode({id: "0.1.0", expanded: true,
-					childrenBelow: true,
-					children: [
-						NewNode({id: "0.1.0.0", expanded: true,
-							children: [
-								NewNode({id: "0.1.0.0.1", expanded: true}),
-							],
-						}),
-						NewNode({id: "0.1.0.1", expanded: true}),
-					],
-				}),
-				NewNode({id: "0.1.1", expanded: true}),
-			],
-		}),
-	],
-});
+export class Keyframe {
+	constructor(data?: Partial<Keyframe>) {
+		Object.assign(this, data);
+	}
+	time: number;
+	actions: {
+		[key: string]: Action;
+	};
+}
+export class Action {
+	setExpanded?: boolean;
+	setFocused?: boolean;
+}
 
-export function GetAllNodesInTree(nodeTree: MapNodeWithExpandState) {
-	const result = [] as MapNodeWithExpandState[];
+export const nodeTree_main = NewNode({id: "0", expanded: true, children: [
+	NewNode({id: "0.0", expanded: true, children: [
+		NewNode({id: "0.0.0", expanded: true}),
+		NewNode({id: "0.0.1", expanded: true, children: [
+			NewNode({id: "0.0.1.0", expanded: true}),
+			NewNode({id: "0.0.1.1", expanded: true, children: [
+				NewNode({id: "0.0.1.1.0", expanded: true}),
+				NewNode({id: "0.0.1.1.1", expanded: true, alignWithParent: true}),
+			]}),
+			NewNode({id: "0.0.1.2", expanded: true, children: [
+				NewNode({id: "0.0.1.2.0", expanded: true}),
+				NewNode({id: "0.0.1.2.1", expanded: true, alignWithParent: true}),
+			]}),
+		]}),
+	]}),
+	NewNode({id: "0.1", expanded: true, children: [
+		NewNode({id: "0.1.0", expanded: true, childrenBelow: true, children: [
+			NewNode({id: "0.1.0.0", expanded: true, children: [
+				NewNode({id: "0.1.0.0.1", expanded: true}),
+			]}),
+			NewNode({id: "0.1.0.1", expanded: true}),
+		]}),
+		NewNode({id: "0.1.1", expanded: true}),
+	]}),
+]});
+export const nodeTree_main_orig = Clone(nodeTree_main);
+
+export const keyframes: Keyframe[] = [
+	// this line just replicates the initial state of the node-tree, as a keyframe (will probably use better system later)
+	new Keyframe({time: 0, actions: {all: {setExpanded: true}}}),
+	// these lines are the "actual keyframes"
+	new Keyframe({time: 0, actions: {all: {setFocused: true}}}),
+	new Keyframe({time: 1, actions: {all: {setFocused: false}, "0.0": {setFocused: true}, "0.0.0": {setFocused: true}, "0.0.1": {setFocused: true}}}),
+	new Keyframe({time: 2, actions: {all: {setFocused: false}, "0.0.1.1": {setFocused: true}, "0.0.1.1.0": {setFocused: true}, "0.0.1.1.1": {setFocused: true}}}),
+	new Keyframe({time: 3, actions: {all: {setFocused: false}, 0.1: {setFocused: true}, "0.0.1.2.1": {setFocused: true}, "0.1.1": {setFocused: true}}}),
+];
+export function GetKeyframeActionsToApplyToNode(nodeID: string) {
+	const keyframesInTimeRange = keyframes.filter(a=>a.time <= store.targetTime);
+	const result = [] as Action[];
+	for (const keyframe of keyframesInTimeRange) {
+		for (const [target, action] of Object.entries(keyframe.actions)) {
+			if (target == nodeID || target == "all") {
+				result.push(action);
+			}
+		}
+	}
+	return result;
+}
+export function GetNodeStateFromKeyframes(nodeID: string) {
+	const actions = GetKeyframeActionsToApplyToNode(nodeID);
+	const result = new NodeState();
+	for (const action of actions) {
+		if (action.setExpanded != null) result.expanded = action.setExpanded;
+		if (action.setFocused != null) result.focused = action.setFocused;
+	}
+	return result;
+}
+
+/*export function UpdateNodeTreeUsingKeyframes() {
+	const keyframesToApply = keyframes.filter(a=>a.time <= store.targetTime);
+	const newNodeTree = Clone(nodeTree_main_orig);
+	for (const keyframe of keyframesToApply) {
+		for (const [target, action] of Object.entries(keyframe.actions)) {
+			const nodes = GetNodesForTarget(newNodeTree, target);
+			for (const node of nodes) {
+				if (action.setExpanded != null) node.expanded = action.setExpanded;
+				if (action.setFocused != null) node.focused = action.setFocused;
+			}
+		}
+	}
+}*/
+
+export function GetAllNodesInTree(nodeTree: MapNodeWithState) {
+	const result = [] as MapNodeWithState[];
 	result.push(nodeTree);
 	for (const child of nodeTree.children) {
 		result.push(...GetAllNodesInTree(child));
 	}
 	return result;
 }
-export function GetAllNodesInTree_ByPath<T extends MapNodeWithExpandState>(nodeTree: T, path = "0") {
-	const result = new Map<string, MapNodeWithExpandState>();
+export function GetAllNodesInTree_ByPath<T extends MapNodeWithState>(nodeTree: T, path = "0") {
+	const result = new Map<string, MapNodeWithState>();
 	result.set(path, nodeTree);
 	for (const [i, child] of nodeTree.children.entries()) {
 		for (const [descendantPath, descendant] of GetAllNodesInTree_ByPath(child, `${path}/${i}`)) {
@@ -66,4 +112,12 @@ export function GetAllNodesInTree_ByPath<T extends MapNodeWithExpandState>(nodeT
 		}
 	}
 	return result;
+}
+export function GetNodeIDFromTreePath(treePath: string) {
+	const allNodes = GetAllNodesInTree_ByPath(nodeTree_main);
+	return allNodes.get(treePath)?.id;
+}
+export function GetNodesForTarget(nodeTree: MapNodeWithState, target: string) {
+	const nodes = GetAllNodesInTree(nodeTree);
+	return nodes.filter(a=>a.id == target || a.id == "all");
 }
