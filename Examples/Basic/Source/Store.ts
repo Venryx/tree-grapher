@@ -5,6 +5,8 @@ import {O} from "./Utils";
 export class RootState {
 	constructor() { makeObservable(this); }
 
+	@O zoomLevel = 1;
+
 	@O playing = false;
 	@O speed = 1;
 	@O targetTime = 0;

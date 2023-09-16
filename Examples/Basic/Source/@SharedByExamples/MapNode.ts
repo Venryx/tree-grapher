@@ -12,6 +12,4 @@ export class MapNode {
 
 	childrenBelow = false;
 	children: MapNode[] = [];
-
-	// for simplicity's sake, just have this data in the MapNode class, and mutate it
 }

@@ -1,4 +1,4 @@
-import {Clone} from "js-vextensions";
+import {CE, Clone} from "js-vextensions";
 import {NodeState} from "../Root";
 import {store} from "../Store";
 import {MapNode} from "./MapNode";
@@ -103,20 +103,38 @@ export function GetAllNodesInTree(nodeTree: MapNodeWithState) {
 	}
 	return result;
 }
-export function GetAllNodesInTree_ByPath<T extends MapNodeWithState>(nodeTree: T, path = "0") {
+
+/*export function GetAllNodesInTree_ByTreePath<T extends MapNodeWithState>(nodeTree: T, path = "0") {
 	const result = new Map<string, MapNodeWithState>();
 	result.set(path, nodeTree);
 	for (const [i, child] of nodeTree.children.entries()) {
-		for (const [descendantPath, descendant] of GetAllNodesInTree_ByPath(child, `${path}/${i}`)) {
+		for (const [descendantPath, descendant] of GetAllNodesInTree_ByTreePath(child, `${path}/${i}`)) {
 			result.set(descendantPath, descendant);
 		}
 	}
 	return result;
 }
 export function GetNodeIDFromTreePath(treePath: string) {
-	const allNodes = GetAllNodesInTree_ByPath(nodeTree_main);
+	const allNodes = GetAllNodesInTree_ByTreePath(nodeTree_main);
 	return allNodes.get(treePath)?.id;
+}*/
+
+export function GetAllNodesInTree_ByNodePath<T extends MapNodeWithState>(nodeTree: T, path = nodeTree.id) {
+	const result = new Map<string, MapNodeWithState>();
+	result.set(path, nodeTree);
+	for (const child of nodeTree.children) {
+		for (const [descendantPath, descendant] of GetAllNodesInTree_ByNodePath(child, `${path}/${child.id}`)) {
+			result.set(descendantPath, descendant);
+		}
+	}
+	return result;
 }
+export function GetNodeIDFromNodePath(path: string) {
+	/*const allNodes = GetAllNodesInTree_ByNodePath(nodeTree_main);
+	return allNodes.get(path)?.id;*/
+	return CE(path.split("/")).Last();
+}
+
 export function GetNodesForTarget(nodeTree: MapNodeWithState, target: string) {
 	const nodes = GetAllNodesInTree(nodeTree);
 	return nodes.filter(a=>a.id == target || a.id == "all");

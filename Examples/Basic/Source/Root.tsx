@@ -4,9 +4,9 @@ import {observer} from "mobx-react";
 import React, {createContext, useCallback, useMemo, useState} from "react";
 import {Button, Column, Text, Row, Spinner, TimeSpanInput} from "react-vcomponents";
 import {GetDOM} from "react-vextensions";
-import {ConnectorLinesUI, Graph, GraphColumnsVisualizer, GraphContext, makeObservable_safe} from "tree-grapher";
+import {ConnectorLinesUI, Graph, GraphColumnsVisualizer, GraphContext, makeObservable_safe, SpaceTakerUI} from "tree-grapher";
 import {FlashComp, FlashOptions} from "ui-debug-kit";
-import {GetAllNodesInTree_ByPath, GetNodeIDFromTreePath, GetNodeStateFromKeyframes, nodeTree_main} from "./@SharedByExamples/NodeData";
+import {GetAllNodesInTree_ByNodePath, GetNodeIDFromNodePath, GetNodeStateFromKeyframes, nodeTree_main} from "./@SharedByExamples/NodeData";
 import {store} from "./Store";
 import {NodeUI} from "./UI/NodeUI";
 
@@ -29,9 +29,9 @@ export class MapInfo {
 		let result = this.nodeStates.get(path)!;
 
 		if (allowKeyframeOverride && urlOpts.anim) {
-			//const nodeID = CE(path.split("/")).Last();
-			const nodeID = GetNodeIDFromTreePath(path);
-			Assert(nodeID, "NodeID could not be found from tree-path!");
+			const nodeID = GetNodeIDFromNodePath(path);
+			/*const nodeID = GetNodeIDFromTreePath(path);
+			Assert(nodeID, "NodeID could not be found from tree-path!");*/
 			result = GetNodeStateFromKeyframes(nodeID);
 		}
 
@@ -103,7 +103,7 @@ export function RootUI() {
 	const mapInfo = useMemo(()=>{
 		const result = new MapInfo();
 		// for demo
-		for (const [path, node] of GetAllNodesInTree_ByPath(nodeTree)) {
+		for (const [path, node] of GetAllNodesInTree_ByNodePath(nodeTree)) {
 			result.GetNodeState(path).expanded = node.expanded ?? false;
 			result.GetNodeState(path).focused = node.focused ?? false;
 		}
@@ -134,7 +134,8 @@ export function RootUI() {
 	}, []);
 
 	// update some graph info
-	graphInfo.containerPadding = {left: 100, top: 100, right: 100, bottom: 100};
+	const paddingAmount = urlOpts.anim ? 1000 : 100;
+	graphInfo.containerPadding = {left: paddingAmount, top: paddingAmount, right: paddingAmount, bottom: paddingAmount};
 
 	const [containerElResolved, setContainerElResolved] = useState(false);
 
@@ -142,7 +143,7 @@ export function RootUI() {
 		<Column style={{height: "100%"}}>
 			<Toolbar/>
 			<div style={{position: "relative", height: "calc(100% - 30px)", overflow: "auto"}}>
-				<div
+				<div style={{position: "relative", width: "fit-content", height: "fit-content"}}
 					ref={useCallback(c=>{
 						/*containerRef.current = GetDOM(c) as any;
 						context.containerEl = containerRef.current!;*/
@@ -150,14 +151,14 @@ export function RootUI() {
 						if (graphInfo.containerEl != null) setContainerElResolved(true);
 						//console.log("Set1:", context.containerEl);
 					}, [graphInfo])}
-					//style={{padding: 100}}
 				>
 					{containerElResolved &&
 					<MapContext.Provider value={mapInfo}>
 						<GraphContext.Provider value={graphInfo}>
+							<SpaceTakerUI graph={graphInfo} scaling={store.zoomLevel}/>
 							<GraphColumnsVisualizer/>
 							<ConnectorLinesUI/>
-							<NodeUI node={nodeTree} path="0"/>
+							<NodeUI node={nodeTree} nodePath={nodeTree.id} treePath="0"/>
 						</GraphContext.Provider>
 					</MapContext.Provider>}
 				</div>

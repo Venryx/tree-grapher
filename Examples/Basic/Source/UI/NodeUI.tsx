@@ -4,17 +4,17 @@ import {Column} from "react-vcomponents";
 import {NodeUI_LeftColumn} from "tree-grapher";
 import {useStateWithDeps} from "use-state-with-deps";
 import {MapNode} from "../@SharedByExamples/MapNode";
-import {GetNodeIDFromTreePath, GetNodeStateFromKeyframes} from "../@SharedByExamples/NodeData.js";
+import {GetNodeStateFromKeyframes} from "../@SharedByExamples/NodeData.js";
 import {MapContext, urlOpts} from "../Root";
 import {ChangePeersOrderFunc, NodeUI_Inner} from "./NodeUI_Inner";
 
 // eslint-disable-next-line prefer-arrow-callback
-export const NodeUI = observer(function NodeUI(props: {node: MapNode, path: string, inBelowGroup?: boolean, changePeersOrder?: ChangePeersOrderFunc}) {
-	const {node, path, inBelowGroup, changePeersOrder} = props;
+export const NodeUI = observer(function NodeUI(props: {node: MapNode, nodePath: string, treePath: string, inBelowGroup?: boolean, changePeersOrder?: ChangePeersOrderFunc}) {
+	const {node, nodePath, treePath, inBelowGroup, changePeersOrder} = props;
 	const mapInfo = useContext(MapContext);
 	//const graph = useContext(GraphContext);
 	//const group = graph.groupsByPath.get(path);
-	const nodeState = mapInfo.GetNodeState(path);
+	const nodeState = mapInfo.GetNodeState(nodePath);
 
 	//const forceUpdate = useForceUpdate();
 	const [children, setChildren] = useStateWithDeps(node.children, [node]);
@@ -25,12 +25,14 @@ export const NodeUI = observer(function NodeUI(props: {node: MapNode, path: stri
 	}, [children, setChildren]);
 	return (
 		<>
-			<NodeUI_LeftColumn treePath={path} alignWithParent={node.alignWithParent} nodeConnectorOpts={{gutterWidth: inBelowGroup ? 20 : 30, parentGutterWidth: 30, parentIsAbove: inBelowGroup, color: path.split("/").length % 2 == 0 ? "green" : "blue"}}>
-				<NodeUI_Inner node={node} path={path} inBelowGroup={inBelowGroup} changePeersOrder={changePeersOrder}/>
+			<NodeUI_LeftColumn treePath={treePath} alignWithParent={node.alignWithParent} nodeConnectorOpts={{
+				gutterWidth: inBelowGroup ? 20 : 30, parentGutterWidth: 30, parentIsAbove: inBelowGroup, color: treePath.split("/").length % 2 == 0 ? "green" : "blue",
+			}}>
+				<NodeUI_Inner node={node} nodePath={nodePath} treePath={treePath} inBelowGroup={inBelowGroup} changePeersOrder={changePeersOrder}/>
 			</NodeUI_LeftColumn>
 			{nodeState.expanded &&
 			children.map((child, index)=>{
-				return <NodeUI key={index} node={child} inBelowGroup={node.childrenBelow} path={`${path}/${index}`} changePeersOrder={changePeersOrder_forChildren}/>;
+				return <NodeUI key={index} node={child} inBelowGroup={node.childrenBelow} nodePath={`${nodePath}/${child.id}`} treePath={`${treePath}/${index}`} changePeersOrder={changePeersOrder_forChildren}/>;
 			})}
 		</>
 	);
