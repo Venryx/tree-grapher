@@ -107,6 +107,9 @@ export function RootUI() {
 		return graph;
 	}, []);
 
+	// update some graph info
+	graphInfo.containerPadding = {left: 100, top: 100, right: 100, bottom: 100};
+
 	const [containerElResolved, setContainerElResolved] = useState(false);
 
 	return (
@@ -127,7 +130,7 @@ export function RootUI() {
 						if (graphInfo.containerEl != null) setContainerElResolved(true);
 						//console.log("Set1:", context.containerEl);
 					}, [graphInfo])}
-					style={{padding: 100}}
+					//style={{padding: 100}}
 				>
 					{containerElResolved &&
 					<MapContext.Provider value={mapInfo}>

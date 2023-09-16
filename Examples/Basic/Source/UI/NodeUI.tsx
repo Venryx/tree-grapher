@@ -7,7 +7,8 @@ import {MapNode} from "../@SharedByExamples/MapNode";
 import {MapContext} from "../Root";
 import {ChangePeersOrderFunc, NodeUI_Inner} from "./NodeUI_Inner";
 
-export const NodeUI = observer((props: {node: MapNode, path: string, inBelowGroup?: boolean, changePeersOrder?: ChangePeersOrderFunc})=>{
+// eslint-disable-next-line prefer-arrow-callback
+export const NodeUI = observer(function NodeUI(props: {node: MapNode, path: string, inBelowGroup?: boolean, changePeersOrder?: ChangePeersOrderFunc}) {
 	const {node, path, inBelowGroup, changePeersOrder} = props;
 	const mapInfo = useContext(MapContext);
 	//const graph = useContext(GraphContext);

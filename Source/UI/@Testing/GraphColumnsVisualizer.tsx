@@ -7,7 +7,8 @@ import {n} from "../../Utils/@Internal/Types.js";
 import {CSSScalarToPixels, GetMarginTopFromStyle} from "../../Utils/General/General.js";
 import {useForceUpdate} from "../../Utils/UI.js";
 
-export const GraphColumnsVisualizer = observer((props: {levelsToScrollContainer?: number})=>{
+// eslint-disable-next-line prefer-arrow-callback
+export const GraphColumnsVisualizer = observer(function GraphColumnsVisualizer(props: {levelsToScrollContainer?: number}) {
 	const {levelsToScrollContainer} = props;
 	const graph = useContext(GraphContext);
 	const forceUpdate = useForceUpdate();

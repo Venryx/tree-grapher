@@ -9,7 +9,8 @@ import {MapContext} from "../Root";
 export const textRepeatSplitter = " [x2:] ";
 export type PeersChangerFunc = (peers: MapNode[])=>MapNode[];
 export type ChangePeersOrderFunc = (func: PeersChangerFunc)=>void;
-export const NodeUI_Inner = observer((props: {node: MapNode, path: string, inBelowGroup?: boolean, changePeersOrder?: ChangePeersOrderFunc})=>{
+// eslint-disable-next-line prefer-arrow-callback
+export const NodeUI_Inner = observer(function NodeUI_Inner(props: {node: MapNode, path: string, inBelowGroup?: boolean, changePeersOrder?: ChangePeersOrderFunc}) {
 	const {node, path, inBelowGroup, changePeersOrder} = props;
 	const mapInfo = useContext(MapContext);
 	const nodeState = mapInfo.GetNodeState(path);
