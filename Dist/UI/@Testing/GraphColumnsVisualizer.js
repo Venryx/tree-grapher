@@ -1,4 +1,4 @@
-import { CE, Range, Timer, Vector2 } from "js-vextensions";
+import { CE, E, Range, Timer, Vector2 } from "js-vextensions";
 import { observer } from "mobx-react";
 import React, { useEffect, useRef, useState, useContext } from "react";
 import { Column, Row } from "react-vcomponents";
@@ -6,7 +6,7 @@ import { GraphContext } from "../../Graph.js";
 import { useForceUpdate } from "../../Utils/UI.js";
 // eslint-disable-next-line prefer-arrow-callback
 export const GraphColumnsVisualizer = observer(function GraphColumnsVisualizer(props) {
-    const { levelsToScrollContainer } = props;
+    const { levelsToScrollContainer, zoomLevel } = E({ zoomLevel: 1 }, props);
     const graph = useContext(GraphContext);
     const forceUpdate = useForceUpdate();
     //const [store] = useState({mousePos: new Vector2(-1, -1)});
@@ -29,7 +29,8 @@ export const GraphColumnsVisualizer = observer(function GraphColumnsVisualizer(p
             if (ref.current == null)
                 return;
             const rectTop_preMargin = ref.current.getBoundingClientRect().top;
-            const newMarginTopToBeVisible_inPageViewport = 0 - rectTop_preMargin; // these rects are in viewport space, so "0" as the target-y just means top-of-viewport!
+            let newMarginTopToBeVisible_inPageViewport = 0 - rectTop_preMargin; // these rects are in viewport space, so "0" as the target-y just means top-of-viewport!
+            newMarginTopToBeVisible_inPageViewport /= zoomLevel;
             let newMarginTopToBeVisible_inScrollContainerViewport = 0;
             if (levelsToScrollContainer != null) {
                 let nextUp = ref.current;
@@ -40,11 +41,14 @@ export const GraphColumnsVisualizer = observer(function GraphColumnsVisualizer(p
                     newMarginTopToBeVisible_inScrollContainerViewport = nextUp.getBoundingClientRect().top - rectTop_preMargin;
                 }
             }
+            newMarginTopToBeVisible_inScrollContainerViewport /= zoomLevel;
             const newMarginTopToBeVisible_inBothViewports = Math.max(newMarginTopToBeVisible_inPageViewport, newMarginTopToBeVisible_inScrollContainerViewport);
             if (newMarginTopToBeVisible_inBothViewports != marginTopNeededToBeVisible) {
                 setMarginTopNeededToBeVisible(newMarginTopToBeVisible_inBothViewports);
             }
-            const { width: newWidth, height: newHeight } = ref.current.getBoundingClientRect();
+            let { width: newWidth, height: newHeight } = ref.current.getBoundingClientRect();
+            newWidth /= zoomLevel;
+            newHeight /= zoomLevel;
             if (newWidth != width || newHeight != height) {
                 setWidth(newWidth);
                 setHeight(newHeight);
@@ -59,9 +63,9 @@ export const GraphColumnsVisualizer = observer(function GraphColumnsVisualizer(p
     const rowOffsets = Range(0, CE(height).CeilingTo(100), 100, false);
     return (React.createElement("div", { ref: ref, style: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, overflow: "hidden", pointerEvents: "none" } },
         mousePos.x != -1 &&
-            React.createElement("div", { style: { position: "absolute", right: 0, top: 0 } }, `${mousePos.x}, ${mousePos.y} (mouse)`),
+            React.createElement("div", { style: { position: "absolute", right: 0 /*marginLeftNeededToBeVisible*/, top: marginTopNeededToBeVisible } }, `${mousePos.x}, ${mousePos.y} (mouse)`),
         React.createElement(Row, { style: {
-                position: "absolute", left: 0, right: 0, top: marginTopNeededToBeVisible, bottom: 0,
+                position: "absolute", left: 0, right: 0, top: 0, bottom: 0,
             } }, columnOffsets.map((columnOffset, index) => {
             return (React.createElement(Column, { key: index, style: { display: "inline-flex", width: 100, height: "100%", border: "solid hsla(40,100%,50%,.5)", borderWidth: "0 1px 0 0" } }));
         })),

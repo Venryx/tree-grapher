@@ -38,10 +38,20 @@ export class NodeGroup {
     get GutterWidth() {
         return this.leftColumn_connectorOpts.gutterWidth + (this.leftColumn_connectorOpts.parentIsAbove ? this.leftColumn_connectorOpts.parentGutterWidth : 0);
     }
+    get LCRect_Old() {
+        if (this.lcSize == null)
+            return null;
+        return new VRect(this.assignedPosition.NewY(y => y - (this.lcSize.y / 2)), this.lcSize);
+    }
     get LCRect() {
         if (this.lcSize == null)
             return null;
         return new VRect(this.assignedPosition.NewY(y => y - (this.lcSize.y / 2)), this.lcSize);
+    }
+    get InnerUIRect_Old() {
+        if (this.innerUISize == null)
+            return null;
+        return new VRect(this.assignedPosition.NewX(x => x + this.GutterWidth).NewY(y => y - (this.innerUISize.y / 2)), this.innerUISize);
     }
     get InnerUIRect() {
         if (this.innerUISize == null)

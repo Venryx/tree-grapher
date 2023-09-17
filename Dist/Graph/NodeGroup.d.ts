@@ -27,13 +27,17 @@ export declare class NodeGroup {
     childHolder_belowParent: boolean;
     get GutterWidth(): number;
     assignedPosition: Vector2;
+    lcSize_old: Vector2 | n;
     lcSize: Vector2 | n;
+    innerUISize_old: Vector2 | n;
     innerUISize: Vector2 | n;
     lineSourcePoint: number | n;
     leftColumnEl_layoutCount: number;
     lcRect_atLastRender: VRect | n;
     innerUIRect_atLastRender: VRect | n;
+    get LCRect_Old(): VRect | null;
     get LCRect(): VRect | null;
+    get InnerUIRect_Old(): VRect | null;
     get InnerUIRect(): VRect | null;
     DetachAndDestroy(): void;
     Detach(): void;

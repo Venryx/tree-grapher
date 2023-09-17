@@ -1,4 +1,4 @@
-import {Assert, CE, Vector2, VRect} from "js-vextensions";
+import {Assert, CE, E, SleepAsync, Vector2, VRect} from "js-vextensions";
 import {observable} from "mobx";
 import {observer} from "mobx-react";
 import React, {createContext, useCallback, useContext, useMemo, useState} from "react";
@@ -99,7 +99,7 @@ export function GetURLOptions() {
 }
 export const urlOpts = GetURLOptions();
 
-export function RootUI() {
+export const RootUI = observer(function RootUI() {
 	const nodeTree = nodeTree_main;
 	const mapInfo = useMemo(()=>{
 		const result = new MapInfo();
@@ -129,6 +129,7 @@ export function RootUI() {
 					style.pointerEvents = "";
 				},
 			},
+			getScrollElFromContainerEl: containerEl=>containerEl.parentElement?.parentElement!,
 		});
 		globalThis.graph = graph;
 		return graph;
@@ -144,32 +145,54 @@ export function RootUI() {
 		<Column style={{height: "100%"}}>
 			<Toolbar/>
 			<div style={{position: "relative", height: "calc(100% - 30px)", overflow: "auto"}}>
-				<div style={{position: "relative", width: "fit-content", height: "fit-content"}}
-					ref={useCallback(c=>{
-						/*containerRef.current = GetDOM(c) as any;
-						context.containerEl = containerRef.current!;*/
-						graphInfo.containerEl = GetDOM(c) as any;
-						if (graphInfo.containerEl != null) setContainerElResolved(true);
-						//console.log("Set1:", context.containerEl);
-					}, [graphInfo])}
-				>
-					{containerElResolved &&
-					<MapContext.Provider value={mapInfo}>
-						<GraphContext.Provider value={graphInfo}>
-							<SpaceTakerUI graph={graphInfo} scaling={store.zoomLevel}/>
-							<GraphColumnsVisualizer/>
-							<ConnectorLinesUI/>
-							<NodeUI node={nodeTree} nodePath={nodeTree.id} treePath="0"/>
-							<MapScroller graph={graphInfo}/>
-						</GraphContext.Provider>
-					</MapContext.Provider>}
+				<div style={E(
+					{position: "relative", minWidth: "fit-content", minHeight: "fit-content"} as const,
+				)}>
+					<SpaceTakerUI graph={graphInfo} scaling={store.zoomLevel}/>
+					<div style={E(
+						//{position: "relative", width: "fit-content", height: "fit-content"} as const,
+						{
+							position: "absolute", left: 0, top: 0,
+							width: CE(1 / store.zoomLevel).ToPercentStr(), height: CE(1 / store.zoomLevel).ToPercentStr(),
+							///* display: "flex", */ whiteSpace: "nowrap",
+							alignItems: "center",
+						} as const,
+						//mapState.zoomLevel != 1 && {zoom: mapState.zoomLevel.ToPercentStr()},
+						store.zoomLevel != 1 && {
+							transform: `scale(${CE(store.zoomLevel).ToPercentStr()})`,
+							transformOrigin: "0% 0%",
+						} as const,
+					)}
+						ref={useCallback(c=>{
+							/*containerRef.current = GetDOM(c) as any;
+							context.containerEl = containerRef.current!;*/
+							graphInfo.containerEl = GetDOM(c) as any;
+							if (graphInfo.containerEl != null) setContainerElResolved(true);
+							//console.log("Set1:", context.containerEl);
+						}, [graphInfo])}
+					>
+						{containerElResolved &&
+						<MapContext.Provider value={mapInfo}>
+							<GraphContext.Provider value={graphInfo}>
+								<GraphColumnsVisualizer levelsToScrollContainer={3} zoomLevel={store.zoomLevel}/>
+								<ConnectorLinesUI/>
+								<NodeUI node={nodeTree} nodePath={nodeTree.id} treePath="0"/>
+								<MapScroller graph={graphInfo}/>
+							</GraphContext.Provider>
+						</MapContext.Provider>}
+					</div>
 				</div>
 			</div>
 		</Column>
 	);
-}
+});
 
 const Toolbar = observer(()=>{
+	const ChangeZoom = (newZoom: number)=>{
+		store.zoomLevel = newZoom;
+		// todo: preserve current view-center (see dm-repo)
+	};
+
 	return (
 		<Row style={{
 			height: 30,
@@ -190,13 +213,27 @@ const Toolbar = observer(()=>{
 				<Button text="±20" ml={3} p={5} onClick={()=>store.AdjustTargetTimeByFrames(20)} onWheel={e=>store.AdjustTargetTimeByFrames(Math.sign(e.deltaY) * 20)}/>
 				<Button text="±60" ml={3} p={5} onClick={()=>store.AdjustTargetTimeByFrames(60)} onWheel={e=>store.AdjustTargetTimeByFrames(Math.sign(e.deltaY) * 60)}/>
 			</Row>}
+			<Row center ml="auto">
+				<Text>Zoom:</Text>
+				<Spinner ml={3} style={{width: 45}} instant={true} min={.1} max={10} step={.1} value={store.zoomLevel} onChange={val=>ChangeZoom(val)}/>
+				<Button ml={3} p="3px 10px" text="-" enabled={store.zoomLevel > .1} onClick={()=>ChangeZoom(CE((store.zoomLevel - .1)).RoundTo(.1))}/>
+				<Button ml={3} p="3px 10px" text="+" enabled={store.zoomLevel < 10} onClick={()=>ChangeZoom(CE((store.zoomLevel + .1)).RoundTo(.1))}/>
+			</Row>
 		</Row>
 	);
 });
 
+//let ignoreNextZoomChange = false;
 const MapScroller = observer(function MapScroller(props: {graph: Graph}) {
 	const {graph} = props;
 	if (graph.containerEl == null) return null;
+	const scrollEl = graph.getScrollElFromContainerEl(graph.containerEl);
+	if (scrollEl == null) return null;
+	//const zoomLevel = store.zoomLevel;
+	/*if (ignoreNextZoomChange) {
+		ignoreNextZoomChange = false;
+		return null;
+	}*/
 
 	const mapInfo = useContext(MapContext);
 	const focusNodePaths = GetFocusNodePaths(mapInfo);
@@ -210,9 +247,42 @@ const MapScroller = observer(function MapScroller(props: {graph: Graph}) {
 	}
 	if (focusNodeRectsMerged == null) return null;
 
-	const scrollEl = graph.getScrollElFromContainerEl(graph.containerEl);
-	if (scrollEl == null) return null;
-	ScrollToPosition_Center(scrollEl, focusNodeRectsMerged.Center);
+	//const nodeBoxesMerged_sizeWhenUnscaled = focusNodeRectsMerged.Size.DividedBy(store.zoomLevel);
+	const nodeBoxesMerged_sizeWhenUnscaled = focusNodeRectsMerged.Size;
+
+	const viewportSize = new Vector2(scrollEl.clientWidth, scrollEl.clientHeight);
+	// apply just enough zoom-out to be able to fit all of the focus-nodes within the viewport
+	const zoomRequired = Math.min(viewportSize.x / nodeBoxesMerged_sizeWhenUnscaled.x, viewportSize.y / nodeBoxesMerged_sizeWhenUnscaled.y);
+	const newZoom = CE(CE(zoomRequired * .9).FloorTo(.1)).KeepBetween(.1, 1);
+
+	/*if (CE(newZoom).Distance(zoomLevel) > .01) {
+		(async()=>{
+			await SleepAsync(1);
+			//ignoreNextZoomChange = true;
+			store.zoomLevel = newZoom;
+			// re-call this function, since we need to recalc // edit: Actually, is this even necessary? I don't think it should be... (well, the ACTUpdateAnchorNodeAndViewOffset call might need the delay)
+			//setTimeout(()=>FocusOnNodes(mapID, paths), 100);
+			//return;
+			await SleepAsync(100);
+			doScroll();
+		})();
+	} else {
+		doScroll();
+	}*/
+
+	function doScroll() { ScrollToPosition_Center(scrollEl!, focusNodeRectsMerged!.Center.Times(store.zoomLevel)); }
+	//function doScroll() { ScrollToPosition_Center(scrollEl!, focusNodeRectsMerged!.Center.DividedBy(store.zoomLevel)); }
+
+	(async()=>{
+		await SleepAsync(1);
+		//ignoreNextZoomChange = true;
+		store.zoomLevel = newZoom;
+		// re-call this function, since we need to recalc // edit: Actually, is this even necessary? I don't think it should be... (well, the ACTUpdateAnchorNodeAndViewOffset call might need the delay)
+		//setTimeout(()=>FocusOnNodes(mapID, paths), 100);
+		//return;
+		await SleepAsync(1);
+		doScroll();
+	})();
 
 	return <></>;
 });

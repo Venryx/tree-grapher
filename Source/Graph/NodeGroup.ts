@@ -54,8 +54,10 @@ export class NodeGroup {
 	assignedPosition = Vector2.zero;
 
 	// sizes (inputs/observed; just storage for "actual rects" observed)
-	lcSize: Vector2|n;
-	innerUISize: Vector2|n;
+	lcSize_old: Vector2|n; // based on getBoundingClientRect()
+	lcSize: Vector2|n; // based on offsetWidth/offsetHeight
+	innerUISize_old: Vector2|n; // based on getBoundingClientRect()
+	innerUISize: Vector2|n; // based on offsetWidth/offsetHeight
 	/*get InnerUISize_WithMargin() {
 		if (this.innerUISize == null || this.leftColumn_connectorOpts == null) return null;
 		return this.innerUISize.Plus(this.leftColumn_connectorOpts.gutterWidth, 0);
@@ -66,9 +68,17 @@ export class NodeGroup {
 	leftColumnEl_layoutCount = 0;
 	lcRect_atLastRender: VRect|n;
 	innerUIRect_atLastRender: VRect|n;
+	get LCRect_Old() {
+		if (this.lcSize == null) return null;
+		return new VRect(this.assignedPosition.NewY(y=>y - (this.lcSize!.y / 2)), this.lcSize);
+	}
 	get LCRect() {
 		if (this.lcSize == null) return null;
 		return new VRect(this.assignedPosition.NewY(y=>y - (this.lcSize!.y / 2)), this.lcSize);
+	}
+	get InnerUIRect_Old() {
+		if (this.innerUISize == null) return null;
+		return new VRect(this.assignedPosition.NewX(x=>x + this.GutterWidth).NewY(y=>y - (this.innerUISize!.y / 2)), this.innerUISize);
 	}
 	get InnerUIRect() {
 		if (this.innerUISize == null) return null;
