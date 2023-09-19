@@ -47,4 +47,4 @@ export declare class Graph {
     RunLayout_InAMoment: () => void;
     RunLayout: (direction?: LayoutDirection) => void;
 }
-export declare type LayoutDirection = "topToBottom" | "leftToRight";
+export type LayoutDirection = "topToBottom" | "leftToRight";

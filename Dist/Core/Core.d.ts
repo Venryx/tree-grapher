@@ -1,12 +1,12 @@
 import { FlexNode } from './FlexNode.js';
-export declare type ChildrenFunc<Datum> = (data: Datum) => any;
-export declare type NodeSizeFunc<Datum> = (self: FlexNode<Datum>) => any;
-export declare type SpacingFunc<Datum> = (nodeA: FlexNode<Datum>, nodeB: FlexNode<Datum>) => any;
+export type ChildrenFunc<Datum> = (data: Datum) => any;
+export type NodeSizeFunc<Datum> = (self: FlexNode<Datum>) => any;
+export type SpacingFunc<Datum> = (nodeA: FlexNode<Datum>, nodeB: FlexNode<Datum>) => any;
 export declare class FlexTreeOptions<Datum> {
     static defaults: Readonly<{
         children: (data: any) => any;
         nodeSize: (node: any) => any;
-        spacing: number;
+        spacing: 0;
     }>;
     children: ChildrenFunc<Datum>;
     nodeSize: NodeSizeFunc<Datum>;

@@ -1,18 +1,22 @@
 // based on: https://github.com/Klortho/d3-flextree
 import { FlexNode, FlexNode_Wrapper, wrapFlexNode } from './FlexNode.js';
 export class FlexTreeOptions {
+    static defaults = Object.freeze({
+        children: data => data.children,
+        nodeSize: node => node.data.size,
+        spacing: 0,
+    });
+    children;
+    nodeSize;
+    spacing;
 }
-FlexTreeOptions.defaults = Object.freeze({
-    children: data => data.children,
-    nodeSize: node => node.data.size,
-    spacing: 0,
-});
 // Create a layout function with customizable options. Per D3-style, the options can be set at any time using setter methods.
 // The layout function will compute the tree node positions based on the options in effect at the time it is called.
 export class FlexTreeLayout {
     constructor(options) {
         this.opts = Object.assign({}, FlexTreeOptions.defaults, options);
     }
+    opts;
     accessor(name) {
         const opt = this.opts[name];
         return typeof opt === 'function' ? opt : () => opt;

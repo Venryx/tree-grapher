@@ -59,8 +59,8 @@ export const keyframes: Keyframe[] = [
 	new Keyframe({time: 2, actions: {all: {setFocused: false}, "0.0.1.1": {setFocused: true}, "0.0.1.1.0": {setFocused: true}, "0.0.1.1.1": {setFocused: true}}}),
 	new Keyframe({time: 3, actions: {all: {setFocused: false}, 0.1: {setFocused: true}, "0.0.1.2.1": {setFocused: true}, "0.1.1": {setFocused: true}}}),
 ];
-export function GetKeyframeActionsToApplyToNode(nodeID: string) {
-	const keyframesInTimeRange = keyframes.filter(a=>a.time <= store.targetTime);
+export function GetKeyframeActionsToApplyToNode(nodeID: string, targetTime: number) {
+	const keyframesInTimeRange = keyframes.filter(a=>a.time <= targetTime);
 	const result = [] as Action[];
 	for (const keyframe of keyframesInTimeRange) {
 		for (const [target, action] of Object.entries(keyframe.actions)) {
@@ -71,8 +71,8 @@ export function GetKeyframeActionsToApplyToNode(nodeID: string) {
 	}
 	return result;
 }
-export function GetNodeStateFromKeyframes(nodeID: string) {
-	const actions = GetKeyframeActionsToApplyToNode(nodeID);
+export function GetNodeStateFromKeyframes(nodeID: string, targetTime: number) {
+	const actions = GetKeyframeActionsToApplyToNode(nodeID, targetTime);
 	const result = new NodeState();
 	for (const action of actions) {
 		if (action.setExpanded != null) result.expanded = action.setExpanded;
@@ -80,14 +80,14 @@ export function GetNodeStateFromKeyframes(nodeID: string) {
 	}
 	return result;
 }
-export function GetFocusNodePaths(mapInfo: MapInfo) {
+export function GetFocusNodePaths(mapInfo: MapInfo, targetTime: number) {
 	//const nodeIDs = [...mapInfo.nodeStates.keys()].map(path=>GetNodeIDFromNodePath(path));
 	//const nodes = GetAllNodesInTree(nodeTree_main);
 	//const nodesByID = CE(nodes).ToMapObj(a=>a.id, a=>a);
 	//const nodeStates = nodes.map(node=>mapInfo.GetNodeState(node.id));
 	//return nodePaths.filter(([path, state])=>state.focused).map(([path])=>nodesByID[GetNodeIDFromNodePath(path)]).filter(a=>a != null);
 	const nodePaths = [...mapInfo.nodeStates.keys()];
-	return nodePaths.filter(path=>mapInfo.GetNodeState(path).focused);
+	return nodePaths.filter(path=>mapInfo.GetNodeState(path, undefined, targetTime).focused);
 }
 
 /*export function UpdateNodeTreeUsingKeyframes() {

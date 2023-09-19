@@ -19,7 +19,6 @@ Library for calculating where to draw tree nodes, while avoiding overlap.
 ## Tasks
 
 Short term:
-* MS scroll-and-zoom system works "smoothly", by knowing past/future state.
 * MS scroll-and-zoom system works "smoothly", even in the case of nodes getting expanded/collapsed.
 * MS the "align with parent" option works again.
 * There's still some code from the old implementation that's not useful anymore and needs to be removed.

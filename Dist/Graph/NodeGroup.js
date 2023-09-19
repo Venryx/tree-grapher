@@ -8,36 +8,56 @@ export function TreePathAsSortableStr(treePath) {
 }
 export function AreRectsEqual(rect1, rect2, fieldsToCheck = ["x", "y", "width", "height"]) {
     for (const field of fieldsToCheck) {
-        if ((rect1 === null || rect1 === void 0 ? void 0 : rect1[field]) != (rect2 === null || rect2 === void 0 ? void 0 : rect2[field]))
+        if (rect1?.[field] != rect2?.[field])
             return false;
     }
     return true;
 }
 export class WaveEffects {
-    constructor() {
-        this.updateColumns = false;
-        this.recalcLineSourcePoint = false;
-        this.recalcLCAlign = false;
-        this.recalcCHShift = false;
-        this.updateLCRect = false;
-        this.updateCHRect = false;
-    }
+    updateColumns = false;
+    recalcLineSourcePoint = false;
+    recalcLCAlign = false;
+    recalcCHShift = false;
+    updateLCRect = false;
+    updateCHRect = false;
 }
 export class NodeGroup {
     constructor(data) {
-        //childHolderEl_sizeChangesToIgnore = 0;
-        this.childHolder_belowParent = false;
-        // pos
-        this.assignedPosition = Vector2.zero;
-        // pos+size
-        this.leftColumnEl_layoutCount = 0;
         Object.assign(this, data);
         this.path_parts = this.path.split("/");
         this.path_sortable = TreePathAsSortableStr(this.path);
     }
+    graph;
+    path;
+    path_parts;
+    path_sortable;
+    leftColumnEl;
+    leftColumn_connectorOpts;
+    leftColumn_userData;
+    leftColumn_alignWithParent;
+    //leftColumnEl_sizeChangesToIgnore = 0;
+    childHolderEl;
+    //childHolderEl_sizeChangesToIgnore = 0;
+    childHolder_belowParent = false;
     get GutterWidth() {
         return this.leftColumn_connectorOpts.gutterWidth + (this.leftColumn_connectorOpts.parentIsAbove ? this.leftColumn_connectorOpts.parentGutterWidth : 0);
     }
+    // pos
+    assignedPosition = Vector2.zero;
+    // sizes (inputs/observed; just storage for "actual rects" observed)
+    lcSize_old; // based on getBoundingClientRect()
+    lcSize; // based on offsetWidth/offsetHeight
+    innerUISize_old; // based on getBoundingClientRect()
+    innerUISize; // based on offsetWidth/offsetHeight
+    /*get InnerUISize_WithMargin() {
+        if (this.innerUISize == null || this.leftColumn_connectorOpts == null) return null;
+        return this.innerUISize.Plus(this.leftColumn_connectorOpts.gutterWidth, 0);
+    }*/
+    lineSourcePoint;
+    // pos+size
+    leftColumnEl_layoutCount = 0;
+    lcRect_atLastRender;
+    innerUIRect_atLastRender;
     get LCRect_Old() {
         if (this.lcSize == null)
             return null;
@@ -74,7 +94,7 @@ export class NodeGroup {
                 Assert(groupsUnderParent.has(this.path), "List of children-groups for parent-group does not contain the node currently being detached!");
             }
             groupsUnderParent.delete(this.path);
-            if ((groupsUnderParent === null || groupsUnderParent === void 0 ? void 0 : groupsUnderParent.size) == 0) {
+            if (groupsUnderParent?.size == 0) {
                 this.graph.groupsByParentPath.delete(parentPath);
             }
         }
@@ -103,4 +123,7 @@ export class NodeConnectorInfo {
     constructor(data) {
         Object.assign(this, data);
     }
+    group;
+    rect;
+    opts;
 }

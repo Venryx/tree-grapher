@@ -20,7 +20,7 @@ export default {
 
 	entry: "./Source/index.tsx",
 	resolve: {
-		extensions: [".ts", ".tsx", ".js"],
+		extensions: [".ts", ".tsx", ".js", ".jsx"],
 		// allow typescript files to import other typescript files using ".js" extension
 		// approach 1 (see: https://github.com/webpack/webpack/issues/13252#issuecomment-828580249)
 		//alias: {"./test.js": "./test"},
@@ -28,7 +28,7 @@ export default {
 		// see plugins section below for code
 		// approach 3 (see: https://github.com/webpack/webpack/issues/13252#issuecomment-1519146192)
 		extensionAlias: {
-			".js": [".ts", ".js"],
+			".js": [".ts", ".tsx", ".js", ".jsx"],
 			//".mjs": [".mts", ".mjs"],
 		},
 	},

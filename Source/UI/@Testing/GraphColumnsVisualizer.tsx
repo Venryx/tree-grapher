@@ -1,4 +1,4 @@
-import {CE, E, Range, Timer, Vector2} from "js-vextensions";
+import {CE, E, Range, Timer, Vector2, WaitXThenRun} from "js-vextensions";
 import {observer} from "mobx-react";
 import React, {useEffect, useRef, useState, useContext} from "react";
 import {Button, Column, Row} from "react-vcomponents";
@@ -59,6 +59,7 @@ export const GraphColumnsVisualizer = observer(function GraphColumnsVisualizer(p
 			newWidth /= zoomLevel;
 			newHeight /= zoomLevel;
 			if (newWidth != width || newHeight != height) {
+				console.log("GraphColumnsVisualizer size changed.", {newWidth, newHeight});
 				setWidth(newWidth);
 				setHeight(newHeight);
 			} else {

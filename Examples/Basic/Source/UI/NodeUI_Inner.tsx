@@ -45,7 +45,7 @@ export const NodeUI_Inner = observer(function NodeUI_Inner(props: {node: MapNode
 						changePeersOrder!(peers=>{
 							const result = peers.slice();
 							const oldIndex = result.indexOf(node);
-							CE(result).Move(node, oldIndex + 1, true);
+							CE(result).Move(node, oldIndex + 1, "final-index");
 							return result;
 						});
 					}}/>

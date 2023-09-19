@@ -19,9 +19,11 @@ export class SpaceTakerUI_Handle {
     constructor(data) {
         Object.assign(this, data);
     }
+    props;
+    divEl; // maybe rework this
+    forceUpdate;
 }
 export const SpaceTakerUI = React.memo((props) => {
-    var _a, _b, _c;
     const forceUpdate = useForceUpdate();
     const handle = useMemo(() => new SpaceTakerUI_Handle({ props: props, divEl: null, forceUpdate }), 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -36,13 +38,13 @@ export const SpaceTakerUI = React.memo((props) => {
         return null;
     const groups = [...graph.groupsByPath.values()];
     //const containerPadding = graph.containerPadding;
-    const rectForAllNodes = (_b = (_a = groups.find(a => a.lcRect_atLastRender != null)) === null || _a === void 0 ? void 0 : _a.lcRect_atLastRender) !== null && _b !== void 0 ? _b : new VRect(0, 0, 0, 0);
+    const rectForAllNodes = groups.find(a => a.lcRect_atLastRender != null)?.lcRect_atLastRender ?? new VRect(0, 0, 0, 0);
     for (const group of groups) {
         if (group.lcRect_atLastRender == null || group.innerUIRect_atLastRender == null)
             return null;
         rectForAllNodes.Encapsulate(group.lcRect_atLastRender);
     }
-    const scaling = (_c = props.scaling) !== null && _c !== void 0 ? _c : 1;
+    const scaling = props.scaling ?? 1;
     /*if (graph.containerEl) {
         /*graph.containerEl.style.width = `calc(${rectForAllNodes.width + containerPadding.left + containerPadding.right}px / ${scaling})`;
         graph.containerEl.style.height = `calc(${rectForAllNodes.height + containerPadding.top + containerPadding.bottom}px / ${scaling})`;*#/

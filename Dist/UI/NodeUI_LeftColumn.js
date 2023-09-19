@@ -16,7 +16,6 @@ export function useRef_nodeLeftColumn(treePath, nodeConnectorOpts, userData = {}
     const ref_resizeObserver = useRef(null);
     const ref_leftColumn_storage = useRef();
     const ref_leftColumn = useCallback(el => {
-        var _a, _b;
         ref_leftColumn_storage.current = el;
         if (el) {
             const group = graph.NotifyGroupLeftColumnMount(el, treePath, nodeConnectorOpts, userData, alignWithParent);
@@ -40,7 +39,7 @@ export function useRef_nodeLeftColumn(treePath, nodeConnectorOpts, userData = {}
             // call once at start (atm needed to avoid rare case where element is attached, but rects aren't, and filter in children-func fails fsr)
             updateGroupRects();
             // until layout is run, set a style that makes the element non-visible
-            (_b = (_a = graph.layoutOpts).styleSetter_layoutPending) === null || _b === void 0 ? void 0 : _b.call(_a, el.style);
+            graph.layoutOpts.styleSetter_layoutPending?.(el.style);
             // clear these things, since we have a new left-column
             group.leftColumnEl_layoutCount = 0;
             // todo: maybe have these cleared

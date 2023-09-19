@@ -6,6 +6,10 @@ export class FlexNode extends hierarchy.prototype.constructor {
         this.func_nodeSize = nodeSize;
         this.func_spacing = spacing;
     }
+    func_nodeSize;
+    func_spacing;
+    /** Only set if wrapFlexNode is used for this node. */
+    length;
     copy() {
         /*const self = this;
         // [Is this actually correct? Seems that `this.data` should be passed instead of `this`...]
@@ -106,6 +110,17 @@ export class FlexNode_Wrapper extends FlexNode {
             throw new Error("Encountered NaN when setting FlexNode_Wrapper.y!");
         this.data.y = v;
     }
+    // wrapper-added fields
+    relX;
+    prelim;
+    shift;
+    change;
+    lExt;
+    lExtRelX;
+    lThr;
+    rExt;
+    rExtRelX;
+    rThr;
     update() {
         layoutChildren(this);
         resolveX(this);

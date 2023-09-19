@@ -1,4 +1,4 @@
-import {Assert, CE, E, SleepAsync, Vector2, VRect} from "js-vextensions";
+import {Assert, CE, E, Lerp, SleepAsync, Vector2, VRect} from "js-vextensions";
 import {observable} from "mobx";
 import {observer} from "mobx-react";
 import React, {createContext, useCallback, useContext, useMemo, useState} from "react";
@@ -7,9 +7,10 @@ import {n} from "react-vcomponents/Dist/@Types.js";
 import {GetDOM} from "react-vextensions";
 import {ConnectorLinesUI, Graph, GraphColumnsVisualizer, GraphContext, makeObservable_safe, SpaceTakerUI} from "tree-grapher";
 import {FlashComp, FlashOptions} from "ui-debug-kit";
-import {GetAllNodesInTree_ByNodePath, GetFocusNodePaths, GetNodeIDFromNodePath, GetNodeStateFromKeyframes, nodeTree_main} from "./@SharedByExamples/NodeData";
+import {GetAllNodesInTree_ByNodePath, GetFocusNodePaths, GetNodeIDFromNodePath, GetNodeStateFromKeyframes, keyframes, nodeTree_main} from "./@SharedByExamples/NodeData";
 import {store} from "./Store";
 import {NodeUI} from "./UI/NodeUI";
+import {NodeFocuser} from "./UI/NodeFocuser.js";
 
 // make some stuff global, for easy debugging
 Object.assign(globalThis, {
@@ -23,7 +24,7 @@ export class MapInfo {
 		});
 	}
 	nodeStates = new Map<string, NodeState>(); // @O
-	GetNodeState(path: string, allowKeyframeOverride = true) {
+	GetNodeState(path: string, allowKeyframeOverride = true, targetTime = store.targetTime) {
 		if (!this.nodeStates.has(path)) {
 			this.nodeStates.set(path, new NodeState());
 		}
@@ -33,7 +34,7 @@ export class MapInfo {
 			const nodeID = GetNodeIDFromNodePath(path);
 			/*const nodeID = GetNodeIDFromTreePath(path);
 			Assert(nodeID, "NodeID could not be found from tree-path!");*/
-			result = GetNodeStateFromKeyframes(nodeID);
+			result = GetNodeStateFromKeyframes(nodeID, targetTime);
 		}
 
 		return result;
@@ -141,6 +142,9 @@ export const RootUI = observer(function RootUI() {
 
 	const [containerElResolved, setContainerElResolved] = useState(false);
 
+	console.log("Test1");
+
+
 	return (
 		<Column style={{height: "100%"}}>
 			<Toolbar/>
@@ -177,7 +181,7 @@ export const RootUI = observer(function RootUI() {
 								<GraphColumnsVisualizer levelsToScrollContainer={3} zoomLevel={store.zoomLevel}/>
 								<ConnectorLinesUI/>
 								<NodeUI node={nodeTree} nodePath={nodeTree.id} treePath="0"/>
-								<MapScroller graph={graphInfo}/>
+								<NodeFocuser graph={graphInfo}/>
 							</GraphContext.Provider>
 						</MapContext.Provider>}
 					</div>
@@ -222,84 +226,3 @@ const Toolbar = observer(()=>{
 		</Row>
 	);
 });
-
-//let ignoreNextZoomChange = false;
-const MapScroller = observer(function MapScroller(props: {graph: Graph}) {
-	const {graph} = props;
-	if (graph.containerEl == null) return null;
-	const scrollEl = graph.getScrollElFromContainerEl(graph.containerEl);
-	if (scrollEl == null) return null;
-	//const zoomLevel = store.zoomLevel;
-	/*if (ignoreNextZoomChange) {
-		ignoreNextZoomChange = false;
-		return null;
-	}*/
-
-	const mapInfo = useContext(MapContext);
-	const focusNodePaths = GetFocusNodePaths(mapInfo);
-
-	let focusNodeRectsMerged: VRect|n;
-	for (const group of graph.groupsByPath.values()) {
-		const groupNodePath = group.leftColumn_userData?.["nodePath"] as string;
-		if (focusNodePaths.includes(groupNodePath) && group.InnerUIRect) {
-			focusNodeRectsMerged = focusNodeRectsMerged ? focusNodeRectsMerged.Encapsulating(group.InnerUIRect) : group.InnerUIRect;
-		}
-	}
-	if (focusNodeRectsMerged == null) return null;
-
-	//const nodeBoxesMerged_sizeWhenUnscaled = focusNodeRectsMerged.Size.DividedBy(store.zoomLevel);
-	const nodeBoxesMerged_sizeWhenUnscaled = focusNodeRectsMerged.Size;
-
-	const viewportSize = new Vector2(scrollEl.clientWidth, scrollEl.clientHeight);
-	// apply just enough zoom-out to be able to fit all of the focus-nodes within the viewport
-	const zoomRequired = Math.min(viewportSize.x / nodeBoxesMerged_sizeWhenUnscaled.x, viewportSize.y / nodeBoxesMerged_sizeWhenUnscaled.y);
-	const newZoom = CE(CE(zoomRequired * .9).FloorTo(.1)).KeepBetween(.1, 1);
-
-	/*if (CE(newZoom).Distance(zoomLevel) > .01) {
-		(async()=>{
-			await SleepAsync(1);
-			//ignoreNextZoomChange = true;
-			store.zoomLevel = newZoom;
-			// re-call this function, since we need to recalc // edit: Actually, is this even necessary? I don't think it should be... (well, the ACTUpdateAnchorNodeAndViewOffset call might need the delay)
-			//setTimeout(()=>FocusOnNodes(mapID, paths), 100);
-			//return;
-			await SleepAsync(100);
-			doScroll();
-		})();
-	} else {
-		doScroll();
-	}*/
-
-	function doScroll() { ScrollToPosition_Center(scrollEl!, focusNodeRectsMerged!.Center.Times(store.zoomLevel)); }
-	//function doScroll() { ScrollToPosition_Center(scrollEl!, focusNodeRectsMerged!.Center.DividedBy(store.zoomLevel)); }
-
-	(async()=>{
-		await SleepAsync(1);
-		//ignoreNextZoomChange = true;
-		store.zoomLevel = newZoom;
-		// re-call this function, since we need to recalc // edit: Actually, is this even necessary? I don't think it should be... (well, the ACTUpdateAnchorNodeAndViewOffset call might need the delay)
-		//setTimeout(()=>FocusOnNodes(mapID, paths), 100);
-		//return;
-		await SleepAsync(1);
-		doScroll();
-	})();
-
-	return <></>;
-});
-
-function ScrollToPosition_Center(scrollEl: HTMLElement, posInContainer: Vector2) {
-	const scrollContainerViewportSize = new Vector2(scrollEl.getBoundingClientRect().width, scrollEl.getBoundingClientRect().height);
-	//const topBarsHeight = window.innerHeight - scrollContainerViewportSize.y;
-
-	//const oldScroll = GetScroll(scrollEl);
-	const newScroll = new Vector2(
-		posInContainer.x - (scrollContainerViewportSize.x / 2),
-		posInContainer.y - (scrollContainerViewportSize.y / 2),
-		// scroll down a bit extra, such that node is center of window, not center of scroll-view container/viewport (I've tried both, and this way is more centered "perceptually")
-		//(posInContainer.y - (scrollContainerViewportSize.y / 2)) + (topBarsHeight / 2),
-	);
-	console.log("Loading scroll:", newScroll.toString());
-	SetScroll(scrollEl, newScroll);
-}
-export const GetScroll = (scrollEl: HTMLElement)=>new Vector2(scrollEl.scrollLeft, scrollEl.scrollTop);
-export const SetScroll = (scrollEl: HTMLElement, scroll: Vector2)=>{ scrollEl.scrollLeft = scroll.x; scrollEl.scrollTop = scroll.y; };

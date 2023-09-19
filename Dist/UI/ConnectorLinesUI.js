@@ -18,18 +18,20 @@ export function useRef_connectorLinesUI(handle) {
     return { ref_connectorLinesUI, graph };
 }
 export class NodeConnectorOpts {
-    constructor() {
-        this.gutterWidth = 30;
-        this.parentGutterWidth = 30; // temp; needed for show-below-parent children (since parent's ui might not be fully attached when child need's parent's gutter-width info)
-    }
+    gutterWidth = 30;
+    parentGutterWidth = 30; // temp; needed for show-below-parent children (since parent's ui might not be fully attached when child need's parent's gutter-width info)
+    parentIsAbove;
+    color;
 }
 export class ConnectorLinesUI_Handle {
     constructor(data) {
         Object.assign(this, data);
     }
+    props;
+    svgEl; // maybe rework this
+    forceUpdate;
 }
 export const ConnectorLinesUI = React.memo((props) => {
-    var _a, _b;
     const forceUpdate = useForceUpdate();
     const handle = useMemo(() => new ConnectorLinesUI_Handle({ props: props, svgEl: null, forceUpdate }), []); // todo: confirm this is correct (don't we need to pass props, or props-stringified, into dep-array?)
     const { ref_connectorLinesUI, graph } = useRef_connectorLinesUI(handle);
@@ -38,9 +40,8 @@ export const ConnectorLinesUI = React.memo((props) => {
     /*const offset = takeSpace ? new Vector2(-containerPadding.left, -containerPadding.top) : Vector2.zero;
     const p = (pos: Vector2)=>pos.Plus(offset);*/
     const p = (pos) => pos; // todo: remove this, once confirmed not needed
-    const rectForAllNodes = (_b = (_a = groups.find(a => a.lcRect_atLastRender != null)) === null || _a === void 0 ? void 0 : _a.lcRect_atLastRender) !== null && _b !== void 0 ? _b : new VRect(0, 0, 0, 0);
+    const rectForAllNodes = groups.find(a => a.lcRect_atLastRender != null)?.lcRect_atLastRender ?? new VRect(0, 0, 0, 0);
     const connectorLineUIs = groups.map((group, index) => {
-        var _a, _b;
         if (group.lcRect_atLastRender == null || group.innerUIRect_atLastRender == null)
             return null;
         rectForAllNodes.Encapsulate(group.lcRect_atLastRender);
@@ -51,7 +52,7 @@ export const ConnectorLinesUI = React.memo((props) => {
             return null;
         const lineFromAbove = lineOpts.parentIsAbove;
         const parentGroup = graph.FindParentGroup(group);
-        if ((parentGroup === null || parentGroup === void 0 ? void 0 : parentGroup.innerUIRect_atLastRender) == null)
+        if (parentGroup?.innerUIRect_atLastRender == null)
             return null;
         const lineStart = lineFromAbove
             ? new Vector2(group.innerUIRect_atLastRender.x - (lineOpts.gutterWidth / 2), parentGroup.innerUIRect_atLastRender.Bottom)
@@ -60,7 +61,7 @@ export const ConnectorLinesUI = React.memo((props) => {
         const childID = `${group.path}_${index}`;
         if (lineFromAbove) {
             const lineMid = lineEnd.Minus(lineOpts.gutterWidth / 2, 0);
-            return React.createElement("path", { key: `connectorLine_${childID}`, style: { stroke: (_b = (_a = group.leftColumn_connectorOpts) === null || _a === void 0 ? void 0 : _a.color) !== null && _b !== void 0 ? _b : "gray", strokeWidth: 3, fill: "none" }, d: `M${p(lineStart).x},${p(lineStart).y} L${p(lineMid).x},${p(lineMid).y} L${p(lineEnd).x},${p(lineEnd).y}` });
+            return React.createElement("path", { key: `connectorLine_${childID}`, style: { stroke: group.leftColumn_connectorOpts?.color ?? "gray", strokeWidth: 3, fill: "none" }, d: `M${p(lineStart).x},${p(lineStart).y} L${p(lineMid).x},${p(lineMid).y} L${p(lineEnd).x},${p(lineEnd).y}` });
         }
         let startControl = lineStart.Plus(30, 0);
         let endControl = lineEnd.Plus(-30, 0);
@@ -68,8 +69,7 @@ export const ConnectorLinesUI = React.memo((props) => {
         startControl = startControl.Plus(middleControl).Times(0.5); // average with middle-control
         endControl = endControl.Plus(middleControl).Times(0.5); // average with middle-control
         const curvedLine = style => {
-            var _a;
-            return React.createElement("path", { style: E({ stroke: (_a = lineOpts.color) !== null && _a !== void 0 ? _a : "gray", strokeWidth: 3, fill: "none" }, style), d: `M${p(lineStart).x},${p(lineStart).y} C${p(startControl).x},${p(startControl).y} ${p(endControl).x},${p(endControl).y} ${p(lineEnd).x},${p(lineEnd).y}` });
+            return React.createElement("path", { style: E({ stroke: lineOpts.color ?? "gray", strokeWidth: 3, fill: "none" }, style), d: `M${p(lineStart).x},${p(lineStart).y} C${p(startControl).x},${p(startControl).y} ${p(endControl).x},${p(endControl).y} ${p(lineEnd).x},${p(lineEnd).y}` });
         };
         const addDash = false;
         return React.createElement(Fragment, { key: `connectorLine_${childID}` },

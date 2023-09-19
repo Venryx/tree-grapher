@@ -35,7 +35,7 @@ export const GraphColumnsVisualizer = observer(function GraphColumnsVisualizer(p
             if (levelsToScrollContainer != null) {
                 let nextUp = ref.current;
                 for (let i = 0; i < levelsToScrollContainer; i++) {
-                    nextUp = nextUp === null || nextUp === void 0 ? void 0 : nextUp.parentElement;
+                    nextUp = nextUp?.parentElement;
                 }
                 if (nextUp instanceof HTMLElement) {
                     newMarginTopToBeVisible_inScrollContainerViewport = nextUp.getBoundingClientRect().top - rectTop_preMargin;
@@ -50,6 +50,7 @@ export const GraphColumnsVisualizer = observer(function GraphColumnsVisualizer(p
             newWidth /= zoomLevel;
             newHeight /= zoomLevel;
             if (newWidth != width || newHeight != height) {
+                console.log("GraphColumnsVisualizer size changed.", { newWidth, newHeight });
                 setWidth(newWidth);
                 setHeight(newHeight);
             }

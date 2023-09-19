@@ -10,14 +10,12 @@ export function useForceUpdate() {
     return forceUpdate;
 }
 export class StripesOptions {
-    constructor() {
-        /** Range: 0-360 */
-        this.angle = 0;
-        this.backgroundColor = "transparent";
-        this.backgroundThickness = 5;
-        this.stripeColor = "rgba(255,0,0,.3)";
-        this.stripThickness = 2;
-    }
+    /** Range: 0-360 */
+    angle = 0;
+    backgroundColor = "transparent";
+    backgroundThickness = 5;
+    stripeColor = "rgba(255,0,0,.3)";
+    stripThickness = 2;
 }
 export function StripesCSS(options) {
     const opt = Object.assign(new StripesOptions(), options);
