@@ -5,6 +5,7 @@ import {O} from "./Utils";
 export class RootState {
 	constructor() { makeObservable(this); }
 
+	@O layoutHelper_show = false;
 	@O zoomLevel = 1;
 
 	@O playing = false;

@@ -1,16 +1,14 @@
-import {Assert, CE, E, Lerp, SleepAsync, Vector2, VRect} from "js-vextensions";
+import {CE, E} from "js-vextensions";
 import {observable} from "mobx";
 import {observer} from "mobx-react";
-import React, {createContext, useCallback, useContext, useMemo, useState} from "react";
-import {Button, Column, Text, Row, Spinner, TimeSpanInput} from "react-vcomponents";
-import {n} from "react-vcomponents/Dist/@Types.js";
-import {GetDOM} from "react-vextensions";
-import {ConnectorLinesUI, Graph, GraphColumnsVisualizer, GraphContext, makeObservable_safe, SpaceTakerUI} from "tree-grapher";
-import {FlashComp, FlashOptions} from "ui-debug-kit";
-import {GetAllNodesInTree_ByNodePath, GetFocusNodePaths, GetNodeIDFromNodePath, GetNodeStateFromKeyframes, keyframes, nodeTree_main} from "./@SharedByExamples/NodeData";
+import React, {createContext} from "react";
+import {Button, CheckBox, Column, Row, Spinner, Text, TimeSpanInput} from "react-vcomponents";
+import {Graph, makeObservable_safe} from "tree-grapher";
+import {FlashOptions} from "ui-debug-kit";
+import {GetNodeIDFromNodePath, GetNodeStateFromKeyframes} from "./@SharedByExamples/NodeData";
 import {store} from "./Store";
-import {NodeUI} from "./UI/NodeUI";
-import {NodeFocuser} from "./UI/NodeFocuser.js";
+import {useGraph} from "./UI/MapGraph.js";
+import {MapUI} from "./UI/MapUI.js";
 
 // make some stuff global, for easy debugging
 Object.assign(globalThis, {
@@ -20,9 +18,11 @@ Object.assign(globalThis, {
 export class MapInfo {
 	constructor() {
 		makeObservable_safe(this, {
+			allowKeyframeOverride: observable,
 			nodeStates: observable,
 		});
 	}
+	allowKeyframeOverride = true; // @O
 	nodeStates = new Map<string, NodeState>(); // @O
 	GetNodeState(path: string, allowKeyframeOverride = true, targetTime = store.targetTime) {
 		if (!this.nodeStates.has(path)) {
@@ -30,7 +30,7 @@ export class MapInfo {
 		}
 		let result = this.nodeStates.get(path)!;
 
-		if (allowKeyframeOverride && urlOpts.anim) {
+		if (this.allowKeyframeOverride && allowKeyframeOverride && urlOpts.anim) {
 			const nodeID = GetNodeIDFromNodePath(path);
 			/*const nodeID = GetNodeIDFromTreePath(path);
 			Assert(nodeID, "NodeID could not be found from tree-path!");*/
@@ -101,91 +101,31 @@ export function GetURLOptions() {
 export const urlOpts = GetURLOptions();
 
 export const RootUI = observer(function RootUI() {
-	const nodeTree = nodeTree_main;
-	const mapInfo = useMemo(()=>{
-		const result = new MapInfo();
-		// for demo
-		for (const [path, node] of GetAllNodesInTree_ByNodePath(nodeTree)) {
-			result.GetNodeState(path).expanded = node.expanded ?? false;
-			result.GetNodeState(path).focused = node.focused ?? false;
-		}
-		return result;
-	}, [nodeTree]);
 	//const containerRef = useRef<HTMLDivElement | null>(null);
-	const graphInfo = useMemo(()=>{
-		const graph = new Graph({
-			//columnWidth: 100,
-			uiDebugKit: {FlashComp},
-			layoutOpts: {
-				//containerPadding: {left: 100, top: 100, right: 100, bottom: 100},
-				nodeSpacing: ()=>GetURLOptions().nodeSpacing,
-				styleSetter_layoutPending: style=>{
-					//style.right = "100%"; // alternative (not quite as "reliable", since sometimes user code might depend on knowing the correct ui position right away)
-					style.opacity = "0";
-					style.pointerEvents = "none";
-				},
-				styleSetter_layoutDone: style=>{
-					//style.right = "";
-					style.opacity = "";
-					style.pointerEvents = "";
-				},
-			},
-			getScrollElFromContainerEl: containerEl=>containerEl.parentElement?.parentElement!,
-		});
-		globalThis.graph = graph;
-		return graph;
-	}, []);
+	const graphInfo_main = useGraph(false);
+	const graphInfo_forLayoutHelper = useGraph(true);
 
 	// update some graph info
 	const paddingAmount = urlOpts.anim ? 1000 : 100;
-	graphInfo.containerPadding = {left: paddingAmount, top: paddingAmount, right: paddingAmount, bottom: paddingAmount};
-
-	const [containerElResolved, setContainerElResolved] = useState(false);
-
-	console.log("Test1");
-
+	graphInfo_main.containerPadding = {left: paddingAmount, top: paddingAmount, right: paddingAmount, bottom: paddingAmount};
+	graphInfo_forLayoutHelper.containerPadding = {left: paddingAmount, top: paddingAmount, right: paddingAmount, bottom: paddingAmount};
 
 	return (
-		<Column style={{height: "100%"}}>
+		<Column style={{position: "relative", height: "100%"}}>
 			<Toolbar/>
-			<div style={{position: "relative", height: "calc(100% - 30px)", overflow: "auto"}}>
-				<div style={E(
-					{position: "relative", minWidth: "fit-content", minHeight: "fit-content"} as const,
+			<MapUI graphInfo={graphInfo_main} forLayoutHelper={false}/>
+			<div
+				className={
+					[!store.layoutHelper_show && "hideAndCompletelyBlockMouseEvents"].filter(a=>a).join(" ")
+				}
+				style={E(
+					{position: "absolute", left: 0, top: 30, right: 0, bottom: 0 /*zIndex: 1*/} as const,
 				)}>
-					<SpaceTakerUI graph={graphInfo} scaling={store.zoomLevel}/>
-					<div style={E(
-						//{position: "relative", width: "fit-content", height: "fit-content"} as const,
-						{
-							position: "absolute", left: 0, top: 0,
-							width: CE(1 / store.zoomLevel).ToPercentStr(), height: CE(1 / store.zoomLevel).ToPercentStr(),
-							///* display: "flex", */ whiteSpace: "nowrap",
-							alignItems: "center",
-						} as const,
-						//mapState.zoomLevel != 1 && {zoom: mapState.zoomLevel.ToPercentStr()},
-						store.zoomLevel != 1 && {
-							transform: `scale(${CE(store.zoomLevel).ToPercentStr()})`,
-							transformOrigin: "0% 0%",
-						} as const,
-					)}
-						ref={useCallback(c=>{
-							/*containerRef.current = GetDOM(c) as any;
-							context.containerEl = containerRef.current!;*/
-							graphInfo.containerEl = GetDOM(c) as any;
-							if (graphInfo.containerEl != null) setContainerElResolved(true);
-							//console.log("Set1:", context.containerEl);
-						}, [graphInfo])}
-					>
-						{containerElResolved &&
-						<MapContext.Provider value={mapInfo}>
-							<GraphContext.Provider value={graphInfo}>
-								<GraphColumnsVisualizer levelsToScrollContainer={3} zoomLevel={store.zoomLevel}/>
-								<ConnectorLinesUI/>
-								<NodeUI node={nodeTree} nodePath={nodeTree.id} treePath="0"/>
-								<NodeFocuser graph={graphInfo}/>
-							</GraphContext.Provider>
-						</MapContext.Provider>}
-					</div>
-				</div>
+				<style>{`
+				.hideAndCompletelyBlockMouseEvents { opacity: 0 !important; pointer-events: none !important; }
+				.hideAndCompletelyBlockMouseEvents * { opacity: 0 !important; pointer-events: none !important; }
+				`}</style>
+				<MapUI graphInfo={graphInfo_forLayoutHelper} forLayoutHelper={true}/>
 			</div>
 		</Column>
 	);
@@ -218,7 +158,8 @@ const Toolbar = observer(()=>{
 				<Button text="±60" ml={3} p={5} onClick={()=>store.AdjustTargetTimeByFrames(60)} onWheel={e=>store.AdjustTargetTimeByFrames(Math.sign(e.deltaY) * 60)}/>
 			</Row>}
 			<Row center ml="auto">
-				<Text>Zoom:</Text>
+				<CheckBox text="Show layout-helper map" value={store.layoutHelper_show} onChange={val=>store.layoutHelper_show = val}/>
+				<Text ml={5}>Zoom:</Text>
 				<Spinner ml={3} style={{width: 45}} instant={true} min={.1} max={10} step={.1} value={store.zoomLevel} onChange={val=>ChangeZoom(val)}/>
 				<Button ml={3} p="3px 10px" text="-" enabled={store.zoomLevel > .1} onClick={()=>ChangeZoom(CE((store.zoomLevel - .1)).RoundTo(.1))}/>
 				<Button ml={3} p="3px 10px" text="+" enabled={store.zoomLevel < 10} onClick={()=>ChangeZoom(CE((store.zoomLevel + .1)).RoundTo(.1))}/>

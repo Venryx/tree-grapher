@@ -8,7 +8,7 @@ import {store} from "../Store";
 import {MapContext} from "../Root.js";
 
 //let ignoreNextZoomChange = false;
-export const NodeFocuser = observer(function MapScroller(props: {graph: Graph}) {
+export const KeyframeApplier = observer(function KeyframeApplier(props: {graph: Graph}) {
 	const {graph} = props;
 	if (graph.containerEl == null) return null;
 	const scrollEl = graph.getScrollElFromContainerEl(graph.containerEl);
@@ -26,18 +26,22 @@ export const NodeFocuser = observer(function MapScroller(props: {graph: Graph}) 
 	const lastFocusNodePaths = GetFocusNodePaths(mapInfo, store.targetTime);
 	const nextFocusNodePaths = GetFocusNodePaths(mapInfo, nextKeyframe.time);
 
-	const MergeNodeRects = (nodePaths: string[])=>{
+	const lastKeyframe_groupRects = GetGroupRectsAtKeyframe(graph, lastKeyframe.time);
+	const nextKeyframe_groupRects = GetGroupRectsAtKeyframe(graph, nextKeyframe.time);
+
+	const MergeNodeRects = (nodePaths: string[], groupRectsAtTargetTime: Map<string, VRect>)=>{
 		let nodeRectsMerged: VRect|n;
 		for (const group of graph.groupsByPath.values()) {
 			const groupNodePath = group.leftColumn_userData?.["nodePath"] as string;
-			if (nodePaths.includes(groupNodePath) && group.InnerUIRect) {
-				nodeRectsMerged = nodeRectsMerged ? nodeRectsMerged.Encapsulating(group.InnerUIRect) : group.InnerUIRect;
+			const groupRect = groupRectsAtTargetTime.get(group.path);
+			if (nodePaths.includes(groupNodePath) && groupRect) {
+				nodeRectsMerged = nodeRectsMerged ? nodeRectsMerged.Encapsulating(groupRect) : groupRect;
 			}
 		}
 		return nodeRectsMerged;
 	};
-	const lastFocusNodeRectsMerged = MergeNodeRects(lastFocusNodePaths);
-	const nextFocusNodeRectsMerged = MergeNodeRects(nextFocusNodePaths);
+	const lastFocusNodeRectsMerged = MergeNodeRects(lastFocusNodePaths, lastKeyframe_groupRects);
+	const nextFocusNodeRectsMerged = MergeNodeRects(nextFocusNodePaths, nextKeyframe_groupRects);
 	if (lastFocusNodeRectsMerged == null || nextFocusNodeRectsMerged == null) return null;
 	const percentFromLastToNext = (store.targetTime - lastKeyframe.time) / (nextKeyframe.time - lastKeyframe.time);
 	console.log("percentFromLastToNext:", percentFromLastToNext);
@@ -105,4 +109,10 @@ export function InterpolateRect(rectA: VRect, rectB: VRect, percent: number) {
 		Lerp(rectA.width, rectB.width, percent),
 		Lerp(rectA.height, rectB.height, percent),
 	);
+}
+
+export function GetGroupRectsAtKeyframe(graph: Graph, keyframeTime: number) {
+	// temp; for now, just use the graph's current group-rects
+	return CE([...graph.groupsByPath.entries()]).ToMap(a=>a[0], a=>a[1].InnerUIRect!);
+	// break point
 }

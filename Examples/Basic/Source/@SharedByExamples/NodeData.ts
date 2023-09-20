@@ -26,7 +26,7 @@ export class Action {
 export const nodeTree_main = NewNode({id: "0", expanded: true, children: [
 	NewNode({id: "0.0", expanded: true, children: [
 		NewNode({id: "0.0.0", expanded: true}),
-		NewNode({id: "0.0.1", expanded: true, children: [
+		NewNode({id: "0.0.1", expanded: false, children: [
 			NewNode({id: "0.0.1.0", expanded: true}),
 			NewNode({id: "0.0.1.1", expanded: true, children: [
 				NewNode({id: "0.0.1.1.0", expanded: true}),
@@ -52,12 +52,17 @@ export const nodeTree_main_orig = Clone(nodeTree_main);
 
 export const keyframes: Keyframe[] = [
 	// this line just replicates the initial state of the node-tree, as a keyframe (will probably use better system later)
-	new Keyframe({time: 0, actions: {all: {setExpanded: true}}}),
+	new Keyframe({time: 0, actions: {all: {setExpanded: true},
+		"0.0.1": {setExpanded: false}}}),
 	// these lines are the "actual keyframes"
 	new Keyframe({time: 0, actions: {all: {setFocused: true}}}),
-	new Keyframe({time: 1, actions: {all: {setFocused: false}, "0.0": {setFocused: true}, "0.0.0": {setFocused: true}, "0.0.1": {setFocused: true}}}),
-	new Keyframe({time: 2, actions: {all: {setFocused: false}, "0.0.1.1": {setFocused: true}, "0.0.1.1.0": {setFocused: true}, "0.0.1.1.1": {setFocused: true}}}),
-	new Keyframe({time: 3, actions: {all: {setFocused: false}, 0.1: {setFocused: true}, "0.0.1.2.1": {setFocused: true}, "0.1.1": {setFocused: true}}}),
+	new Keyframe({time: 1, actions: {all: {setFocused: false},
+		"0.0": {setFocused: true}, "0.0.0": {setFocused: true}, "0.0.1": {setFocused: true}}}),
+	new Keyframe({time: 2, actions: {all: {setFocused: false},
+		"0.0.1": {setExpanded: true},
+		"0.0.1.1": {setFocused: true}, "0.0.1.1.0": {setFocused: true}, "0.0.1.1.1": {setFocused: true}}}),
+	new Keyframe({time: 3, actions: {all: {setFocused: false},
+		0.1: {setFocused: true}, "0.0.1.2.1": {setFocused: true}, "0.1.1": {setFocused: true}}}),
 ];
 export function GetKeyframeActionsToApplyToNode(nodeID: string, targetTime: number) {
 	const keyframesInTimeRange = keyframes.filter(a=>a.time <= targetTime);

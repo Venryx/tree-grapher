@@ -1,6 +1,7 @@
 /// <reference types="react" />
 import type { FlashComp } from "ui-debug-kit";
 import { SpacingFunc } from "./Core/Core.js";
+import { FlexNode } from "./Core/FlexNode.js";
 import { NodeGroup } from "./Graph/NodeGroup.js";
 import { ConnectorLinesUI_Handle, NodeConnectorOpts } from "./index.js";
 import { SpaceTakerUI_Handle } from "./UI/SpaceTakerUI.js";
@@ -46,5 +47,7 @@ export declare class Graph {
     runLayout_scheduled: boolean;
     RunLayout_InAMoment: () => void;
     RunLayout: (direction?: LayoutDirection) => void;
+    GetLayout: (direction?: LayoutDirection) => FlexNode<NodeGroup> | null;
+    ApplyLayout: (tree: FlexNode<NodeGroup>, direction?: LayoutDirection) => void;
 }
 export type LayoutDirection = "topToBottom" | "leftToRight";

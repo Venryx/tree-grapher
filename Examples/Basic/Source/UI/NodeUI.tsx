@@ -9,12 +9,13 @@ import {MapContext, urlOpts} from "../Root";
 import {ChangePeersOrderFunc, NodeUI_Inner} from "./NodeUI_Inner";
 
 // eslint-disable-next-line prefer-arrow-callback
-export const NodeUI = observer(function NodeUI(props: {node: MapNode, nodePath: string, treePath: string, inBelowGroup?: boolean, changePeersOrder?: ChangePeersOrderFunc}) {
-	const {node, nodePath, treePath, inBelowGroup, changePeersOrder} = props;
+export const NodeUI = observer(function NodeUI(props: {node: MapNode, nodePath: string, treePath: string, inBelowGroup?: boolean, forLayoutHelper: boolean, changePeersOrder?: ChangePeersOrderFunc}) {
+	const {node, nodePath, treePath, inBelowGroup, forLayoutHelper, changePeersOrder} = props;
 	const mapInfo = useContext(MapContext);
 	//const graph = useContext(GraphContext);
 	//const group = graph.groupsByPath.get(path);
 	const nodeState = mapInfo.GetNodeState(nodePath);
+	const expanded_final = nodeState.expanded || forLayoutHelper;
 
 	//const forceUpdate = useForceUpdate();
 	const [children, setChildren] = useStateWithDeps(node.children, [node]);
@@ -28,11 +29,11 @@ export const NodeUI = observer(function NodeUI(props: {node: MapNode, nodePath: 
 			<NodeUI_LeftColumn treePath={treePath} alignWithParent={node.alignWithParent} userData={{nodePath}} nodeConnectorOpts={{
 				gutterWidth: inBelowGroup ? 20 : 30, parentGutterWidth: 30, parentIsAbove: inBelowGroup, color: treePath.split("/").length % 2 == 0 ? "green" : "blue",
 			}}>
-				<NodeUI_Inner node={node} nodePath={nodePath} treePath={treePath} inBelowGroup={inBelowGroup} changePeersOrder={changePeersOrder}/>
+				<NodeUI_Inner node={node} nodePath={nodePath} treePath={treePath} inBelowGroup={inBelowGroup} forLayoutHelper={forLayoutHelper} changePeersOrder={changePeersOrder}/>
 			</NodeUI_LeftColumn>
-			{nodeState.expanded &&
+			{expanded_final &&
 			children.map((child, index)=>{
-				return <NodeUI key={index} node={child} inBelowGroup={node.childrenBelow} nodePath={`${nodePath}/${child.id}`} treePath={`${treePath}/${index}`} changePeersOrder={changePeersOrder_forChildren}/>;
+				return <NodeUI key={index} node={child} inBelowGroup={node.childrenBelow} nodePath={`${nodePath}/${child.id}`} treePath={`${treePath}/${index}`} forLayoutHelper={forLayoutHelper} changePeersOrder={changePeersOrder_forChildren}/>;
 			})}
 		</>
 	);

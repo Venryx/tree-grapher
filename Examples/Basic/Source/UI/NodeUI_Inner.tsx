@@ -10,10 +10,11 @@ export const textRepeatSplitter = " [x2:] ";
 export type PeersChangerFunc = (peers: MapNode[])=>MapNode[];
 export type ChangePeersOrderFunc = (func: PeersChangerFunc)=>void;
 // eslint-disable-next-line prefer-arrow-callback
-export const NodeUI_Inner = observer(function NodeUI_Inner(props: {node: MapNode, nodePath: string, treePath: string, inBelowGroup?: boolean, changePeersOrder?: ChangePeersOrderFunc}) {
-	const {node, nodePath, treePath, inBelowGroup, changePeersOrder} = props;
+export const NodeUI_Inner = observer(function NodeUI_Inner(props: {node: MapNode, nodePath: string, treePath: string, inBelowGroup?: boolean, forLayoutHelper: boolean, changePeersOrder?: ChangePeersOrderFunc}) {
+	const {node, nodePath, treePath, inBelowGroup, forLayoutHelper, changePeersOrder} = props;
 	const mapInfo = useContext(MapContext);
 	const nodeState = mapInfo.GetNodeState(nodePath);
+	const expanded_final = nodeState.expanded || forLayoutHelper;
 	const forceUpdate = useForceUpdate();
 
 	const textIsRepeated = node.text.includes(textRepeatSplitter);
@@ -69,7 +70,7 @@ export const NodeUI_Inner = observer(function NodeUI_Inner(props: {node: MapNode
 						node.width += 50;
 						forceUpdate();
 					}}/>
-					<Button p="5px 10px" text={nodeState.expanded ? "-" : "+"} onClick={()=>{
+					<Button p="5px 10px" text={expanded_final ? "-" : "+"} enabled={!forLayoutHelper} onClick={()=>{
 						nodeState.expanded = !nodeState.expanded;
 					}}/>
 				</Column>

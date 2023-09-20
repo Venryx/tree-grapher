@@ -175,10 +175,14 @@ export class Graph {
 		});
 	};
 	RunLayout = (direction = "leftToRight" as LayoutDirection)=>{
+		const tree = this.GetLayout(direction);
+		if (tree == null) return;
+		this.ApplyLayout(tree, direction);
+	};
+	GetLayout = (direction = "leftToRight" as LayoutDirection)=>{
 		//Assert(this.containerEl != null, "Container-element not found. Did you forget to set graph.containerEl, or wrap the ref-callback in a useCallback hook?");
-		if (this.containerEl == null || this.groupsByPath.get("0") == null) return;
+		if (this.containerEl == null || this.groupsByPath.get("0") == null) return null;
 
-		const containerPadding = this.containerPadding;
 		const layout = new FlexTreeLayout<NodeGroup>({
 			children: group=>{
 				const children = this.FindChildGroups(group).filter(a=>a.leftColumnEl != null && a.lcSize != null); // ignore children that don't have their basic info loaded yet
@@ -212,7 +216,9 @@ export class Graph {
 		const tree = layout.hierarchy(groupsArray);*/
 		const tree = layout.hierarchy(this.groupsByPath.get("0")!);
 		layout.receiveTree(tree);
-
+		return tree;
+	};
+	ApplyLayout = (tree: FlexNode<NodeGroup>, direction = "leftToRight" as LayoutDirection)=>{
 		const treeNodes = tree.nodes; // This is a getter, and pretty expensive (at scale)! So cache its value here.
 		const nodeRects_base: VRect[] = treeNodes.map(node=>{
 			const newPos = direction == "topToBottom"
@@ -228,7 +234,7 @@ export class Graph {
 			return rect.y - Number(group.innerUISize!.y / 2);
 		})).Min();
 		const maxY = CE(nodeRects_base.map((rect, i)=>rect.Bottom)).Max();
-		const offset = new Vector2(containerPadding.left - minX, containerPadding.top - minY);
+		const offset = new Vector2(this.containerPadding.left - minX, this.containerPadding.top - minY);
 
 		for (const [i, node] of treeNodes.entries()) {
 			const group = node.data;

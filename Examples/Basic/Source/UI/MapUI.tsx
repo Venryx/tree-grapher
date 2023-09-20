@@ -1,0 +1,73 @@
+import {CE, E} from "js-vextensions";
+import {observer} from "mobx-react";
+import React, {useCallback, useMemo, useState} from "react";
+import {ConnectorLinesUI, Graph, GraphColumnsVisualizer, GraphContext, SpaceTakerUI} from "tree-grapher";
+import {store} from "../Store.js";
+import {GetDOM} from "react-vextensions";
+import {MapContext, MapInfo} from "../Root.js";
+import {NodeUI} from "./NodeUI.js";
+import {KeyframeApplier} from "./KeyframeApplier.js";
+import {GetAllNodesInTree_ByNodePath, nodeTree_main} from "../@SharedByExamples/NodeData.js";
+
+export const MapUI = observer(function MapUI(props: {graphInfo: Graph, forLayoutHelper: boolean}) {
+	const {graphInfo, forLayoutHelper} = props;
+
+	const [containerElResolved, setContainerElResolved] = useState(false);
+	const mapUI_ref = useCallback(c=>{
+		//this.mapUIEl = c;
+		graphInfo.containerEl = c;
+		if (graphInfo.containerEl != null) setContainerElResolved(true);
+	}, [graphInfo]);
+
+	const nodeTree = nodeTree_main;
+	const mapInfo = useMemo(()=>{
+		const result = new MapInfo();
+		result.allowKeyframeOverride = !forLayoutHelper;
+		// for demo
+		for (const [path, node] of GetAllNodesInTree_ByNodePath(nodeTree)) {
+			result.GetNodeState(path).expanded = node.expanded ?? false;
+			result.GetNodeState(path).focused = node.focused ?? false;
+			if (forLayoutHelper) {
+				result.GetNodeState(path).expanded = true;
+				result.GetNodeState(path).focused = false;
+			}
+		}
+		return result;
+	}, [nodeTree]);
+
+	// todo: find out why space-taker not taking up space
+
+	return (
+		<div style={{position: "relative", height: `calc(100% - ${forLayoutHelper ? 0 : 30}px)`, overflow: "auto"}}>
+			<div style={E(
+				{position: "relative", minWidth: "fit-content", minHeight: "fit-content"} as const,
+			)}>
+				<SpaceTakerUI graph={graphInfo} scaling={store.zoomLevel}/>
+				<div ref={mapUI_ref} style={E(
+					//{position: "relative", width: "fit-content", height: "fit-content"} as const,
+					{
+						position: "absolute", left: 0, top: 0,
+						width: CE(1 / store.zoomLevel).ToPercentStr(), height: CE(1 / store.zoomLevel).ToPercentStr(),
+						///* display: "flex", */ whiteSpace: "nowrap",
+						alignItems: "center",
+					} as const,
+					//mapState.zoomLevel != 1 && {zoom: mapState.zoomLevel.ToPercentStr()},
+					store.zoomLevel != 1 && {
+						transform: `scale(${CE(store.zoomLevel).ToPercentStr()})`,
+						transformOrigin: "0% 0%",
+					} as const,
+				)}>
+					{containerElResolved &&
+					<MapContext.Provider value={mapInfo}>
+						<GraphContext.Provider value={graphInfo}>
+							<GraphColumnsVisualizer levelsToScrollContainer={3} zoomLevel={store.zoomLevel}/>
+							<ConnectorLinesUI/>
+							<NodeUI node={nodeTree} nodePath={nodeTree.id} treePath="0" forLayoutHelper={forLayoutHelper}/>
+							<KeyframeApplier graph={graphInfo}/>
+						</GraphContext.Provider>
+					</MapContext.Provider>}
+				</div>
+			</div>
+		</div>
+	);
+});
