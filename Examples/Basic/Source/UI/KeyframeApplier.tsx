@@ -2,16 +2,16 @@ import {CE, Lerp, SleepAsync, Vector2, VRect} from "js-vextensions";
 import {observer} from "mobx-react";
 import React, {useContext} from "react";
 import {n} from "react-vcomponents/Dist/@Types.js";
-import {Graph} from "tree-grapher";
-import {GetFocusNodePaths, keyframes} from "../@SharedByExamples/NodeData";
+import {Graph, NodeGroup, FlexNode, GetTreeNodeBaseRect, GetTreeNodeOffset} from "tree-grapher";
+import {GetFocusNodePaths, GetVisibleNodePaths, keyframes} from "../@SharedByExamples/NodeData";
 import {store} from "../Store";
-import {MapContext} from "../Root.js";
+import {MapContext, MapInfo} from "../Root.js";
 
 //let ignoreNextZoomChange = false;
-export const KeyframeApplier = observer(function KeyframeApplier(props: {graph: Graph}) {
-	const {graph} = props;
-	if (graph.containerEl == null) return null;
-	const scrollEl = graph.getScrollElFromContainerEl(graph.containerEl);
+export const KeyframeApplier = observer(function KeyframeApplier(props: {mainGraph: Graph, layoutHelperGraph: Graph|n}) {
+	const {mainGraph, layoutHelperGraph} = props;
+	if (mainGraph.containerEl == null) return null;
+	const scrollEl = mainGraph.getScrollElFromContainerEl(mainGraph.containerEl);
 	if (scrollEl == null) return null;
 	//const zoomLevel = store.zoomLevel;
 	/*if (ignoreNextZoomChange) {
@@ -26,16 +26,22 @@ export const KeyframeApplier = observer(function KeyframeApplier(props: {graph: 
 	const lastFocusNodePaths = GetFocusNodePaths(mapInfo, store.targetTime);
 	const nextFocusNodePaths = GetFocusNodePaths(mapInfo, nextKeyframe.time);
 
-	const lastKeyframe_groupRects = GetGroupRectsAtKeyframe(graph, lastKeyframe.time);
-	const nextKeyframe_groupRects = GetGroupRectsAtKeyframe(graph, nextKeyframe.time);
+	const lastKeyframe_groupRects = GetGroupRectsAtKeyframe(mapInfo, mainGraph, layoutHelperGraph, lastKeyframe.time);
+	const nextKeyframe_groupRects = GetGroupRectsAtKeyframe(mapInfo, mainGraph, layoutHelperGraph, nextKeyframe.time);
+	if (lastKeyframe_groupRects == null || nextKeyframe_groupRects == null) return null;
 
 	const MergeNodeRects = (nodePaths: string[], groupRectsAtTargetTime: Map<string, VRect>)=>{
 		let nodeRectsMerged: VRect|n;
-		for (const group of graph.groupsByPath.values()) {
+		/*for (const group of mainGraph.groupsByPath.values()) {
 			const groupNodePath = group.leftColumn_userData?.["nodePath"] as string;
 			const groupRect = groupRectsAtTargetTime.get(group.path);
 			if (nodePaths.includes(groupNodePath) && groupRect) {
 				nodeRectsMerged = nodeRectsMerged ? nodeRectsMerged.Encapsulating(groupRect) : groupRect;
+			}
+		}*/
+		for (const [nodePath, rect] of groupRectsAtTargetTime) {
+			if (nodePaths.includes(nodePath) && rect) {
+				nodeRectsMerged = nodeRectsMerged ? nodeRectsMerged.Encapsulating(rect) : rect;
 			}
 		}
 		return nodeRectsMerged;
@@ -44,8 +50,8 @@ export const KeyframeApplier = observer(function KeyframeApplier(props: {graph: 
 	const nextFocusNodeRectsMerged = MergeNodeRects(nextFocusNodePaths, nextKeyframe_groupRects);
 	if (lastFocusNodeRectsMerged == null || nextFocusNodeRectsMerged == null) return null;
 	const percentFromLastToNext = (store.targetTime - lastKeyframe.time) / (nextKeyframe.time - lastKeyframe.time);
-	console.log("percentFromLastToNext:", percentFromLastToNext);
 	const focusNodeRects_interpolated = InterpolateRect(lastFocusNodeRectsMerged, nextFocusNodeRectsMerged, percentFromLastToNext);
+	//console.log("percentFromLastToNext:", percentFromLastToNext);
 
 	const viewportSize = new Vector2(scrollEl.clientWidth, scrollEl.clientHeight);
 	// apply just enough zoom-out to be able to fit all of the focus-nodes within the viewport
@@ -96,7 +102,7 @@ function ScrollToPosition_Center(scrollEl: HTMLElement, posInContainer: Vector2)
 		// scroll down a bit extra, such that node is center of window, not center of scroll-view container/viewport (I've tried both, and this way is more centered "perceptually")
 		//(posInContainer.y - (scrollContainerViewportSize.y / 2)) + (topBarsHeight / 2),
 	);
-	//console.log("Loading scroll:", newScroll.toString());
+	console.log("Loading scroll:", newScroll.toString());
 	SetScroll(scrollEl, newScroll);
 }
 export const GetScroll = (scrollEl: HTMLElement)=>new Vector2(scrollEl.scrollLeft, scrollEl.scrollTop);
@@ -111,8 +117,31 @@ export function InterpolateRect(rectA: VRect, rectB: VRect, percent: number) {
 	);
 }
 
-export function GetGroupRectsAtKeyframe(graph: Graph, keyframeTime: number) {
-	// temp; for now, just use the graph's current group-rects
-	return CE([...graph.groupsByPath.entries()]).ToMap(a=>a[0], a=>a[1].InnerUIRect!);
-	// break point
+export function GetGroupRectsAtKeyframe(mapInfo: MapInfo, mainGraph: Graph, layoutHelperGraph: Graph|n, keyframeTime: number) {
+	//return CE([...mainGraph.groupsByPath.entries()]).ToMap(a=>a[0], a=>a[1].InnerUIRect!);
+
+	const nodesVisibleAtKeyframe = GetVisibleNodePaths(mapInfo, keyframeTime);
+	
+	let tree: FlexNode<NodeGroup>;
+	if (layoutHelperGraph != null) {
+		tree = layoutHelperGraph.GetLayout(undefined, group=>{
+			//return mainGraph.groupsByPath.has(group.path);
+			return nodesVisibleAtKeyframe.includes(group.leftColumn_userData?.["nodePath"] as string);
+		})!;
+	} else {
+		tree = mainGraph.GetLayout()!;
+	}
+	if (tree == null) return null;
+
+	const treeNodes = tree.nodes; // This is a getter, and pretty expensive (at scale)! So cache its value here.
+	const nodeRects_base: VRect[] = treeNodes.map(node=>GetTreeNodeBaseRect(node));
+	const {offset} = GetTreeNodeOffset(nodeRects_base, treeNodes, mainGraph.containerPadding);
+	const nodeRects_final = nodeRects_base.map(a=>a.NewPosition(b=>b.Plus(offset)));
+
+	const groupRects = new Map<string, VRect>();
+	for (const [i, treeNode] of treeNodes.entries()) {
+		const nodePath = treeNode.data.leftColumn_userData?.["nodePath"] as string;
+		groupRects.set(nodePath, nodeRects_final[i]);
+	}
+	return groupRects;
 }

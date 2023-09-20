@@ -95,6 +95,17 @@ export function GetFocusNodePaths(mapInfo: MapInfo, targetTime: number) {
 	return nodePaths.filter(path=>mapInfo.GetNodeState(path, undefined, targetTime).focused);
 }
 
+export function GetVisibleNodePaths(mapInfo: MapInfo, targetTime: number) {
+	const nodePaths = [...mapInfo.nodeStates.keys()];
+	return nodePaths.filter(path=>{
+		if (path.includes("/")) {
+			const parentPath = path.split("/").slice(0, -1).join("/");
+			return mapInfo.GetNodeState(parentPath, undefined, targetTime).expanded;
+		}
+		return true; // root-node always visible
+	});
+}
+
 /*export function UpdateNodeTreeUsingKeyframes() {
 	const keyframesToApply = keyframes.filter(a=>a.time <= store.targetTime);
 	const newNodeTree = Clone(nodeTree_main_orig);

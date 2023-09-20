@@ -2,7 +2,7 @@ import { Assert, CE, Vector2, VRect } from "js-vextensions";
 import { configure } from "mobx";
 import { createContext } from "react";
 import { FlexTreeLayout } from "./Core/Core.js";
-import { NodeGroup, TreePathAsSortableStr } from "./Graph/NodeGroup.js";
+import { NodeGroup } from "./Graph/NodeGroup.js";
 // maybe temp
 configure({ enforceActions: "never" });
 //const defaultGraph = new Graph({columnWidth: 100});
@@ -46,13 +46,13 @@ export class Graph {
         if (groupsUnderParent == null)
             return [];
         let result = [...groupsUnderParent.values()];
-        result = CE(result).OrderBy(a => TreePathAsSortableStr(a.path));
+        result = CE(result).OrderBy(a => a.path_sortable);
         return result;
     }
     FindDescendantGroups(parentGroup) {
         const prefix = `${parentGroup.path}/`;
         let result = [...this.groupsByPath.values()].filter(a => a.path.startsWith(prefix));
-        result = CE(result).OrderBy(a => TreePathAsSortableStr(a.path));
+        result = CE(result).OrderBy(a => a.path_sortable);
         return result;
     }
     GetOrCreateGroup(treePath) {
@@ -154,17 +154,17 @@ export class Graph {
             return;
         this.ApplyLayout(tree, direction);
     };
-    GetLayout = (direction = "leftToRight") => {
+    GetLayout = (direction = "leftToRight", nodeGroupFilter = (group) => true) => {
         //Assert(this.containerEl != null, "Container-element not found. Did you forget to set graph.containerEl, or wrap the ref-callback in a useCallback hook?");
         if (this.containerEl == null || this.groupsByPath.get("0") == null)
             return null;
         const layout = new FlexTreeLayout({
             children: group => {
-                const children = this.FindChildGroups(group).filter(a => a.leftColumnEl != null && a.lcSize != null); // ignore children that don't have their basic info loaded yet
+                const children = this.FindChildGroups(group).filter(nodeGroupFilter).filter(a => a.leftColumnEl != null && a.lcSize != null); // ignore children that don't have their basic info loaded yet
                 const children_noSelfSideBoxes = children.filter(a => !a.leftColumn_connectorOpts.parentIsAbove);
                 const children_noSelfSideBoxes_addChildSideBoxes = CE(children_noSelfSideBoxes).SelectMany(child => {
                     const result = [child];
-                    for (const grandChild of this.FindChildGroups(child)) {
+                    for (const grandChild of this.FindChildGroups(child).filter(nodeGroupFilter)) {
                         if (grandChild.leftColumn_connectorOpts.parentIsAbove) {
                             result.push(grandChild);
                         }
@@ -194,27 +194,18 @@ export class Graph {
     };
     ApplyLayout = (tree, direction = "leftToRight") => {
         const treeNodes = tree.nodes; // This is a getter, and pretty expensive (at scale)! So cache its value here.
-        const nodeRects_base = treeNodes.map(node => {
-            const newPos = direction == "topToBottom"
-                ? new VRect(node.x, node.y, node.xSize, node.ySize)
-                : new VRect(node.y, node.x, node.ySize, node.xSize);
-            return newPos;
-        });
-        const minX = CE(nodeRects_base.map((rect, i) => rect.x)).Min();
-        const maxX = CE(nodeRects_base.map((rect, i) => rect.Right)).Min();
-        //const minY = CE(nodeRects_base.map((rect, i)=>rect.y)).Min();
-        const minY = CE(nodeRects_base.map((rect, i) => {
-            const group = treeNodes[i].data;
-            return rect.y - Number(group.innerUISize.y / 2);
-        })).Min();
-        const maxY = CE(nodeRects_base.map((rect, i) => rect.Bottom)).Max();
-        const offset = new Vector2(this.containerPadding.left - minX, this.containerPadding.top - minY);
+        const nodeRects_base = treeNodes.map(node => GetTreeNodeBaseRect(node, direction));
+        const { offset } = GetTreeNodeOffset(nodeRects_base, treeNodes, this.containerPadding);
+        //const nodeRects_final = nodeRects_base.map(a=>a.NewPosition(b=>b.Plus(offset)));
+        const nodePositions_final = nodeRects_base.map(a => a.Position.Plus(offset));
         for (const [i, node] of treeNodes.entries()) {
             const group = node.data;
             if (group.leftColumnEl == null)
                 continue;
-            const newPos = nodeRects_base[i].Position.Plus(offset);
-            group.assignedPosition = newPos;
+            /*const newPos = nodeRects_base[i].Position.Plus(offset);
+            group.assignedPosition = newPos;*/
+            //group.assignedPosition = nodeRects_final[i].Position;
+            group.assignedPosition = nodePositions_final[i];
             const newRect = group.LCRect;
             if (!newRect?.Equals(group.lcRect_atLastRender)) {
                 group.leftColumnEl.style.left = `${group.assignedPosition.x}px`;
@@ -233,6 +224,24 @@ export class Graph {
         this.spaceTakerComp?.forceUpdate();
         this.connectorLinesComp?.forceUpdate();
     };
+}
+export function GetTreeNodeBaseRect(treeNode, direction = "leftToRight") {
+    const newPos = direction == "topToBottom"
+        ? new VRect(treeNode.x, treeNode.y, treeNode.xSize, treeNode.ySize)
+        : new VRect(treeNode.y, treeNode.x, treeNode.ySize, treeNode.xSize);
+    return newPos;
+}
+export function GetTreeNodeOffset(baseRects, treeNodes, containerPadding) {
+    const minX = CE(baseRects.map((rect, i) => rect.x)).Min();
+    const maxX = CE(baseRects.map((rect, i) => rect.Right)).Min();
+    //const minY = CE(baseRects.map((rect, i)=>rect.y)).Min();
+    const minY = CE(baseRects.map((rect, i) => {
+        const group = treeNodes[i].data;
+        return rect.y - Number(group.innerUISize.y / 2);
+    })).Min();
+    const maxY = CE(baseRects.map((rect, i) => rect.Bottom)).Max();
+    const offset = new Vector2(containerPadding.left - minX, containerPadding.top - minY);
+    return { minX, maxX, minY, maxY, offset };
 }
 /*export class GraphPassInfo {
     treePath: string;

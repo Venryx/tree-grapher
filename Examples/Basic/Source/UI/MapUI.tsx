@@ -9,25 +9,25 @@ import {NodeUI} from "./NodeUI.js";
 import {KeyframeApplier} from "./KeyframeApplier.js";
 import {GetAllNodesInTree_ByNodePath, nodeTree_main} from "../@SharedByExamples/NodeData.js";
 
-export const MapUI = observer(function MapUI(props: {graphInfo: Graph, forLayoutHelper: boolean}) {
-	const {graphInfo, forLayoutHelper} = props;
+export const MapUI = observer(function MapUI(props: {mainGraph: Graph, mainGraphIsLayoutHelper: boolean, layoutHelperGraph?: Graph}) {
+	const {mainGraph, mainGraphIsLayoutHelper, layoutHelperGraph} = props;
 
 	const [containerElResolved, setContainerElResolved] = useState(false);
 	const mapUI_ref = useCallback(c=>{
 		//this.mapUIEl = c;
-		graphInfo.containerEl = c;
-		if (graphInfo.containerEl != null) setContainerElResolved(true);
-	}, [graphInfo]);
+		mainGraph.containerEl = c;
+		if (mainGraph.containerEl != null) setContainerElResolved(true);
+	}, [mainGraph]);
 
 	const nodeTree = nodeTree_main;
 	const mapInfo = useMemo(()=>{
 		const result = new MapInfo();
-		result.allowKeyframeOverride = !forLayoutHelper;
+		result.allowKeyframeOverride = !mainGraphIsLayoutHelper;
 		// for demo
 		for (const [path, node] of GetAllNodesInTree_ByNodePath(nodeTree)) {
 			result.GetNodeState(path).expanded = node.expanded ?? false;
 			result.GetNodeState(path).focused = node.focused ?? false;
-			if (forLayoutHelper) {
+			if (mainGraphIsLayoutHelper) {
 				result.GetNodeState(path).expanded = true;
 				result.GetNodeState(path).focused = false;
 			}
@@ -35,14 +35,12 @@ export const MapUI = observer(function MapUI(props: {graphInfo: Graph, forLayout
 		return result;
 	}, [nodeTree]);
 
-	// todo: find out why space-taker not taking up space
-
 	return (
-		<div style={{position: "relative", height: `calc(100% - ${forLayoutHelper ? 0 : 30}px)`, overflow: "auto"}}>
+		<div style={{position: "relative", height: `calc(100% - ${mainGraphIsLayoutHelper ? 0 : 30}px)`, overflow: "auto"}}>
 			<div style={E(
 				{position: "relative", minWidth: "fit-content", minHeight: "fit-content"} as const,
 			)}>
-				<SpaceTakerUI graph={graphInfo} scaling={store.zoomLevel}/>
+				<SpaceTakerUI graph={mainGraph} scaling={store.zoomLevel}/>
 				<div ref={mapUI_ref} style={E(
 					//{position: "relative", width: "fit-content", height: "fit-content"} as const,
 					{
@@ -59,11 +57,11 @@ export const MapUI = observer(function MapUI(props: {graphInfo: Graph, forLayout
 				)}>
 					{containerElResolved &&
 					<MapContext.Provider value={mapInfo}>
-						<GraphContext.Provider value={graphInfo}>
+						<GraphContext.Provider value={mainGraph}>
 							<GraphColumnsVisualizer levelsToScrollContainer={3} zoomLevel={store.zoomLevel}/>
 							<ConnectorLinesUI/>
-							<NodeUI node={nodeTree} nodePath={nodeTree.id} treePath="0" forLayoutHelper={forLayoutHelper}/>
-							<KeyframeApplier graph={graphInfo}/>
+							<NodeUI node={nodeTree} nodePath={nodeTree.id} treePath="0" forLayoutHelper={mainGraphIsLayoutHelper}/>
+							<KeyframeApplier mainGraph={mainGraph} layoutHelperGraph={layoutHelperGraph}/>
 						</GraphContext.Provider>
 					</MapContext.Provider>}
 				</div>

@@ -6,3 +6,5 @@ export * from "./UI/ConnectorLinesUI.js";
 export * from "./Utils/General/MobX.js";
 export * from "./Utils/UI.js";
 export * from "./Core/Core.js";
+export * from "./Core/FlexNode.js";
+export * from "./Graph/NodeGroup.js";

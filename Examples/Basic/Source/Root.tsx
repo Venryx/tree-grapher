@@ -102,18 +102,18 @@ export const urlOpts = GetURLOptions();
 
 export const RootUI = observer(function RootUI() {
 	//const containerRef = useRef<HTMLDivElement | null>(null);
-	const graphInfo_main = useGraph(false);
-	const graphInfo_forLayoutHelper = useGraph(true);
+	const graph_main = useGraph(false);
+	const graph_layoutHelper = useGraph(true);
 
 	// update some graph info
 	const paddingAmount = urlOpts.anim ? 1000 : 100;
-	graphInfo_main.containerPadding = {left: paddingAmount, top: paddingAmount, right: paddingAmount, bottom: paddingAmount};
-	graphInfo_forLayoutHelper.containerPadding = {left: paddingAmount, top: paddingAmount, right: paddingAmount, bottom: paddingAmount};
+	graph_main.containerPadding = {left: paddingAmount, top: paddingAmount, right: paddingAmount, bottom: paddingAmount};
+	graph_layoutHelper.containerPadding = {left: paddingAmount, top: paddingAmount, right: paddingAmount, bottom: paddingAmount};
 
 	return (
 		<Column style={{position: "relative", height: "100%"}}>
 			<Toolbar/>
-			<MapUI graphInfo={graphInfo_main} forLayoutHelper={false}/>
+			<MapUI mainGraph={graph_main} mainGraphIsLayoutHelper={false} layoutHelperGraph={graph_layoutHelper}/>
 			<div
 				className={
 					[!store.layoutHelper_show && "hideAndCompletelyBlockMouseEvents"].filter(a=>a).join(" ")
@@ -125,7 +125,7 @@ export const RootUI = observer(function RootUI() {
 				.hideAndCompletelyBlockMouseEvents { opacity: 0 !important; pointer-events: none !important; }
 				.hideAndCompletelyBlockMouseEvents * { opacity: 0 !important; pointer-events: none !important; }
 				`}</style>
-				<MapUI graphInfo={graphInfo_forLayoutHelper} forLayoutHelper={true}/>
+				<MapUI mainGraph={graph_layoutHelper} mainGraphIsLayoutHelper={true}/>
 			</div>
 		</Column>
 	);

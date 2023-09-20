@@ -1,4 +1,5 @@
 /// <reference types="react" />
+import { Vector2, VRect } from "js-vextensions";
 import type { FlashComp } from "ui-debug-kit";
 import { SpacingFunc } from "./Core/Core.js";
 import { FlexNode } from "./Core/FlexNode.js";
@@ -7,16 +8,17 @@ import { ConnectorLinesUI_Handle, NodeConnectorOpts } from "./index.js";
 import { SpaceTakerUI_Handle } from "./UI/SpaceTakerUI.js";
 import { n, RequiredBy } from "./Utils/@Internal/Types.js";
 export declare const GraphContext: import("react").Context<Graph>;
+export type Padding = {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+};
 export declare class Graph {
     constructor(data: RequiredBy<Partial<Graph>, "layoutOpts">);
     containerEl?: HTMLElement;
     getScrollElFromContainerEl: (containerEl: HTMLElement) => HTMLElement | null;
-    containerPadding: {
-        left: number;
-        right: number;
-        top: number;
-        bottom: number;
-    };
+    containerPadding: Padding;
     spaceTakerComp: SpaceTakerUI_Handle | n;
     connectorLinesComp: ConnectorLinesUI_Handle | n;
     layoutOpts: {
@@ -47,7 +49,15 @@ export declare class Graph {
     runLayout_scheduled: boolean;
     RunLayout_InAMoment: () => void;
     RunLayout: (direction?: LayoutDirection) => void;
-    GetLayout: (direction?: LayoutDirection) => FlexNode<NodeGroup> | null;
+    GetLayout: (direction?: LayoutDirection, nodeGroupFilter?: (group: NodeGroup) => boolean) => FlexNode<NodeGroup> | null;
     ApplyLayout: (tree: FlexNode<NodeGroup>, direction?: LayoutDirection) => void;
 }
 export type LayoutDirection = "topToBottom" | "leftToRight";
+export declare function GetTreeNodeBaseRect(treeNode: FlexNode<any>, direction?: LayoutDirection): VRect;
+export declare function GetTreeNodeOffset(baseRects: VRect[], treeNodes: FlexNode<NodeGroup>[], containerPadding: Padding): {
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+    offset: Vector2;
+};
