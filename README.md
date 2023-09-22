@@ -19,6 +19,8 @@ Library for calculating where to draw tree nodes, while avoiding overlap.
 ## Tasks
 
 Short term:
+* Improve performance enough that animation system works fine, even when animation is run in real-time/full-speed. (not needed immediately, since initial animation will render frame-by-frame) [NOTE: it's maybe already fast enough, but probably not]
+* MS animation system works properly, even in cases where the user interacts with nodes and changes their sizes. (not needed immediately, since initial animation use-cases don't have this sort of user interaction)
 * MS the "align with parent" option works again.
 * There's still some code from the old implementation that's not useful anymore and needs to be removed.
 

@@ -1,7 +1,7 @@
-import {CE, E} from "js-vextensions";
-import {observable} from "mobx";
+import {CE, E, Timer} from "js-vextensions";
+import {makeObservable, observable, runInAction} from "mobx";
 import {observer} from "mobx-react";
-import React, {createContext} from "react";
+import React, {createContext, useMemo} from "react";
 import {Button, CheckBox, Column, Row, Spinner, Text, TimeSpanInput} from "react-vcomponents";
 import {Graph, makeObservable_safe} from "tree-grapher";
 import {FlashOptions} from "ui-debug-kit";
@@ -148,8 +148,8 @@ const Toolbar = observer(()=>{
 
 			{urlOpts.anim &&
 			<Row ml={10}>
-				<Button text={store.playing ? "⏸" : "▶"} onClick={()=>store.playing = !store.playing}/>
-				<Spinner style={{width: 45}} instant={true} min={0} max={10} step={.1} value={store.speed} onChange={val=>store.speed = val}/>
+				<Button text={store.framePlayer.playing ? "⏸" : "▶"} onClick={()=>store.framePlayer.SetPlaying(!store.framePlayer.playing)}/>
+				<Spinner style={{width: 45}} instant={true} min={0} max={10} step={.1} value={store.framePlayer.speed} onChange={val=>store.framePlayer.SetSpeed(val)}/>
 				<TimeSpanInput largeUnit="minute" smallUnit="second" style={{width: 60}} value={store.targetTime ?? 0} onChange={val=>store.SetTargetTime(val)}/>
 				<Text ml={3} title="With mouse over button, mouse scroll-wheel moves forward/backward by X frames.">Seek:</Text>
 				<Button text="±1" ml={3} p={5} onClick={()=>store.AdjustTargetTimeByFrames(1)} onWheel={e=>store.AdjustTargetTimeByFrames(Math.sign(e.deltaY) * 1)}/>
