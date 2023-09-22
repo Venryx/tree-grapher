@@ -102,8 +102,8 @@ export const urlOpts = GetURLOptions();
 
 export const RootUI = observer(function RootUI() {
 	//const containerRef = useRef<HTMLDivElement | null>(null);
-	const graph_main = useGraph(false);
-	const graph_layoutHelper = useGraph(true);
+	const graph_layoutHelper = useGraph(true, null);
+	const graph_main = useGraph(false, graph_layoutHelper);
 
 	// update some graph info
 	const paddingAmount = urlOpts.anim ? 1000 : 100;

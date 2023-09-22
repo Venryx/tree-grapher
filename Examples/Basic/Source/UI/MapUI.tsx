@@ -9,6 +9,9 @@ import {NodeUI} from "./NodeUI.js";
 import {KeyframeApplier} from "./KeyframeApplier.js";
 import {GetAllNodesInTree_ByNodePath, nodeTree_main} from "../@SharedByExamples/NodeData.js";
 
+/*export let mapInfo_main: MapInfo;
+export let mapInfo_layoutHelper: MapInfo;*/
+
 export const MapUI = observer(function MapUI(props: {mainGraph: Graph, mainGraphIsLayoutHelper: boolean, layoutHelperGraph?: Graph}) {
 	const {mainGraph, mainGraphIsLayoutHelper, layoutHelperGraph} = props;
 
@@ -35,8 +38,11 @@ export const MapUI = observer(function MapUI(props: {mainGraph: Graph, mainGraph
 		return result;
 	}, [nodeTree]);
 
+	/*if (mainGraphIsLayoutHelper) mapInfo_layoutHelper = mapInfo;
+	else mapInfo_main = mapInfo;*/
+
 	return (
-		<div style={{position: "relative", height: `calc(100% - ${mainGraphIsLayoutHelper ? 0 : 30}px)`, overflow: "auto"}}>
+		<div style={{position: "relative", height: `calc(100% - ${mainGraphIsLayoutHelper ? 0 : 30}px)`, overflow: "scroll"}}>
 			<div style={E(
 				{position: "relative", minWidth: "fit-content", minHeight: "fit-content"} as const,
 			)}>

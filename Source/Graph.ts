@@ -1,5 +1,5 @@
-import {Assert, CE, TreeNode, Vector2, VRect} from "js-vextensions";
-import {configure} from "mobx";
+import {Assert, CE, Lerp, TreeNode, Vector2, VRect} from "js-vextensions";
+import {configure, autorun, IReactionDisposer} from "mobx";
 import {createContext} from "react";
 import type {FlashComp} from "ui-debug-kit";
 import {FlexTreeLayout, SpacingFunc} from "./Core/Core.js";
@@ -17,6 +17,16 @@ configure({enforceActions: "never"});
 const defaultGraph = undefined as any as Graph; // we want an error if someone forgets to add the GraphContext.Provider wrapper
 export const GraphContext = createContext<Graph>(defaultGraph);
 
+export type KeyframeInfo = {
+	//layoutHelperGraph: Graph,
+	layout: FlexNode<NodeGroup>;
+	percentThroughTransition: number,
+};
+//export type AnimationData = {visibleNodeGroupPaths: string[], percentThroughTransition: number};
+export function InterpolateVector(vecA: Vector2, vecB: Vector2, percent: number) {
+	return new Vector2(Lerp(vecA.x, vecB.x, percent), Lerp(vecA.y, vecB.y, percent));
+}
+
 export type Padding = {left: number, right: number, top: number, bottom: number};
 export class Graph {
 	constructor(data: RequiredBy<Partial<Graph>, "layoutOpts">) {
@@ -25,6 +35,28 @@ export class Graph {
 	//containerEl = document.body; // start out the "container" as the body, just so there aren't null errors prior to container-ref resolving
 	containerEl?: HTMLElement;
 	getScrollElFromContainerEl = (containerEl: HTMLElement)=>containerEl.parentElement;
+
+	// animation system
+	/** This should be a mobx-compatible getter function, which returns information required for smoothly animating changes to node positions. (will try to add animation of size-changes later) */
+	private getNextKeyframeInfo?: ()=>KeyframeInfo;
+	private getGroupStablePath: (group: NodeGroup)=>string;
+	animation_autorunDisposer?: IReactionDisposer;
+	// live variables (ie. driven by animation-autorun, which then trigger new layouts)
+	nextKeyframeInfo?: KeyframeInfo;
+	StartAnimating(getNextKeyframeInfo: ()=>KeyframeInfo, getGroupStablePath: (group: NodeGroup)=>string) {
+		if (this.animation_autorunDisposer != null) {
+			throw new Error("Animation autorun already exists; must end the earlier one first.");
+		}
+		this.getNextKeyframeInfo = getNextKeyframeInfo;
+		this.getGroupStablePath = getGroupStablePath;
+		this.animation_autorunDisposer = autorun(()=>{
+			this.nextKeyframeInfo = this.getNextKeyframeInfo!();
+			this.RunLayout_InAMoment();
+		});
+	}
+	StopAnimating() {
+		if (this.animation_autorunDisposer) this.animation_autorunDisposer();
+	}
 
 	/*get ContainerPadding() {
 		return {
@@ -176,9 +208,9 @@ export class Graph {
 		});
 	};
 	RunLayout = (direction = "leftToRight" as LayoutDirection)=>{
-		const tree = this.GetLayout(direction);
-		if (tree == null) return;
-		this.ApplyLayout(tree, direction);
+		const ownLayout = this.GetLayout(direction);
+		if (ownLayout == null) return;
+		this.ApplyLayout(ownLayout, direction);
 	};
 	GetLayout = (direction = "leftToRight" as LayoutDirection, nodeGroupFilter = (group: NodeGroup)=>true)=>{
 		//Assert(this.containerEl != null, "Container-element not found. Did you forget to set graph.containerEl, or wrap the ref-callback in a useCallback hook?");
@@ -219,12 +251,28 @@ export class Graph {
 		layout.receiveTree(tree);
 		return tree;
 	};
-	ApplyLayout = (tree: FlexNode<NodeGroup>, direction = "leftToRight" as LayoutDirection)=>{
-		const treeNodes = tree.nodes; // This is a getter, and pretty expensive (at scale)! So cache its value here.
+	ApplyLayout = (ownLayout: FlexNode<NodeGroup>, direction = "leftToRight" as LayoutDirection, applyAnimationModifiers = true)=>{
+		const treeNodes = ownLayout.nodes; // This is a getter, and pretty expensive (at scale)! So cache its value here.
 		const nodeRects_base: VRect[] = treeNodes.map(node=>GetTreeNodeBaseRect(node, direction));
 		const {offset} = GetTreeNodeOffset(nodeRects_base, treeNodes, this.containerPadding);
 		//const nodeRects_final = nodeRects_base.map(a=>a.NewPosition(b=>b.Plus(offset)));
 		const nodePositions_final = nodeRects_base.map(a=>a.Position.Plus(offset));
+
+		// animation system, prep
+		const helperTreeNodesByStablePath = new Map<string, FlexNode<NodeGroup>>();
+		let helperLayout_offset = new Vector2(0, 0);
+		if (applyAnimationModifiers && this.animation_autorunDisposer != null && this.nextKeyframeInfo?.layout != null) {
+			const helperLayout = this.nextKeyframeInfo.layout;
+			const helperTreeNodes = helperLayout.nodes; // This is a getter, and pretty expensive (at scale)! So cache its value here.
+			const helperNodeRects_base: VRect[] = helperTreeNodes.map(node=>GetTreeNodeBaseRect(node, direction));
+			const {offset} = GetTreeNodeOffset(helperNodeRects_base, helperTreeNodes, this.containerPadding);
+			helperLayout_offset = offset;
+			//const helperNodePositions_final = nodeRects_base.map(a=>a.Position.Plus(offset));
+			for (const treeNode of helperTreeNodes) {
+				const stablePath = this.getGroupStablePath!(treeNode.data);
+				helperTreeNodesByStablePath.set(stablePath, treeNode);
+			}
+		}
 
 		for (const [i, node] of treeNodes.entries()) {
 			const group = node.data;
@@ -233,13 +281,25 @@ export class Graph {
 			group.assignedPosition = newPos;*/
 			//group.assignedPosition = nodeRects_final[i].Position;
 			group.assignedPosition = nodePositions_final[i];
+			group.assignedPosition_final = group.assignedPosition;
+
+			// animation system, apply
+			if (applyAnimationModifiers && this.animation_autorunDisposer != null && this.nextKeyframeInfo?.layout != null) {
+				const groupStablePath = this.getGroupStablePath(group);
+				const helperTreeNode = helperTreeNodesByStablePath.get(groupStablePath);
+				if (helperTreeNode) {
+					//const helperGroup = helperTreeNode.data;
+					const helperGroup_position = GetTreeNodeBaseRect(helperTreeNode, direction).Position.Plus(helperLayout_offset);
+					group.assignedPosition_final = InterpolateVector(group.assignedPosition, helperGroup_position, this.nextKeyframeInfo.percentThroughTransition);
+				}
+			}
 
 			const newRect = group.LCRect;
 			if (!newRect?.Equals(group.lcRect_atLastRender)) {
-				group.leftColumnEl.style.left = `${group.assignedPosition.x}px`;
+				group.leftColumnEl.style.left = `${group.assignedPosition_final.x}px`;
 				//group.leftColumnEl.style.left = `calc(${group.assignedPosition.x}px - ${group.innerUIRect!.width / 2}px)`;
 				//group.leftColumnEl.style.top = `${group.assignedPosition.y}px`;
-				group.leftColumnEl.style.top = `calc(${group.assignedPosition.y}px - ${Number(group.innerUISize!.y / 2)}px)`;
+				group.leftColumnEl.style.top = `calc(${group.assignedPosition_final.y}px - ${Number(group.innerUISize!.y / 2)}px)`;
 				//console.log(`For ${group.path}, assigned pos: ${group.assignedPosition}`);
 
 				// if this is our first render/layout, clear the style that had made our node invisible

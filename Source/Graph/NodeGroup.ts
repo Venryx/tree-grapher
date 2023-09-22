@@ -51,7 +51,8 @@ export class NodeGroup {
 	}
 
 	// pos
-	assignedPosition = Vector2.zero;
+	assignedPosition = Vector2.zero; // raw value obtained from own graph, for layout position
+	assignedPosition_final = Vector2.zero; // like assignedPosition, except includes modifications due to animation
 
 	// sizes (inputs/observed; just storage for "actual rects" observed)
 	lcSize_old: Vector2|n; // based on getBoundingClientRect()
@@ -70,19 +71,19 @@ export class NodeGroup {
 	innerUIRect_atLastRender: VRect|n;
 	get LCRect_Old() {
 		if (this.lcSize == null) return null;
-		return new VRect(this.assignedPosition.NewY(y=>y - (this.lcSize!.y / 2)), this.lcSize);
+		return new VRect(this.assignedPosition_final.NewY(y=>y - (this.lcSize!.y / 2)), this.lcSize);
 	}
 	get LCRect() {
 		if (this.lcSize == null) return null;
-		return new VRect(this.assignedPosition.NewY(y=>y - (this.lcSize!.y / 2)), this.lcSize);
+		return new VRect(this.assignedPosition_final.NewY(y=>y - (this.lcSize!.y / 2)), this.lcSize);
 	}
 	get InnerUIRect_Old() {
 		if (this.innerUISize == null) return null;
-		return new VRect(this.assignedPosition.NewX(x=>x + this.GutterWidth).NewY(y=>y - (this.innerUISize!.y / 2)), this.innerUISize);
+		return new VRect(this.assignedPosition_final.NewX(x=>x + this.GutterWidth).NewY(y=>y - (this.innerUISize!.y / 2)), this.innerUISize);
 	}
 	get InnerUIRect() {
 		if (this.innerUISize == null) return null;
-		return new VRect(this.assignedPosition.NewX(x=>x + this.GutterWidth).NewY(y=>y - (this.innerUISize!.y / 2)), this.innerUISize);
+		return new VRect(this.assignedPosition_final.NewX(x=>x + this.GutterWidth).NewY(y=>y - (this.innerUISize!.y / 2)), this.innerUISize);
 	}
 
 	DetachAndDestroy() {

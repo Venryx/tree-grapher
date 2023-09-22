@@ -50,6 +50,15 @@ export const nodeTree_main = NewNode({id: "0", expanded: true, children: [
 ]});
 export const nodeTree_main_orig = Clone(nodeTree_main);
 
+export function GetAllNodeStatesInNodeTreeMain_JustFromKeyframes(targetTime: number) {
+	const nodesByNodePath = GetAllNodesInTree_ByNodePath(nodeTree_main);
+	const nodeStates = new Map<string, NodeState>();
+	for (const [nodePath, node] of nodesByNodePath) {
+		nodeStates.set(nodePath, GetNodeStateFromKeyframes(node.id, targetTime));
+	}
+	return nodeStates;
+}
+
 export const keyframes: Keyframe[] = [
 	// this line just replicates the initial state of the node-tree, as a keyframe (will probably use better system later)
 	new Keyframe({time: 0, actions: {all: {setExpanded: true},
@@ -105,6 +114,17 @@ export function GetVisibleNodePaths(mapInfo: MapInfo, targetTime: number) {
 		return true; // root-node always visible
 	});
 }
+export function GetVisibleNodePaths_JustFromKeyframes(targetTime: number) {
+	const nodeStates = GetAllNodeStatesInNodeTreeMain_JustFromKeyframes(targetTime);
+	const nodePaths = [...nodeStates.keys()];
+	return nodePaths.filter(path=>{
+		if (path.includes("/")) {
+			const parentPath = path.split("/").slice(0, -1).join("/");
+			return nodeStates.get(parentPath)!.expanded;
+		}
+		return true; // root-node always visible
+	});
+}
 
 /*export function UpdateNodeTreeUsingKeyframes() {
 	const keyframesToApply = keyframes.filter(a=>a.time <= store.targetTime);
@@ -128,6 +148,26 @@ export function GetAllNodesInTree(nodeTree: MapNodeWithState) {
 	}
 	return result;
 }
+export function GetAllNodesInTree_ByNodePath<T extends MapNodeWithState>(nodeTree: T, path = nodeTree.id) {
+	const result = new Map<string, MapNodeWithState>();
+	result.set(path, nodeTree);
+	for (const child of nodeTree.children) {
+		for (const [descendantPath, descendant] of GetAllNodesInTree_ByNodePath(child, `${path}/${child.id}`)) {
+			result.set(descendantPath, descendant);
+		}
+	}
+	return result;
+}
+/*export function GetAllNodesInTree_ByNodePath(tree: MapNodeWithState) {
+	const result = new Map<string, MapNodeWithState>();
+	result.set(tree.id, tree);
+	for (const child of tree.children) {
+		for (const [descendantPath, descendant] of GetAllNodesInTree_ByNodePath(child)) {
+			result.set(`${tree.id}/${descendantPath}`, descendant)
+		}
+	}
+	return result;
+}*/
 
 /*export function GetAllNodesInTree_ByTreePath<T extends MapNodeWithState>(nodeTree: T, path = "0") {
 	const result = new Map<string, MapNodeWithState>();
@@ -144,16 +184,6 @@ export function GetNodeIDFromTreePath(treePath: string) {
 	return allNodes.get(treePath)?.id;
 }*/
 
-export function GetAllNodesInTree_ByNodePath<T extends MapNodeWithState>(nodeTree: T, path = nodeTree.id) {
-	const result = new Map<string, MapNodeWithState>();
-	result.set(path, nodeTree);
-	for (const child of nodeTree.children) {
-		for (const [descendantPath, descendant] of GetAllNodesInTree_ByNodePath(child, `${path}/${child.id}`)) {
-			result.set(descendantPath, descendant);
-		}
-	}
-	return result;
-}
 export function GetNodeIDFromNodePath(path: string) {
 	/*const allNodes = GetAllNodesInTree_ByNodePath(nodeTree_main);
 	return allNodes.get(path)?.id;*/

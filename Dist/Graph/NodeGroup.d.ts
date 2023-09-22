@@ -27,6 +27,7 @@ export declare class NodeGroup {
     childHolder_belowParent: boolean;
     get GutterWidth(): number;
     assignedPosition: Vector2;
+    assignedPosition_final: Vector2;
     lcSize_old: Vector2 | n;
     lcSize: Vector2 | n;
     innerUISize_old: Vector2 | n;

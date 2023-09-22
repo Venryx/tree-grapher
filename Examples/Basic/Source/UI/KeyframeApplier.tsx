@@ -6,6 +6,14 @@ import {Graph, NodeGroup, FlexNode, GetTreeNodeBaseRect, GetTreeNodeOffset} from
 import {GetFocusNodePaths, GetVisibleNodePaths, keyframes} from "../@SharedByExamples/NodeData";
 import {store} from "../Store";
 import {MapContext, MapInfo} from "../Root.js";
+import {GetPercentThroughTransition} from "./MapGraph.js";
+
+export const GetLastKeyframe = ()=>{
+	return keyframes.findLast(a=>a.time <= store.targetTime);
+};
+export const GetNextKeyframe = ()=>{
+	return keyframes.find(a=>a.time > store.targetTime);
+};
 
 //let ignoreNextZoomChange = false;
 export const KeyframeApplier = observer(function KeyframeApplier(props: {mainGraph: Graph, layoutHelperGraph: Graph|n}) {
@@ -20,8 +28,8 @@ export const KeyframeApplier = observer(function KeyframeApplier(props: {mainGra
 	}*/
 
 	const mapInfo = useContext(MapContext);
-	const lastKeyframe = keyframes.findLast(a=>a.time <= store.targetTime);
-	const nextKeyframe = keyframes.find(a=>a.time > store.targetTime);
+	const lastKeyframe = GetLastKeyframe();
+	const nextKeyframe = GetNextKeyframe();
 	if (lastKeyframe == null || nextKeyframe == null) return null;
 	const lastFocusNodePaths = GetFocusNodePaths(mapInfo, store.targetTime);
 	const nextFocusNodePaths = GetFocusNodePaths(mapInfo, nextKeyframe.time);
@@ -49,7 +57,8 @@ export const KeyframeApplier = observer(function KeyframeApplier(props: {mainGra
 	const lastFocusNodeRectsMerged = MergeNodeRects(lastFocusNodePaths, lastKeyframe_groupRects);
 	const nextFocusNodeRectsMerged = MergeNodeRects(nextFocusNodePaths, nextKeyframe_groupRects);
 	if (lastFocusNodeRectsMerged == null || nextFocusNodeRectsMerged == null) return null;
-	const percentFromLastToNext = (store.targetTime - lastKeyframe.time) / (nextKeyframe.time - lastKeyframe.time);
+	//const percentFromLastToNext = (store.targetTime - lastKeyframe.time) / (nextKeyframe.time - lastKeyframe.time);
+	const percentFromLastToNext = GetPercentThroughTransition(lastKeyframe, nextKeyframe);
 	const focusNodeRects_interpolated = InterpolateRect(lastFocusNodeRectsMerged, nextFocusNodeRectsMerged, percentFromLastToNext);
 	//console.log("percentFromLastToNext:", percentFromLastToNext);
 
@@ -130,6 +139,9 @@ export function GetGroupRectsAtKeyframe(mapInfo: MapInfo, mainGraph: Graph, layo
 		})!;
 	} else {
 		tree = mainGraph.GetLayout()!;
+		/*tree = mainGraph.GetLayout(undefined, group=>{
+			return nodesVisibleAtKeyframe.includes(group.leftColumn_userData?.["nodePath"] as string);
+		})!;*/
 	}
 	if (tree == null) return null;
 

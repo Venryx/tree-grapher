@@ -19,7 +19,6 @@ Library for calculating where to draw tree nodes, while avoiding overlap.
 ## Tasks
 
 Short term:
-* MS the nodes themselves can "smoothly move" to their positions in the next keyframe. (probably requires library-level support, at least to be sufficiently performant)
 * MS the "align with parent" option works again.
 * There's still some code from the old implementation that's not useful anymore and needs to be removed.
 
