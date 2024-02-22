@@ -16,7 +16,7 @@ export const GetNextKeyframe = ()=>{
 };
 
 //let ignoreNextZoomChange = false;
-export const KeyframeApplier = observer(function KeyframeApplier(props: {mainGraph: Graph, layoutHelperGraph: Graph|n}) {
+export const KeyframeApplier = observer(function KeyframeApplier_(props: {mainGraph: Graph, layoutHelperGraph: Graph|n}) {
 	const {mainGraph, layoutHelperGraph} = props;
 	if (mainGraph.containerEl == null) return null;
 	const scrollEl = mainGraph.getScrollElFromContainerEl(mainGraph.containerEl);

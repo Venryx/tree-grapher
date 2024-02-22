@@ -12,7 +12,7 @@ import {GetAllNodesInTree_ByNodePath, nodeTree_main} from "../@SharedByExamples/
 /*export let mapInfo_main: MapInfo;
 export let mapInfo_layoutHelper: MapInfo;*/
 
-export const MapUI = observer(function MapUI(props: {mainGraph: Graph, mainGraphIsLayoutHelper: boolean, layoutHelperGraph?: Graph}) {
+export const MapUI = observer(function MapUI_(props: {mainGraph: Graph, mainGraphIsLayoutHelper: boolean, layoutHelperGraph?: Graph}) {
 	const {mainGraph, mainGraphIsLayoutHelper, layoutHelperGraph} = props;
 
 	const [containerElResolved, setContainerElResolved] = useState(false);

@@ -1,7 +1,6 @@
-import { Assert, ToNumber, Vector2 } from "js-vextensions";
+import { Assert, Vector2 } from "js-vextensions";
 import React, { useCallback, useContext, useMemo, useRef } from "react";
 import { GraphContext } from "../Graph.js";
-import { GetRectRelative } from "../Utils/General/General.js";
 import { NodeConnectorOpts } from "./ConnectorLinesUI.js";
 export function useRef_nodeLeftColumn(treePath, nodeConnectorOpts, userData = {}, alignWithParent) {
     nodeConnectorOpts = useMemo(() => Object.assign(new NodeConnectorOpts(), nodeConnectorOpts), 
@@ -22,18 +21,11 @@ export function useRef_nodeLeftColumn(treePath, nodeConnectorOpts, userData = {}
             ref_group.current = group;
             const updateGroupRects = () => {
                 if (group.leftColumnEl && group.graph.containerEl) {
-                    group.lcSize_old = GetRectRelative(group.leftColumnEl, group.graph.containerEl).Size;
-                    // undo any map-level scaling; we want to operate on the "unscaled" size (since whatever tree-grapher outputs will be scaled back up "at the end" using the css-transform)
-                    const scaleMatch = group.graph.containerEl.style.transform.match(/scale\((.*?)\)/);
-                    if (scaleMatch != null) {
-                        group.lcSize_old = group.lcSize_old.DividedBy(ToNumber(scaleMatch[1]));
-                    }
                     group.lcSize = new Vector2(group.leftColumnEl.offsetWidth, group.leftColumnEl.offsetHeight);
                 }
                 else {
                     group.lcSize = null;
                 }
-                group.innerUISize_old = group.leftColumnEl && group.lcSize_old ? new Vector2(group.lcSize_old.x - group.GutterWidth, group.lcSize_old.y) : null;
                 group.innerUISize = group.leftColumnEl && group.lcSize ? new Vector2(group.lcSize.x - group.GutterWidth, group.lcSize.y) : null;
             };
             // call once at start (atm needed to avoid rare case where element is attached, but rects aren't, and filter in children-func fails fsr)

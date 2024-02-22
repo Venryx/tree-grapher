@@ -8,7 +8,7 @@ import {CSSScalarToPixels, GetMarginTopFromStyle} from "../../Utils/General/Gene
 import {useForceUpdate} from "../../Utils/UI.js";
 
 // eslint-disable-next-line prefer-arrow-callback
-export const GraphColumnsVisualizer = observer(function GraphColumnsVisualizer(props: {levelsToScrollContainer?: number, zoomLevel?: number}) {
+export const GraphColumnsVisualizer = observer(function GraphColumnsVisualizer_(props: {levelsToScrollContainer?: number, zoomLevel?: number}) {
 	const {levelsToScrollContainer, zoomLevel} = E({zoomLevel: 1}, props);
 	const graph = useContext(GraphContext);
 	const forceUpdate = useForceUpdate();

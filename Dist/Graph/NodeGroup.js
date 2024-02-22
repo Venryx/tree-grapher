@@ -43,12 +43,12 @@ export class NodeGroup {
         return this.leftColumn_connectorOpts.gutterWidth + (this.leftColumn_connectorOpts.parentIsAbove ? this.leftColumn_connectorOpts.parentGutterWidth : 0);
     }
     // pos
-    assignedPosition = Vector2.zero; // raw value obtained from own graph, for layout position
-    assignedPosition_final = Vector2.zero; // like assignedPosition, except includes modifications due to animation
+    /** Raw value obtained from own graph, for layout position. */
+    assignedPosition = Vector2.zero;
+    /** Like assignedPosition, except includes modifications due to animation. (excludes gutter-offset, since layout-engine uses the lc-rect, ie. the rect that contains the gutter) */
+    assignedPosition_final = Vector2.zero;
     // sizes (inputs/observed; just storage for "actual rects" observed)
-    lcSize_old; // based on getBoundingClientRect()
     lcSize; // based on offsetWidth/offsetHeight
-    innerUISize_old; // based on getBoundingClientRect()
     innerUISize; // based on offsetWidth/offsetHeight
     /*get InnerUISize_WithMargin() {
         if (this.innerUISize == null || this.leftColumn_connectorOpts == null) return null;
@@ -59,25 +59,19 @@ export class NodeGroup {
     leftColumnEl_layoutCount = 0;
     lcRect_atLastRender;
     innerUIRect_atLastRender;
-    get LCRect_Old() {
-        if (this.lcSize == null)
-            return null;
-        return new VRect(this.assignedPosition_final.NewY(y => y - (this.lcSize.y / 2)), this.lcSize);
-    }
+    /** Gets the rect of the left-column rect (which includes the gutter), which is used for layout-calculation by the layout engine. */
     get LCRect() {
         if (this.lcSize == null)
             return null;
-        return new VRect(this.assignedPosition_final.NewY(y => y - (this.lcSize.y / 2)), this.lcSize);
+        return new VRect(this.assignedPosition_final, this.lcSize);
+        //return new VRect(this.assignedPosition_final.NewY(y=>y - (this.lcSize!.y / 2)), this.lcSize);
     }
-    get InnerUIRect_Old() {
-        if (this.innerUISize == null)
-            return null;
-        return new VRect(this.assignedPosition_final.NewX(x => x + this.GutterWidth).NewY(y => y - (this.innerUISize.y / 2)), this.innerUISize);
-    }
+    /** Like LCRect, except excludes the gutter. (thus matching with visual-box rect) */
     get InnerUIRect() {
         if (this.innerUISize == null)
             return null;
-        return new VRect(this.assignedPosition_final.NewX(x => x + this.GutterWidth).NewY(y => y - (this.innerUISize.y / 2)), this.innerUISize);
+        return new VRect(this.assignedPosition_final.NewX(x => x + this.GutterWidth), this.innerUISize);
+        //return new VRect(this.assignedPosition_final.NewX(x=>x + this.GutterWidth).NewY(y=>y - (this.innerUISize!.y / 2)), this.innerUISize);
     }
     DetachAndDestroy() {
         this.Detach();

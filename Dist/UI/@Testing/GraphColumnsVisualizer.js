@@ -5,7 +5,7 @@ import { Column, Row } from "react-vcomponents";
 import { GraphContext } from "../../Graph.js";
 import { useForceUpdate } from "../../Utils/UI.js";
 // eslint-disable-next-line prefer-arrow-callback
-export const GraphColumnsVisualizer = observer(function GraphColumnsVisualizer(props) {
+export const GraphColumnsVisualizer = observer(function GraphColumnsVisualizer_(props) {
     const { levelsToScrollContainer, zoomLevel } = E({ zoomLevel: 1 }, props);
     const graph = useContext(GraphContext);
     const forceUpdate = useForceUpdate();

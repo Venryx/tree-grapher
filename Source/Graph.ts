@@ -38,12 +38,12 @@ export class Graph {
 
 	// animation system
 	/** This should be a mobx-compatible getter function, which returns information required for smoothly animating changes to node positions. (will try to add animation of size-changes later) */
-	private getNextKeyframeInfo?: ()=>KeyframeInfo;
+	private getNextKeyframeInfo?: ()=>KeyframeInfo|null|undefined;
 	private getGroupStablePath: (group: NodeGroup)=>string;
 	animation_autorunDisposer?: IReactionDisposer;
 	// live variables (ie. driven by animation-autorun, which then trigger new layouts)
-	nextKeyframeInfo?: KeyframeInfo;
-	StartAnimating(getNextKeyframeInfo: ()=>KeyframeInfo, getGroupStablePath: (group: NodeGroup)=>string) {
+	nextKeyframeInfo?: KeyframeInfo|null|undefined;
+	StartAnimating(getNextKeyframeInfo: ()=>KeyframeInfo|null|undefined, getGroupStablePath: (group: NodeGroup)=>string) {
 		if (this.animation_autorunDisposer != null) {
 			throw new Error("Animation autorun already exists; must end the earlier one first.");
 		}
@@ -51,7 +51,9 @@ export class Graph {
 		this.getGroupStablePath = getGroupStablePath;
 		this.animation_autorunDisposer = autorun(()=>{
 			this.nextKeyframeInfo = this.getNextKeyframeInfo!();
-			this.RunLayout_InAMoment();
+			if (this.nextKeyframeInfo) {
+				this.RunLayout_InAMoment();
+			}
 		});
 	}
 	StopAnimating() {
@@ -297,9 +299,9 @@ export class Graph {
 			const newRect = group.LCRect;
 			if (!newRect?.Equals(group.lcRect_atLastRender)) {
 				group.leftColumnEl.style.left = `${group.assignedPosition_final.x}px`;
-				//group.leftColumnEl.style.left = `calc(${group.assignedPosition.x}px - ${group.innerUIRect!.width / 2}px)`;
-				//group.leftColumnEl.style.top = `${group.assignedPosition.y}px`;
-				group.leftColumnEl.style.top = `calc(${group.assignedPosition_final.y}px - ${Number(group.innerUISize!.y / 2)}px)`;
+				//group.leftColumnEl.style.left = `calc(${group.assignedPosition_final.x}px - ${group.innerUIRect!.width / 2}px)`;
+				group.leftColumnEl.style.top = `${group.assignedPosition_final.y}px`;
+				//group.leftColumnEl.style.top = `calc(${group.assignedPosition_final.y}px - ${Number(group.innerUISize!.y / 2)}px)`;
 				//console.log(`For ${group.path}, assigned pos: ${group.assignedPosition}`);
 
 				// if this is our first render/layout, clear the style that had made our node invisible
@@ -318,19 +320,24 @@ export class Graph {
 export type LayoutDirection = "topToBottom" | "leftToRight";
 
 export function GetTreeNodeBaseRect(treeNode: FlexNode<any>, direction = "leftToRight" as LayoutDirection) {
+	// Why do we flip x and y in our regular case? Because the algorithm defaults to top-to-bottom layout, but we want left-to-right.
 	const newPos = direction == "topToBottom"
-		? new VRect(treeNode.x, treeNode.y, treeNode.xSize, treeNode.ySize)
-		: new VRect(treeNode.y, treeNode.x, treeNode.ySize, treeNode.xSize);
+		// Why do we include the `- (treeNode.xSize / 2)` adjustment?
+		// Situation: The core algorithm (probably for simpler algorithm-implementation) considers a node's position to be the center of its toward-y-origin edge (ie. pos.x is rect-centered).
+		// Response: Recalculate its returned rects, so that the rest of the code (ie. outside of the core algorithm) deals with "regular rects", ie. where its [x,y] point equals its toward-origin corner.
+		? new VRect(treeNode.x - (treeNode.xSize / 2), treeNode.y, treeNode.xSize, treeNode.ySize)
+		: new VRect(treeNode.y, treeNode.x - (treeNode.xSize / 2), treeNode.ySize, treeNode.xSize);
 	return newPos;
 }
 export function GetTreeNodeOffset(baseRects: VRect[], treeNodes: FlexNode<NodeGroup>[], containerPadding: Padding) {
 	const minX = CE(baseRects.map((rect, i)=>rect.x)).Min();
 	const maxX = CE(baseRects.map((rect, i)=>rect.Right)).Min();
-	//const minY = CE(baseRects.map((rect, i)=>rect.y)).Min();
-	const minY = CE(baseRects.map((rect, i)=>{
+	const minY = CE(baseRects.map((rect, i)=>rect.y)).Min();
+	/*const minY = CE(baseRects.map((rect, i)=>{
 		const group = treeNodes[i].data;
+		// shift-up the actual box by half of box's height (lets position be used for connector-line targeting)
 		return rect.y - Number(group.innerUISize!.y / 2);
-	})).Min();
+	})).Min();*/
 	const maxY = CE(baseRects.map((rect, i)=>rect.Bottom)).Max();
 	const offset = new Vector2(containerPadding.left - minX, containerPadding.top - minY);
 	return {minX, maxX, minY, maxY, offset};

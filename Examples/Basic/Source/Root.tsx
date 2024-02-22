@@ -100,7 +100,7 @@ export function GetURLOptions() {
 }
 export const urlOpts = GetURLOptions();
 
-export const RootUI = observer(function RootUI() {
+export const RootUI = observer(function RootUI_() {
 	//const containerRef = useRef<HTMLDivElement | null>(null);
 	const graph_layoutHelper = useGraph(true, null);
 	const graph_main = useGraph(false, graph_layoutHelper);

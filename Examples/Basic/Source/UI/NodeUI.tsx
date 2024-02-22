@@ -9,7 +9,7 @@ import {MapContext, urlOpts} from "../Root";
 import {ChangePeersOrderFunc, NodeUI_Inner} from "./NodeUI_Inner";
 
 // eslint-disable-next-line prefer-arrow-callback
-export const NodeUI = observer(function NodeUI(props: {node: MapNode, nodePath: string, treePath: string, inBelowGroup?: boolean, forLayoutHelper: boolean, changePeersOrder?: ChangePeersOrderFunc}) {
+export const NodeUI = observer(function NodeUI_(props: {node: MapNode, nodePath: string, treePath: string, inBelowGroup?: boolean, forLayoutHelper: boolean, changePeersOrder?: ChangePeersOrderFunc}) {
 	const {node, nodePath, treePath, inBelowGroup, forLayoutHelper, changePeersOrder} = props;
 	const mapInfo = useContext(MapContext);
 	//const graph = useContext(GraphContext);

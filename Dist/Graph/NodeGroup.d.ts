@@ -26,19 +26,19 @@ export declare class NodeGroup {
     childHolderEl: HTMLElement | n;
     childHolder_belowParent: boolean;
     get GutterWidth(): number;
+    /** Raw value obtained from own graph, for layout position. */
     assignedPosition: Vector2;
+    /** Like assignedPosition, except includes modifications due to animation. (excludes gutter-offset, since layout-engine uses the lc-rect, ie. the rect that contains the gutter) */
     assignedPosition_final: Vector2;
-    lcSize_old: Vector2 | n;
     lcSize: Vector2 | n;
-    innerUISize_old: Vector2 | n;
     innerUISize: Vector2 | n;
     lineSourcePoint: number | n;
     leftColumnEl_layoutCount: number;
     lcRect_atLastRender: VRect | n;
     innerUIRect_atLastRender: VRect | n;
-    get LCRect_Old(): VRect | null;
+    /** Gets the rect of the left-column rect (which includes the gutter), which is used for layout-calculation by the layout engine. */
     get LCRect(): VRect | null;
-    get InnerUIRect_Old(): VRect | null;
+    /** Like LCRect, except excludes the gutter. (thus matching with visual-box rect) */
     get InnerUIRect(): VRect | null;
     DetachAndDestroy(): void;
     Detach(): void;

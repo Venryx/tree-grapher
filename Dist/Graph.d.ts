@@ -28,8 +28,8 @@ export declare class Graph {
     private getNextKeyframeInfo?;
     private getGroupStablePath;
     animation_autorunDisposer?: IReactionDisposer;
-    nextKeyframeInfo?: KeyframeInfo;
-    StartAnimating(getNextKeyframeInfo: () => KeyframeInfo, getGroupStablePath: (group: NodeGroup) => string): void;
+    nextKeyframeInfo?: KeyframeInfo | null | undefined;
+    StartAnimating(getNextKeyframeInfo: () => KeyframeInfo | null | undefined, getGroupStablePath: (group: NodeGroup) => string): void;
     StopAnimating(): void;
     containerPadding: Padding;
     spaceTakerComp: SpaceTakerUI_Handle | n;

@@ -10,7 +10,7 @@ export const textRepeatSplitter = " [x2:] ";
 export type PeersChangerFunc = (peers: MapNode[])=>MapNode[];
 export type ChangePeersOrderFunc = (func: PeersChangerFunc)=>void;
 // eslint-disable-next-line prefer-arrow-callback
-export const NodeUI_Inner = observer(function NodeUI_Inner(props: {node: MapNode, nodePath: string, treePath: string, inBelowGroup?: boolean, forLayoutHelper: boolean, changePeersOrder?: ChangePeersOrderFunc}) {
+export const NodeUI_Inner = observer(function NodeUI_Inner_(props: {node: MapNode, nodePath: string, treePath: string, inBelowGroup?: boolean, forLayoutHelper: boolean, changePeersOrder?: ChangePeersOrderFunc}) {
 	const {node, nodePath, treePath, inBelowGroup, forLayoutHelper, changePeersOrder} = props;
 	const mapInfo = useContext(MapContext);
 	const nodeState = mapInfo.GetNodeState(nodePath);
