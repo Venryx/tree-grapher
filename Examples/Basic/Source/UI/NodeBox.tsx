@@ -2,20 +2,23 @@ import {CE, E} from "js-vextensions";
 import {observer} from "mobx-react";
 import React, {useContext} from "react";
 import {Button, Column, Row, Text} from "react-vcomponents";
-import {useForceUpdate} from "tree-grapher";
+import {GraphContext, useForceUpdate} from "tree-grapher";
 import {MapNode} from "../@SharedByExamples/MapNode";
-import {MapContext} from "../Root";
+import {GetURLOptions, MapContext} from "../Root";
 
 export const textRepeatSplitter = " [x2:] ";
 export type PeersChangerFunc = (peers: MapNode[])=>MapNode[];
 export type ChangePeersOrderFunc = (func: PeersChangerFunc)=>void;
 // eslint-disable-next-line prefer-arrow-callback
-export const NodeUI_Inner = observer(function NodeUI_Inner_(props: {node: MapNode, nodePath: string, treePath: string, inBelowGroup?: boolean, forLayoutHelper: boolean, changePeersOrder?: ChangePeersOrderFunc}) {
+export const NodeBox = observer(function NodeBox_(props: {node: MapNode, nodePath: string, treePath: string, inBelowGroup?: boolean, forLayoutHelper: boolean, changePeersOrder?: ChangePeersOrderFunc}) {
 	const {node, nodePath, treePath, inBelowGroup, forLayoutHelper, changePeersOrder} = props;
 	const mapInfo = useContext(MapContext);
 	const nodeState = mapInfo.GetNodeState(nodePath);
 	const expanded_final = nodeState.expanded || forLayoutHelper;
 	const forceUpdate = useForceUpdate();
+
+	const graph = useContext(GraphContext);
+	//const group = graph.groupsByPath.get(treePath);
 
 	const textIsRepeated = node.text.includes(textRepeatSplitter);
 
@@ -71,6 +74,7 @@ export const NodeUI_Inner = observer(function NodeUI_Inner_(props: {node: MapNod
 						forceUpdate();
 					}}/>
 					<Button p="5px 10px" text={expanded_final ? "-" : "+"} enabled={!forLayoutHelper} onClick={()=>{
+						if (GetURLOptions().stable) graph.SetAnchorNode(treePath);
 						nodeState.expanded = !nodeState.expanded;
 					}}/>
 				</Column>

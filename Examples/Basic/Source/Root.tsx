@@ -92,9 +92,11 @@ FlashOptions.finalizers.push(new FinalizerEntry({
 export function GetURLOptions() {
 	const urlParams = new URLSearchParams(window.location.search);
 	const anim = urlParams.get("anim") == "1";
+	const stable = urlParams.get("stable") == "1";
 	const nodeSpacing = urlParams.get("nodeSpacing") ? Number(urlParams.get("nodeSpacing")) : anim ? 100 : 10;
 	return {
 		anim,
+		stable,
 		nodeSpacing,
 	};
 }
@@ -106,12 +108,12 @@ export const RootUI = observer(function RootUI_() {
 	const graph_main = useGraph(false, graph_layoutHelper);
 
 	// update some graph info
-	const paddingAmount = urlOpts.anim ? 1000 : 100;
+	const paddingAmount = urlOpts.anim || urlOpts.stable ? 1000 : 100;
 	graph_main.containerPadding = {left: paddingAmount, top: paddingAmount, right: paddingAmount, bottom: paddingAmount};
 	graph_layoutHelper.containerPadding = {left: paddingAmount, top: paddingAmount, right: paddingAmount, bottom: paddingAmount};
 
 	return (
-		<Column style={{position: "relative", height: "100%"}}>
+		<Column style={{position: "relative", height: "100%", userSelect: "none"}}>
 			<Toolbar/>
 			<MapUI mainGraph={graph_main} mainGraphIsLayoutHelper={false} layoutHelperGraph={graph_layoutHelper}/>
 			<div
@@ -145,6 +147,7 @@ const Toolbar = observer(()=>{
 		}}>
 			<Button text="Base" onClick={()=>window.location.href = "http://localhost:8080"}/>
 			<Button ml={5} text="Anim" onClick={()=>window.location.href = "http://localhost:8080/?anim=1"}/>
+			<Button ml={5} text="Stable expand" onClick={()=>window.location.href = "http://localhost:8080/?stable=1"}/>
 
 			{urlOpts.anim &&
 			<Row ml={10}>

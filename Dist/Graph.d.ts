@@ -14,6 +14,11 @@ export type KeyframeInfo = {
     percentThroughTransition: number;
 };
 export declare function InterpolateVector(vecA: Vector2, vecB: Vector2, percent: number): Vector2;
+export type NodeLayout = {
+    treeNode: FlexNode<NodeGroup>;
+    lcUserData: Object;
+    rect_final: VRect;
+};
 export type Padding = {
     left: number;
     right: number;
@@ -31,6 +36,13 @@ export declare class Graph {
     nextKeyframeInfo?: KeyframeInfo | null | undefined;
     StartAnimating(getNextKeyframeInfo: () => KeyframeInfo | null | undefined, getGroupStablePath: (group: NodeGroup) => string): void;
     StopAnimating(): void;
+    anchorNode_targetInfo: {
+        treePath: string;
+        extras: any;
+    } | n;
+    anchorNode_targetFinderFunc: (nodeLayouts: NodeLayout[]) => NodeLayout | n;
+    /** Makes-so when the next layout is applied, the scroll-view is simultaneously scrolled so that the anchor-node remains at the same position as it had been prior to the layout application. */
+    SetAnchorNode(treePath: string, extras?: {}): void;
     containerPadding: Padding;
     spaceTakerComp: SpaceTakerUI_Handle | n;
     connectorLinesComp: ConnectorLinesUI_Handle | n;
@@ -63,6 +75,7 @@ export declare class Graph {
     RunLayout_InAMoment: () => void;
     RunLayout: (direction?: LayoutDirection) => void;
     GetLayout: (direction?: LayoutDirection, nodeGroupFilter?: (group: NodeGroup) => boolean) => FlexNode<NodeGroup> | null;
+    lastAppliedLayout_nodeLayouts: NodeLayout[];
     ApplyLayout: (ownLayout: FlexNode<NodeGroup>, direction?: LayoutDirection, applyAnimationModifiers?: boolean) => void;
 }
 export type LayoutDirection = "topToBottom" | "leftToRight";

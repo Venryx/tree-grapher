@@ -43,6 +43,15 @@ export class Graph {
         if (this.animation_autorunDisposer)
             this.animation_autorunDisposer();
     }
+    anchorNode_targetInfo;
+    anchorNode_targetFinderFunc = nodeLayouts => {
+        return this.anchorNode_targetInfo && nodeLayouts.find(a => a.treeNode.data.path == this.anchorNode_targetInfo.treePath);
+    };
+    /** Makes-so when the next layout is applied, the scroll-view is simultaneously scrolled so that the anchor-node remains at the same position as it had been prior to the layout application. */
+    SetAnchorNode(treePath, extras = {}) {
+        this.anchorNode_targetInfo = { treePath, extras };
+        //this.RunLayout_InAMoment();
+    }
     /*get ContainerPadding() {
         return {
             left: CSSScalarToPixels(this.containerEl?.style.paddingLeft ?? ""), right: CSSScalarToPixels(this.containerEl?.style.paddingRight ?? ""),
@@ -220,12 +229,21 @@ export class Graph {
         layout.receiveTree(tree);
         return tree;
     };
+    //lastAppliedLayout_nodePositions: Map<string, Vector2>|n;
+    lastAppliedLayout_nodeLayouts = [];
     ApplyLayout = (ownLayout, direction = "leftToRight", applyAnimationModifiers = true) => {
         const treeNodes = ownLayout.nodes; // This is a getter, and pretty expensive (at scale)! So cache its value here.
         const nodeRects_base = treeNodes.map(node => GetTreeNodeBaseRect(node, direction));
         const { offset } = GetTreeNodeOffset(nodeRects_base, treeNodes, this.containerPadding);
-        //const nodeRects_final = nodeRects_base.map(a=>a.NewPosition(b=>b.Plus(offset)));
-        const nodePositions_final = nodeRects_base.map(a => a.Position.Plus(offset));
+        const nodeLayouts = treeNodes.map((node, i) => {
+            return {
+                treeNode: node,
+                lcUserData: node.data.leftColumn_userData,
+                rect_final: nodeRects_base[i].NewPosition(a => a.Plus(offset)),
+            };
+        });
+        //const nodePositions_final = nodeRects_base.map(a=>a.Position.Plus(offset));
+        //const nodePositions_final_map = new Map(treeNodes.map((node, index)=>[node.data.path, nodePositions_final[index]] as [string, Vector2]));
         // animation system, prep
         const helperTreeNodesByStablePath = new Map();
         let helperLayout_offset = new Vector2(0, 0);
@@ -241,14 +259,26 @@ export class Graph {
                 helperTreeNodesByStablePath.set(stablePath, treeNode);
             }
         }
+        // get old scroll relative to anchor-node
+        const scrollEl = this.getScrollElFromContainerEl(this.containerEl);
+        const anchorNode_oldLayout = this.anchorNode_targetFinderFunc(this.lastAppliedLayout_nodeLayouts);
+        const anchorNode_newLayout = this.anchorNode_targetFinderFunc(nodeLayouts);
+        let newScroll_toKeepAnchorPos;
+        if (scrollEl && anchorNode_oldLayout && anchorNode_newLayout) {
+            const scrollPos = new Vector2(scrollEl.scrollLeft, scrollEl.scrollTop);
+            const oldScroll_relToAnchor = scrollPos.Minus(anchorNode_oldLayout.rect_final.Position);
+            newScroll_toKeepAnchorPos = anchorNode_newLayout.rect_final.Position.Plus(oldScroll_relToAnchor);
+            //console.log("Same?:", anchorNode_oldLayout.rect_final == anchorNode_newLayout.rect_final);
+            console.log("anchorNodePath:", this.anchorNode_targetInfo?.treePath, "scrollPos:", scrollPos, "layoutNode_oldPos:", anchorNode_oldLayout.rect_final.Position.toString(), "layoutNode_newPos:", anchorNode_newLayout.rect_final.Position.toString(), "oldScroll_relToAnchor:", oldScroll_relToAnchor.toString(), "newScroll_toKeepAnchorPos:", newScroll_toKeepAnchorPos.toString());
+        }
+        else {
+            console.log("No valid target-info.");
+        }
         for (const [i, node] of treeNodes.entries()) {
             const group = node.data;
             if (group.leftColumnEl == null)
                 continue;
-            /*const newPos = nodeRects_base[i].Position.Plus(offset);
-            group.assignedPosition = newPos;*/
-            //group.assignedPosition = nodeRects_final[i].Position;
-            group.assignedPosition = nodePositions_final[i];
+            group.assignedPosition = nodeLayouts[i].rect_final.Position;
             group.assignedPosition_final = group.assignedPosition;
             // animation system, apply
             if (applyAnimationModifiers && this.animation_autorunDisposer != null && this.nextKeyframeInfo?.layout != null) {
@@ -275,8 +305,14 @@ export class Graph {
                 group.innerUIRect_atLastRender = group.InnerUIRect;
             }
         }
+        if (scrollEl && newScroll_toKeepAnchorPos) {
+            scrollEl.scrollTo({ left: newScroll_toKeepAnchorPos.x, top: newScroll_toKeepAnchorPos.y });
+            /*scrollEl.scrollLeft = newScroll_toKeepAnchorPos.x;
+            scrollEl.scrollTop = newScroll_toKeepAnchorPos.y;*/
+        }
         this.spaceTakerComp?.forceUpdate();
         this.connectorLinesComp?.forceUpdate();
+        this.lastAppliedLayout_nodeLayouts = nodeLayouts;
     };
 }
 export function GetTreeNodeBaseRect(treeNode, direction = "leftToRight") {

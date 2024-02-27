@@ -6,7 +6,7 @@ import {useStateWithDeps} from "use-state-with-deps";
 import {MapNode} from "../@SharedByExamples/MapNode";
 import {GetNodeStateFromKeyframes} from "../@SharedByExamples/NodeData.js";
 import {MapContext, urlOpts} from "../Root";
-import {ChangePeersOrderFunc, NodeUI_Inner} from "./NodeUI_Inner";
+import {ChangePeersOrderFunc, NodeBox} from "./NodeBox";
 
 // eslint-disable-next-line prefer-arrow-callback
 export const NodeUI = observer(function NodeUI_(props: {node: MapNode, nodePath: string, treePath: string, inBelowGroup?: boolean, forLayoutHelper: boolean, changePeersOrder?: ChangePeersOrderFunc}) {
@@ -29,7 +29,7 @@ export const NodeUI = observer(function NodeUI_(props: {node: MapNode, nodePath:
 			<NodeUI_LeftColumn treePath={treePath} alignWithParent={node.alignWithParent} userData={{nodePath}} nodeConnectorOpts={{
 				gutterWidth: inBelowGroup ? 20 : 30, parentGutterWidth: 30, parentIsAbove: inBelowGroup, color: treePath.split("/").length % 2 == 0 ? "green" : "blue",
 			}}>
-				<NodeUI_Inner node={node} nodePath={nodePath} treePath={treePath} inBelowGroup={inBelowGroup} forLayoutHelper={forLayoutHelper} changePeersOrder={changePeersOrder}/>
+				<NodeBox node={node} nodePath={nodePath} treePath={treePath} inBelowGroup={inBelowGroup} forLayoutHelper={forLayoutHelper} changePeersOrder={changePeersOrder}/>
 			</NodeUI_LeftColumn>
 			{expanded_final &&
 			children.map((child, index)=>{
