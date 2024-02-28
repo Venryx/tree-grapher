@@ -1,7 +1,7 @@
 {
   "name": "tree-grapher",
   "description": "Library for calculating where to draw tree nodes, while avoiding overlap.",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "author": "Venryx (https://venryx.com)",
   "main": "Dist/index.js",
   "typings": "Dist/index.d.ts",

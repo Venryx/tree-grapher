@@ -310,14 +310,11 @@ export class Graph {
 			const scrollPos = new Vector2(scrollEl.scrollLeft, scrollEl.scrollTop);
 			const oldScroll_relToAnchor = scrollPos.Minus(anchorNode_oldLayout.rect_final.Position);
 			newScroll_toKeepAnchorPos = anchorNode_newLayout.rect_final.Position.Plus(oldScroll_relToAnchor);
-			//console.log("Same?:", anchorNode_oldLayout.rect_final == anchorNode_newLayout.rect_final);
-			console.log(
+			/*console.log(
 				"anchorNodePath:", this.anchorNode_targetInfo?.treePath, "scrollPos:", scrollPos,
 				"layoutNode_oldPos:", anchorNode_oldLayout.rect_final.Position.toString(), "layoutNode_newPos:", anchorNode_newLayout.rect_final.Position.toString(),
 				"oldScroll_relToAnchor:", oldScroll_relToAnchor.toString(), "newScroll_toKeepAnchorPos:", newScroll_toKeepAnchorPos.toString()
-			);
-		} else {
-			console.log("No valid target-info.");
+			);*/
 		}
 
 		for (const [i, node] of treeNodes.entries()) {
